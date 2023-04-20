@@ -1,3 +1,40 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+    font-family: font-regular;
+    src: url('./fonts/Ubuntu-Regular.ttf');
+}
+
+@font-face {
+    font-family: font-medium;
+    src: url('./fonts/Ubuntu-Medium.ttf');
+}
+
+@font-face {
+    font-family: font-light;
+    src: url('./fonts/Ubuntu-Light.ttf');
+}
+
+* {
+    font-family: font-regular;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body, html {
+    width: 100vw;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* GLOBAL VARIABLES */
+
+:root {
+
+    --large-bp: 1800px;
+    --mid-bp: 1000px;
+    --small-bp:500px;
+
+}
