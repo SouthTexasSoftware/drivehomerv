@@ -18,18 +18,31 @@ export interface Unit {
   additional_fees?: Array<Fee>;
   created_by: string;
   created_on: Timestamp;
-  default_price?: number;
+  daily_fees_total?: number;
+  default_price: number;
   description?: string;
   discounts?: Array<Discount>;
-  feature_list?: { [key: string]: string };
+  feature_list?: Array<Feature>;
+  avail_extras?: Array<Extra>;
   id: string;
   mileage_record?: Array<MileageEntry>;
   miles_price?: number;
   name: string;
+  long_name?: string;
+  short_name?: string;
   photo_list?: Array<Photo>;
   updated_on?: Timestamp;
   bookings?: CollectionReference;
   prices?: CollectionReference;
+  min_booking_days: number;
+}
+
+export interface Booking {
+  id?: string;
+  customer?: string;
+  unit?: string;
+  start?: string;
+  end?: string;
 }
 
 export interface Fee {
@@ -37,6 +50,7 @@ export interface Fee {
   amount: number;
   description?: string;
   fee_group?: string; // TODO: do we need adtl interface for FeeGroup ???
+  per_day: boolean;
 }
 
 export interface Discount {
@@ -58,4 +72,18 @@ export interface Photo {
   date_added: Timestamp;
   primary: boolean;
   index: number;
+}
+
+export interface Feature {
+  name: string;
+  icon: string;
+  shorthand: string;
+  value: string;
+}
+
+export interface Extra {
+  name: string;
+  amount: string;
+  description?: string;
+  selected?: boolean;
 }
