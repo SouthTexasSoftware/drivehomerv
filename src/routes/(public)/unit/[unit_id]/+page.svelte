@@ -6,6 +6,7 @@
   import { unitStore } from "$lib/stores";
   import { onMount } from "svelte";
   import LoadingUnit from "./LoadingUnit.svelte";
+  import FeatureList from "./FeatureList.svelte";
 
   let unitObject: Unit | undefined;
   let loadingUnit = true;
@@ -16,6 +17,7 @@
 
     // if lookup produced results, allow page to continue loading.
     if (unitObject != undefined) {
+      console.log(JSON.stringify(unitObject.description));
       loadingUnit = false;
       return;
     }
@@ -26,7 +28,9 @@
   // to be populated. Right now, the subscription just keeps it updated live.
 </script>
 
-<h2>Availability & Pricing</h2>
+<h2>Plan Your Trip</h2>
+<p class="small">with</p>
+<p class="unit-name">{unitObject?.name}</p>
 
 {#if loadingUnit}
   <LoadingUnit />
@@ -34,6 +38,9 @@
   <MainCard {unitObject} />
   <div id="information-container">
     <!-- Bullets/Description -->
+    <p id="description">
+      {unitObject.description}
+    </p>
     <!-- How it Works/Rental Process Explained -->
   </div>
 {/if}
@@ -53,10 +60,34 @@
     transform: rotate(-16deg);
     z-index: -1;
   }
+  p.small {
+    font-size: 14px;
+    margin-top: -10px;
+  }
+  p.unit-name {
+    font-family: font-medium;
+    color: hsl(var(--p));
+    font-size: 32px;
+    margin-top: -10px;
+  }
+  #information-container {
+    max-width: 1700px;
+    width: 50vw;
+    margin-top: 50px;
+  }
+  #description {
+    white-space: pre-wrap;
+    width: 100%;
+    margin: 0 25px;
+    font-size: 18px;
+    line-height: 35px;
+  }
 
   @media (max-width: 500px) {
     .background-stripe {
       top: 250px;
+    }
+    #description {
     }
   }
 

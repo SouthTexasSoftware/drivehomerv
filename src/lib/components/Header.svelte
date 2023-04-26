@@ -121,8 +121,6 @@
   </nav>
 </header>
 
-<div>{screenWidth}</div>
-
 <style>
   header {
     display: flex;

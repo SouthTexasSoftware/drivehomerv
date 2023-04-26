@@ -2,14 +2,22 @@
   import Carousel from "./Carousel.svelte";
   import TripPlan from "./TripPlan.svelte";
   import type { Unit } from "$lib/types";
+  import FeatureList from "./FeatureList.svelte";
+
+  let screenWidth: number;
 
   export let unitObject: Unit;
 </script>
 
+<svelte:window bind:innerWidth={screenWidth} />
 <div id="card-wrapper">
-  <Carousel {unitObject} />
-
-  <TripPlan {unitObject} />
+  {#if screenWidth > 500}
+    <Carousel {unitObject} />
+    <TripPlan {unitObject} />
+  {:else}
+    <TripPlan {unitObject} />
+    <Carousel {unitObject} />
+  {/if}
 </div>
 
 <style>
@@ -20,13 +28,15 @@
     background-color: hsl(var(--b1));
     position: relative;
     display: grid;
-    grid-template-rows: 90vw 1fr;
+    grid-template-rows: 1fr 0.8fr;
     grid-template-columns: 1fr;
+    min-height: 500px;
   }
   @media (max-width: 700px) {
     #card-wrapper {
       width: 90vw;
       min-height: 120vw;
+      padding-bottom: 25px;
     }
   }
 

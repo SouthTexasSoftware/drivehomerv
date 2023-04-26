@@ -3,9 +3,19 @@
   import { DateTime } from "@easepick/datetime";
   import { RangePlugin } from "@easepick/range-plugin";
   import { LockPlugin } from "@easepick/lock-plugin";
-  import { onMount } from "svelte";
+  import { onMount, createEventDispatcher } from "svelte";
   import basicCalendarCss from "$lib/styles/basicCalendar.css?inline";
-  import rangeCalendarCss from "$lib/styles/rangeCalendar.css?inline";
+  import type { Unit } from "$lib/types";
+
+  export let unitObject: Unit;
+
+  let dispatch = createEventDispatcher();
+  let screenWidth: number;
+
+  // TODO: this needs to be algorithmic eventually
+  let selectedTripStart: string = "Jul 01 2024";
+  let selectedTripEnd: string =
+    "Jul 0" + (1 + unitObject.min_booking_days) + " 2024";
 
   onMount(() => {
     buildHotelCalendarExample();
@@ -39,12 +49,23 @@
       return new DateTime(d, "YYYY-MM-DD");
     });
 
+    let inlineCalendar = false;
+    if (screenWidth > 500) {
+      inlineCalendar = true;
+    }
+
     const picker = new easepick.create({
-      element: "#calendar",
-      inline: true,
+      element: "#calendar-button",
+      inline: inlineCalendar, // always visible - TODO: change this in mobile only
       css: basicCalendarCss,
-      firstDay: 0,
+      zIndex: 100,
+      firstDay: 0, // sets the calendar to have SUNDAY on the left
       plugins: [RangePlugin, LockPlugin],
+      setup(picker) {
+        picker.on("select", (e) => {
+          calendarSelectionHandler(e.detail);
+        });
+      },
       RangePlugin: {
         tooltipNumber(num) {
           return num - 1;
@@ -74,36 +95,125 @@
       },
     });
   }
+
+  /*
+   * Called from within easepick calendar instance upon user selection of timespan
+   */
+  function calendarSelectionHandler(selection: { start: Date; end: Date }) {
+    selectedTripStart = dateToString(selection.start);
+    selectedTripEnd = dateToString(selection.end);
+
+    dispatch("selection", selection);
+  }
+
+  function dateToString(date: Date) {
+    let dateString = date.toDateString();
+
+    dateString = dateString.substring(4);
+    return dateString;
+  }
 </script>
 
-<input id="calendar" />
+<svelte:window bind:innerWidth={screenWidth} />
 
-<div class="catch-paragraph">
-  <strong class="catch-paragraph">Simple Rental Process</strong>
-  <p class="catch-paragraph">
-    Pay only 50% of the booking value now and the rest 14 days before your trip.
-  </p>
+<div class="row stack dates">
+  <strong class="dates">Dates</strong>
+
+  <label for="calendar-button" class="row date-display">
+    <p>{selectedTripStart}</p>
+    <div class="arrow-container">
+      <svg
+        id="right-arrow"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g id="Complete">
+          <g id="arrow-right">
+            <g>
+              <polyline
+                data-name="Right"
+                fill="none"
+                id="Right-2"
+                points="16.4 7 21.5 12 16.4 17"
+                stroke="#000000"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+              />
+
+              <line
+                fill="none"
+                stroke="#000000"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                x1="2.5"
+                x2="19.2"
+                y1="12"
+                y2="12"
+              />
+            </g>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <p>{selectedTripEnd}</p>
+  </label>
+  <input id="calendar-button" />
 </div>
 
 <style>
-  #calendar {
+  #calendar-button {
     height: 0;
+    outline: none;
+    position: relative;
   }
-  div.catch-paragraph {
-    margin-top: 10px;
-    position: absolute;
-    bottom: 15px;
+  .row {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0px;
+    /* left/right margin for the rows is set in .col */
   }
-  strong.catch-paragraph {
-    font-size: 20px;
+  .row.stack {
+    flex-direction: column;
   }
-  p.catch-paragraph {
-    padding: 0 10px;
+  .row.stack.dates {
+    align-items: center;
+    justify-content: center;
+    margin: auto 0;
+  }
+  strong.dates {
+    font-size: 16px;
+    margin-bottom: -5px;
+    margin-top: 25px;
+    max-width: 300px;
+  }
+  .date-display {
+    border: 1px solid hsl(var(--b3));
+    border-radius: 10px;
+    padding: 10px 10px;
+    color: black;
+
+    max-width: 300px;
+    z-index: 100;
+  }
+  svg#right-arrow {
+    height: 100%;
+    width: 20px;
+  }
+  :global(.easepick-wrapper) {
+    opacity: 1 !important;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
   }
   @media (max-width: 500px) {
-    div.catch-paragraph {
-      width: 100%;
-      padding: 0 25px;
+    .row.stack.dates {
+      align-items: center;
+    }
+    :global(.easepick-wrapper) {
+      position: absolute;
+      bottom: 50px;
     }
   }
 

@@ -1,71 +1,64 @@
 <script lang="ts">
-  import type { Unit } from "$lib/types";
+  import type { Unit, Booking } from "$lib/types";
   import Calendar from "./Calendar.svelte";
+  import FeatureList from "./FeatureList.svelte";
+  import ReserveButton from "./ReserveButton.svelte";
 
   export let unitObject: Unit;
+
+  let screenWidth: number;
+  let selectedTripLength: number = unitObject.min_booking_days;
+
+  $: nightlyRateSum = unitObject.default_price * selectedTripLength;
+  $: additionalFeesTotal = calculateAdditionalFeesSum(selectedTripLength);
+  $: totalBookingPrice = nightlyRateSum + additionalFeesTotal;
+
+  function calculateAdditionalFeesSum(tripLength: number) {
+    let sum = 0;
+
+    unitObject.additional_fees?.forEach((fee) => {
+      if (fee.per_day) {
+        sum += fee.amount * tripLength;
+      } else {
+        sum += fee.amount;
+      }
+    });
+
+    return sum;
+  }
+
+  function handleNewCalendarSelection(event: CustomEvent) {
+    let differenceInTime =
+      event.detail.end.getTime() - event.detail.start.getTime();
+    let differenceInDays = differenceInTime / (1000 * 3600 * 24);
+
+    selectedTripLength = differenceInDays;
+  }
 </script>
 
 <div class="trip-plan-container">
-  <div class="trip-plan-title">
-    <p>Plan Your Trip&nbsp;</p>
-    <p>with <span class="unit-name">{unitObject.name}</span></p>
-  </div>
   <section class="col-container">
     <div class="col estimate">
       <div class="row stack location">
         <strong id="state">New York</strong>
         <p id="pickup-location">Modena Pickup Location</p>
       </div>
-      <div class="row stack dates">
-        <strong class="dates">Dates</strong>
-        <div class="row date-display">
-          <p>13 Apr 2023</p>
-          <div class="arrow-container">
-            <svg
-              id="right-arrow"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <g id="Complete">
-                <g id="arrow-right">
-                  <g>
-                    <polyline
-                      data-name="Right"
-                      fill="none"
-                      id="Right-2"
-                      points="16.4 7 21.5 12 16.4 17"
-                      stroke="#000000"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                    />
-
-                    <line
-                      fill="none"
-                      stroke="#000000"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      x1="2.5"
-                      x2="19.2"
-                      y1="12"
-                      y2="12"
-                    />
-                  </g>
-                </g>
-              </g>
-            </svg>
-          </div>
-          <p>17 Apr 2023</p>
-        </div>
-      </div>
+      <FeatureList {unitObject} />
       <div class="row fee nightly-rate">
-        <p>$185 x 4 Nights</p>
-        <p>$740</p>
+        <p>
+          ${unitObject.default_price} x {selectedTripLength} Nights
+        </p>
+        <p>
+          ${nightlyRateSum}
+        </p>
       </div>
       <div class="row fee">
-        <p>Preparation fee</p>
-        <p>$100</p>
+        {#if unitObject.additional_fees}
+          {#each unitObject.additional_fees as fee}
+            <p>{fee.name}</p>
+            <p>${fee.amount}</p>
+          {/each}
+        {/if}
       </div>
       <div class="row fee mi-per-night">
         <p>100 mi per night ($0.00/day)</p>
@@ -81,17 +74,30 @@
       <div class="bar" />
       <div class="row total">
         <p>Total</p>
-        <p>$999</p>
+        <p>${totalBookingPrice}</p>
       </div>
-
-      <button class="reserve-button"><p>RESERVE NOW · $499.50</p></button>
+      {#if screenWidth > 500}
+        <button class="reserve-button"
+          ><p>
+            RESERVE NOW · ${Math.floor(totalBookingPrice / 2)}
+          </p></button
+        >
+      {/if}
     </div>
 
     <div class="col calendar">
-      <Calendar />
+      <Calendar
+        {unitObject}
+        on:selection={(e) => handleNewCalendarSelection(e)}
+      />
     </div>
   </section>
+
+  {#if screenWidth < 500}
+    <ReserveButton reservePrice={Math.floor(totalBookingPrice / 2)} />
+  {/if}
 </div>
+<svelte:window bind:innerWidth={screenWidth} />
 
 <style>
   .trip-plan-container {
@@ -104,39 +110,20 @@
     position: relative;
     font-size: 16px;
   }
-  .trip-plan-title {
-    font-size: 28px;
-    margin-top: 15px;
-    font-family: font-regular;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-  }
-  span.unit-name {
-    color: hsl(var(--p));
-    font-family: font-medium;
-  }
   .col-container {
     display: flex;
     flex-wrap: wrap-reverse;
     width: 100%;
     justify-content: space-evenly;
-    margin-bottom: 25px;
+    height: 100%;
   }
   .col {
     flex-basis: 300px;
     flex-grow: 2;
-    margin: 0 15px;
+    margin: auto 15px;
     display: flex;
     flex-direction: column;
     max-width: 450px;
-  }
-  .col.calendar {
-    margin: 0 auto;
-    position: relative;
-    height: 450px;
-    /* align-items: center; */
   }
   .row {
     display: flex;
@@ -147,6 +134,9 @@
   .row.stack {
     flex-direction: column;
   }
+  .row.stack.location {
+    margin-bottom: 20px;
+  }
   strong {
     font-size: 20px;
     color: hsl(var(--nf));
@@ -155,26 +145,7 @@
     margin-top: -10px;
     padding-left: 10px;
   }
-  .row.stack.dates {
-    align-items: flex-start;
-    margin: 10px 0 15px 0;
-  }
-  strong.dates {
-    font-size: 16px;
-    margin-bottom: -5px;
-  }
-  .date-display {
-    border: 1px solid hsl(var(--b3));
-    border-radius: 10px;
-    padding: 10px 10px;
-    color: black;
-    position: relative;
-    max-width: 300px;
-  }
-  svg#right-arrow {
-    height: 100%;
-    width: 20px;
-  }
+
   .row.fee {
     color: hsl(var(--n));
     opacity: 0.8;
@@ -227,11 +198,9 @@
 
   @media (max-width: 500px) {
     .col {
-      margin: 15px 25px;
+      margin: 0px 25px;
     }
-    .row.stack.dates {
-      align-items: center;
-    }
+
     .reserve-button {
       padding: 12px 0;
     }

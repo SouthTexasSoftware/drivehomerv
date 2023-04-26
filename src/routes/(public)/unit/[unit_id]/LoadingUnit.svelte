@@ -29,7 +29,7 @@
   }
   @media (max-width: 500px) {
     .spinner {
-      margin-top: 200px;
+      margin-top: 150px;
       width: 100px;
       height: 100px;
     }
