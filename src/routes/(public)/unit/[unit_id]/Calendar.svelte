@@ -4,8 +4,9 @@
   import { RangePlugin } from "@easepick/range-plugin";
   import { LockPlugin } from "@easepick/lock-plugin";
   import { onMount, createEventDispatcher } from "svelte";
-  import basicCalendarCss from "$lib/styles/basicCalendar.css?inline";
+  import publicPickerCalendar from "$lib/styles/publicPickerCalendar.css?inline";
   import type { Unit } from "$lib/types";
+  import { bookingStore } from "$lib/stores";
 
   export let unitObject: Unit;
 
@@ -13,41 +14,24 @@
   let screenWidth: number;
 
   // TODO: this needs to be algorithmic eventually
-  let selectedTripStart: string = "Jul 01 2024";
+  let selectedTripStart: string = "Jul-01-2023";
   let selectedTripEnd: string =
-    "Jul 0" + (1 + unitObject.min_booking_days) + " 2024";
+    "Jul-0" + (1 + unitObject.min_booking_days) + "-2023";
 
   onMount(() => {
-    buildHotelCalendarExample();
+    buildUnitCalendar();
 
-    // const picker = new easepick.create({
-    //   element: "#calendar",
-    //   zIndex: 10,
-    //   inline: true,
-    //   css: basicCalendarCss,
-    // });
+    $bookingStore.start = selectedTripStart;
+    $bookingStore.end = selectedTripEnd;
   });
 
-  function buildHotelCalendarExample() {
-    // const DateTime = easepick.DateTime;
-    const bookedDates = [
-      "2023-04-02",
-      ["2023-04-06", "2023-04-11"],
-      "2023-04-18",
-      "2023-04-19",
-      "2023-04-20",
-      "2023-04-25",
-      "2023-04-28",
-    ].map((d) => {
-      if (d instanceof Array) {
-        const start = new DateTime(d[0], "YYYY-MM-DD");
-        const end = new DateTime(d[1], "YYYY-MM-DD");
+  function buildUnitCalendar() {
+    const bookedDates = unitObject.bookings;
 
-        return [start, end];
-      }
-
-      return new DateTime(d, "YYYY-MM-DD");
-    });
+    if (!bookedDates) {
+      setTimeout(buildUnitCalendar, 200);
+      return;
+    }
 
     let inlineCalendar = false;
     if (screenWidth > 500) {
@@ -57,8 +41,8 @@
     const picker = new easepick.create({
       element: "#calendar-button",
       inline: inlineCalendar, // always visible - TODO: change this in mobile only
-      css: basicCalendarCss,
-      zIndex: 100,
+      css: publicPickerCalendar,
+      zIndex: 110,
       firstDay: 0, // sets the calendar to have SUNDAY on the left
       plugins: [RangePlugin, LockPlugin],
       setup(picker) {
@@ -74,10 +58,12 @@
           one: "night",
           other: "nights",
         },
+        startDate: new DateTime(selectedTripStart, "MMM-DD-YYYY"),
+        endDate: new DateTime(selectedTripEnd, "MMM-DD-YYYY"),
       },
       LockPlugin: {
         minDate: new Date(),
-        minDays: 2,
+        minDays: unitObject.min_booking_days,
         inseparable: true,
         filter(date, picked) {
           if (picked.length === 1) {
@@ -104,12 +90,20 @@
     selectedTripEnd = dateToString(selection.end);
 
     dispatch("selection", selection);
+
+    bookingStore.update((storeData) => {
+      storeData.start = selectedTripStart;
+      storeData.end = selectedTripEnd;
+
+      return storeData;
+    });
   }
 
   function dateToString(date: Date) {
     let dateString = date.toDateString();
 
     dateString = dateString.substring(4);
+    dateString = dateString.replaceAll(" ", "-");
     return dateString;
   }
 </script>

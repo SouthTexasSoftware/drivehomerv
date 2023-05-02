@@ -1,8 +1,9 @@
 import { firebaseClientConfig } from "../config";
 import { collection, query, onSnapshot } from "firebase/firestore";
 import { get } from "svelte/store";
-import type { Unit } from "./types";
+import type { Unit, Booking } from "./types";
 import { firebaseStore, unitStore } from "./stores";
+import { DateTime } from "@easepick/bundle";
 
 // TODO: needs a fallback when a failure is caught. Display a message, etc.
 
@@ -63,7 +64,10 @@ export async function populateUnitStore() {
           // Sorting can happen here if needed.
         });
         unitStore.set(unitsList);
-        console.log("Units List Updated: ", unitsList);
+        unitsList.forEach((unitObj) => {
+          attachUnitBookingsListener(unitObj);
+        });
+
         // TODO: set listeners off of this, so that things can get triggered on update.
       });
     } catch (error) {
@@ -71,6 +75,49 @@ export async function populateUnitStore() {
       console.warn(error);
     }
   }
+}
+
+/**
+ * Pass in unitobject ot setup unit bookings listeners, updates automatically on addition of booking to unit
+ * @param unitObject
+ *
+ */
+async function attachUnitBookingsListener(unitObject: Unit) {
+  let fb = get(firebaseStore);
+
+  let collectionReference = collection(
+    fb.db,
+    "units",
+    unitObject.id,
+    "bookings"
+  );
+
+  const q = query(collectionReference);
+  let localStorageBookings: DateTime[][] = [];
+
+  const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const snapshotBookings: DateTime[][] = [];
+
+    querySnapshot.forEach((booking: Booking) => {
+      //@ts-ignore
+      const bookingData = booking.data();
+
+      const start = new DateTime(bookingData.start, "MMM-DD-YYYY");
+      const end = new DateTime(bookingData.end, "MMM-DD-YYYY");
+
+      snapshotBookings.push([start, end]);
+    });
+
+    unitStore.update((units) => {
+      units.forEach((unit) => {
+        if (unit.id == unitObject.id) {
+          unit.bookings = snapshotBookings;
+        }
+      });
+
+      return units;
+    });
+  });
 }
 
 /**
@@ -97,7 +144,7 @@ export function unitLookup(id: string): Unit | undefined {
   if (!unitFound) {
     console.warn("Unit Lookup found 0 results.");
   } else {
-    console.log("Matching Unit Found: ", unitFound);
+    // console.log("Matching Unit Found: ", unitFound);
   }
   return unitFound;
 }

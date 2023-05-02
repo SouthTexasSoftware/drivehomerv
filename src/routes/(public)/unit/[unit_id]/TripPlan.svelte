@@ -1,17 +1,28 @@
 <script lang="ts">
+  import { bookingStore } from "$lib/stores";
   import type { Unit, Booking } from "$lib/types";
   import Calendar from "./Calendar.svelte";
-  import FeatureList from "./FeatureList.svelte";
+  import TempFeatureList from "./TempFeatureList.svelte";
   import ReserveButton from "./ReserveButton.svelte";
+  import { createEventDispatcher } from "svelte";
 
   export let unitObject: Unit;
+  export let showRequest: boolean;
 
+  let dispatch = createEventDispatcher();
   let screenWidth: number;
   let selectedTripLength: number = unitObject.min_booking_days;
 
   $: nightlyRateSum = unitObject.default_price * selectedTripLength;
   $: additionalFeesTotal = calculateAdditionalFeesSum(selectedTripLength);
   $: totalBookingPrice = nightlyRateSum + additionalFeesTotal;
+
+  $: {
+    bookingStore.update((storeData) => {
+      storeData.total_price = totalBookingPrice;
+      return storeData;
+    });
+  }
 
   function calculateAdditionalFeesSum(tripLength: number) {
     let sum = 0;
@@ -34,6 +45,10 @@
 
     selectedTripLength = differenceInDays;
   }
+
+  function dispatchShowModal() {
+    dispatch("showModal", true);
+  }
 </script>
 
 <div class="trip-plan-container">
@@ -43,7 +58,7 @@
         <strong id="state">New York</strong>
         <p id="pickup-location">Modena Pickup Location</p>
       </div>
-      <FeatureList {unitObject} />
+      <TempFeatureList {unitObject} />
       <div class="row fee nightly-rate">
         <p>
           ${unitObject.default_price} x {selectedTripLength} Nights
@@ -52,14 +67,20 @@
           ${nightlyRateSum}
         </p>
       </div>
-      <div class="row fee">
-        {#if unitObject.additional_fees}
-          {#each unitObject.additional_fees as fee}
+
+      {#if unitObject.additional_fees}
+        {#each unitObject.additional_fees as fee}
+          <div class="row fee">
             <p>{fee.name}</p>
-            <p>${fee.amount}</p>
-          {/each}
-        {/if}
-      </div>
+            {#if fee.per_day}
+              <p>${fee.amount * selectedTripLength}</p>
+            {:else}
+              <p>${fee.amount}</p>
+            {/if}
+          </div>
+        {/each}
+      {/if}
+
       <div class="row fee mi-per-night">
         <p>100 mi per night ($0.00/day)</p>
         <p class="green-highlight">FREE</p>
@@ -77,10 +98,8 @@
         <p>${totalBookingPrice}</p>
       </div>
       {#if screenWidth > 500}
-        <button class="reserve-button"
-          ><p>
-            RESERVE NOW · ${Math.floor(totalBookingPrice / 2)}
-          </p></button
+        <button class="reserve-button" on:click={dispatchShowModal}
+          ><p>REQUEST NOW</p></button
         >
       {/if}
     </div>
@@ -94,7 +113,7 @@
   </section>
 
   {#if screenWidth < 500}
-    <ReserveButton reservePrice={Math.floor(totalBookingPrice / 2)} />
+    <ReserveButton {showRequest} on:showModal={dispatchShowModal} />
   {/if}
 </div>
 <svelte:window bind:innerWidth={screenWidth} />
@@ -129,6 +148,7 @@
     display: flex;
     justify-content: space-between;
     margin: 5px 0px;
+    z-index: 1;
     /* left/right margin for the rows is set in .col */
   }
   .row.stack {

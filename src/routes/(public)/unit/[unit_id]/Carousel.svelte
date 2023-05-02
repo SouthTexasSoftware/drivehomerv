@@ -37,7 +37,6 @@
       let photoUrl = await getDownloadURL(fileRef);
 
       carouselPhotoUrls.push(photoUrl);
-      console.log(carouselPhotoUrls);
     }
     photosLoaded = true;
   }

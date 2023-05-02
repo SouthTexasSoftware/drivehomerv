@@ -162,7 +162,7 @@
     border-radius: 10px;
     padding: 10px;
     box-shadow: 0px 0px 2px grey;
-    z-index: 100;
+    z-index: 105;
     background-color: hsl(var(--b1));
   }
 
