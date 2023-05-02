@@ -6,6 +6,7 @@ import type {
   CollectionReference,
 } from "firebase/firestore";
 import type { FirebaseStorage } from "firebase/storage";
+import type { DateTime } from "@easepick/datetime";
 
 export interface FirebaseStore {
   app: FirebaseApp;
@@ -32,17 +33,33 @@ export interface Unit {
   short_name?: string;
   photo_list?: Array<Photo>;
   updated_on?: Timestamp;
-  bookings?: CollectionReference;
+  bookings?: DateTime[][];
   prices?: CollectionReference;
   min_booking_days: number;
+  feature_sleeps?: string;
+  feature_vehicle_class?: string;
+  feature_year_built?: string;
+  feature_length?: string;
 }
 
 export interface Booking {
   id?: string;
   customer?: string;
-  unit?: string;
-  start?: string;
-  end?: string;
+  unit_id?: string;
+  unit_name?: string;
+  start?: string; //MMM-DD-YYYY
+  end?: string; //MMM-DD-YYYY
+  total_price?: number;
+  created?: Timestamp;
+  status?: BookingStatus;
+}
+
+enum BookingStatus {
+  requested,
+  reserved,
+  paid,
+  completed,
+  manualEntry,
 }
 
 export interface Fee {
@@ -86,4 +103,19 @@ export interface Extra {
   amount: string;
   description?: string;
   selected?: boolean;
+}
+
+export interface Customer {
+  id?: string;
+  first_name: string;
+  last_name: string;
+  created: Timestamp;
+  phone: string;
+  email: string;
+  address?: null;
+  payment_method?: null;
+  terms_agreement?: boolean;
+  bookings?: string[];
+  age_over_25?: boolean;
+  documents?: Document[];
 }

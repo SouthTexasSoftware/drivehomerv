@@ -123,7 +123,11 @@
   </section>
   <section class="lower-footer">
     <img src={companyLogo} alt="Company Logo" />
-    <p>All Rights Reserved. DriveHome RV Inc. Copyright 2023.</p>
+    <p>
+      All Rights Reserved. DriveHome RV Inc. Copyright 2023. <a href="/cms"
+        >CMS</a
+      >
+    </p>
   </section>
 </footer>
 

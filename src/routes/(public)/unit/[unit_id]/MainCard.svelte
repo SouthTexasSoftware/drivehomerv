@@ -3,19 +3,61 @@
   import TripPlan from "./TripPlan.svelte";
   import type { Unit } from "$lib/types";
   import FeatureList from "./FeatureList.svelte";
+  import RequestModal from "./RequestModal.svelte";
+  import { bookingStore } from "$lib/stores";
+  import SuccessModal from "./SuccessModal.svelte";
 
   let screenWidth: number;
+  let showRequest = false;
+  let showSuccess = false;
 
   export let unitObject: Unit;
+
+  if (unitObject) {
+    bookingStore.set({
+      unit_id: unitObject.id,
+      unit_name: unitObject.name,
+    });
+  }
 </script>
 
 <svelte:window bind:innerWidth={screenWidth} />
+{#if showRequest}
+  <RequestModal
+    on:close={() => {
+      showRequest = false;
+    }}
+    on:requestSuccess={() => {
+      showSuccess = true;
+    }}
+  />
+  <div class="blur-background" />
+{/if}
+{#if showSuccess}
+  <SuccessModal
+    on:close={() => {
+      showSuccess = false;
+    }}
+  />
+{/if}
 <div id="card-wrapper">
   {#if screenWidth > 500}
     <Carousel {unitObject} />
-    <TripPlan {unitObject} />
+    <TripPlan
+      {showRequest}
+      {unitObject}
+      on:showModal={() => {
+        showRequest = true;
+      }}
+    />
   {:else}
-    <TripPlan {unitObject} />
+    <TripPlan
+      {unitObject}
+      {showRequest}
+      on:showModal={() => {
+        showRequest = true;
+      }}
+    />
     <Carousel {unitObject} />
   {/if}
 </div>

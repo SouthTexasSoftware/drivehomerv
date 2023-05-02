@@ -29,7 +29,7 @@
   }
   @media (max-width: 500px) {
     .spinner {
-      margin-top: 150px;
+      margin-top: 275px;
       width: 100px;
       height: 100px;
     }
@@ -37,7 +37,7 @@
 
   @media (min-width: 500px) and (max-width: 1000px) {
     .spinner {
-      margin-top: 240px;
+      margin-top: 325px;
       width: 100px;
       height: 100px;
     }
@@ -45,7 +45,7 @@
 
   @media (min-width: 1000px) {
     .spinner {
-      margin-top: 270px;
+      margin-top: 350px;
       width: 100px;
       height: 100px;
     }
