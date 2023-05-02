@@ -28,11 +28,6 @@
   function buildUnitCalendar() {
     const bookedDates = unitObject.bookings;
 
-    if (!bookedDates) {
-      setTimeout(buildUnitCalendar, 200);
-      return;
-    }
-
     let inlineCalendar = false;
     if (screenWidth > 500) {
       inlineCalendar = true;

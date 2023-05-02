@@ -105,10 +105,12 @@
     </div>
 
     <div class="col calendar">
-      <Calendar
-        {unitObject}
-        on:selection={(e) => handleNewCalendarSelection(e)}
-      />
+      {#if unitObject.bookings != undefined}
+        <Calendar
+          {unitObject}
+          on:selection={(e) => handleNewCalendarSelection(e)}
+        />
+      {/if}
     </div>
   </section>
 
@@ -116,6 +118,7 @@
     <ReserveButton {showRequest} on:showModal={dispatchShowModal} />
   {/if}
 </div>
+
 <svelte:window bind:innerWidth={screenWidth} />
 
 <style>
