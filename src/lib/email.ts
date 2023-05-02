@@ -9,7 +9,7 @@ let msg: MessageObject = {
     name: "South Texas Software",
     email: "notifications@southtexas.software",
   },
-  to: ["notifications@southtexas.software"],
+  to: ["notifications@southtexas.software", "info@drivehomerv.com"],
   // 'alec@rapplitemedia.com',
 };
 
