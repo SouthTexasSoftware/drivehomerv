@@ -1,12 +1,15 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import { firebaseStore } from "$lib/stores";
+  import { firebaseStore, unitStore } from "$lib/stores";
   import { createEventDispatcher } from "svelte";
   import type { SubmitFunction } from "@sveltejs/kit";
-  import { collection, doc, setDoc } from "firebase/firestore";
+  import { collection, doc, setDoc, updateDoc } from "firebase/firestore";
+  import type { Unit } from "$lib/types";
 
   let dispatch = createEventDispatcher();
-  let creatingNewUnit = false;
+  let savingUnit = false;
+
+  export let unitObject: Unit;
 
   async function formSubmitHandler<SubmitFunction>(input: {
     action: URL;
@@ -16,12 +19,12 @@
     submitter: HTMLElement | null;
     cancel(): void;
   }) {
-    if (creatingNewUnit) {
+    if (savingUnit) {
       return;
     }
-    creatingNewUnit = true;
+    savingUnit = true;
 
-    let newUnitObject: { [key: string]: any } = {
+    let updatedUnitObject: { [key: string]: any } = {
       additional_fees: [],
     };
 
@@ -33,7 +36,7 @@
         value = parseInt(value);
       }
       if (key == "service_fee") {
-        newUnitObject.additional_fees.push({
+        updatedUnitObject.additional_fees.push({
           name: "Service Fee",
           per_day: false,
           amount: parseInt(value),
@@ -41,7 +44,7 @@
         return;
       }
       if (key == "taxes_fee") {
-        newUnitObject.additional_fees.push({
+        updatedUnitObject.additional_fees.push({
           name: "Taxes and Insurance",
           per_day: true,
           amount: parseInt(value),
@@ -49,28 +52,34 @@
         return;
       }
 
-      newUnitObject[key] = value;
+      updatedUnitObject[key] = value;
     });
 
-    let unitsCollection = collection($firebaseStore.db, "units");
-    let newUnitDocRef = doc(unitsCollection);
-    let newUnitId = newUnitDocRef.id;
+    let colRef = collection($firebaseStore.db, "units");
+    let existingUnitDocRef = doc(colRef, unitObject.id);
 
-    newUnitObject.id = newUnitId;
+    await updateDoc(existingUnitDocRef, updatedUnitObject);
 
-    let createNewUnit = await setDoc(newUnitDocRef, newUnitObject);
+    unitStore.update((unitsList) => {
+      unitsList.forEach((unit) => {
+        if (unit.id == unitObject.id) {
+          unit = updatedUnitObject as Unit;
+        }
+      });
+      return unitsList;
+    });
 
-    creatingNewUnit = false;
+    savingUnit = false;
     dispatch("refresh", true);
     input.cancel();
   }
 </script>
 
-<div class="new-unit-container">
-  <h4>New Unit</h4>
+<div class="edit-unit-container">
+  <h4>Edit Unit Details</h4>
   <form
-    id="new-unit-form"
-    name="new-unit-form"
+    id="edit-unit-form"
+    name="edit-unit-form"
     method="POST"
     use:enhance={formSubmitHandler}
   >
@@ -80,24 +89,28 @@
       required
       name="name"
       class="input input-bordered w-full max-w-xs"
+      value={unitObject.name}
     />
     <label for="long_name">Long Name</label>
     <input
       type="text"
       name="long_name"
       class="input input-bordered w-full max-w-xs"
+      value={unitObject.long_name}
     />
     <label for="short_name">Short Name</label>
     <input
       type="text"
       name="short_name"
       class="input input-bordered w-full max-w-xs"
+      value={unitObject.short_name}
     />
     <label for="description">Description*</label>
     <textarea
       required
       name="description"
       class="textarea textarea-bordered w-full max-w-xs"
+      value={unitObject.description}
     />
 
     <div class="flex-row">
@@ -120,6 +133,7 @@
       type="number"
       name="feature_sleeps"
       class="input input-bordered small"
+      value={unitObject.feature_sleeps}
     />
 
     <div class="flex-row">
@@ -154,6 +168,7 @@
       type="text"
       name="feature_vehicle_class"
       class="input input-bordered w-full max-w-xs"
+      value={unitObject.feature_vehicle_class}
     />
 
     <div class="flex-row">
@@ -186,6 +201,7 @@
       type="text"
       name="feature_year_built"
       class="input input-bordered w-full max-w-xs"
+      value={unitObject.feature_year_built}
     />
 
     <div class="flex-row">
@@ -208,6 +224,7 @@
       type="text"
       name="feature_length"
       class="input input-bordered w-full max-w-xs"
+      value={unitObject.feature_length}
     />
 
     <label for="default_price">Default Price*</label>
@@ -216,6 +233,7 @@
       required
       name="default_price"
       class="input input-bordered small"
+      value={unitObject.default_price}
     />
 
     <label for="min_booking_days">Min Booking Days*</label>
@@ -224,6 +242,7 @@
       type="number"
       name="min_booking_days"
       class="input input-bordered small"
+      value={unitObject.min_booking_days}
     />
 
     <label for="service_fee">Service Fee*</label>
@@ -232,6 +251,7 @@
       type="number"
       name="service_fee"
       class="input input-bordered small"
+      value={unitObject.additional_fees[0].amount}
     />
 
     <label for="taxes_fee">Taxes & Insurance / Per Day*</label>
@@ -240,18 +260,19 @@
       type="number"
       name="taxes_fee"
       class="input input-bordered small"
+      value={unitObject.additional_fees[1].amount}
     />
 
     <button
       type="submit"
       class="btn btn-primary w-full"
-      class:loading={creatingNewUnit}>CREATE</button
+      class:loading={savingUnit}>SAVE</button
     >
   </form>
 </div>
 
 <style>
-  .new-unit-container {
+  .edit-unit-container {
     /* background-color: lightblue; */
     padding: 25px;
     display: flex;

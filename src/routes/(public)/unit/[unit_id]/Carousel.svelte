@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Photo, Unit } from "$lib/types";
   import { firebaseStore, unitStore } from "$lib/stores";
-  import { ref, listAll, getDownloadURL } from "firebase/storage";
+  import { ref, getDownloadURL } from "firebase/storage";
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
   // carousel needs a loader/shimmer effect, while we bring in photos/files
