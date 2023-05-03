@@ -16,7 +16,7 @@ export interface FirebaseStore {
 }
 
 export interface Unit {
-  additional_fees?: Array<Fee>;
+  additional_fees: Array<Fee>;
   created_by: string;
   created_on: Timestamp;
   daily_fees_total?: number;
