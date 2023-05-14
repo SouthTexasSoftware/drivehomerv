@@ -82,15 +82,15 @@
       {/if}
 
       <div class="row fee mi-per-night">
-        <p>100 mi per night ($0.00/day)</p>
+        <p>100 mi per night ($0.00/night)</p>
         <p class="green-highlight">FREE</p>
       </div>
       <div class="banner">
         <div class="row fee miles-included">
           <p>Miles included</p>
-          <p>400 mi</p>
+          <p>{100 * selectedTripLength} mi</p>
         </div>
-        <p class="row fee small-note">Additional miles: $0.38/mi</p>
+        <p class="row fee small-note">Additional miles: $0.58/mi</p>
       </div>
       <div class="bar" />
       <div class="row total">
