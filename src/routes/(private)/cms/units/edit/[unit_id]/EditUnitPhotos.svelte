@@ -117,7 +117,7 @@
 
 <style>
   .outer-container {
-    /* background-color: lightblue; */
+    background-color: hsl(var(--b1));
     padding: 25px;
     display: flex;
     flex-direction: column;
@@ -153,6 +153,7 @@
     background-color: hsl(var(--b2));
     display: flex;
     justify-content: center;
+    border: 1px solid hsl(var(--b3));
   }
   .card-photo {
     width: 100%;

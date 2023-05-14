@@ -18,7 +18,7 @@
 
 <style>
   .menu-container {
-    /* background-color: lightgrey; */
+    background-color: hsl(var(--b1));
     width: 250px;
     flex-grow: 0;
     padding: 25px;

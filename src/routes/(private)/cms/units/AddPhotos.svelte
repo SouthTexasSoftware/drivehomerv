@@ -110,6 +110,7 @@
     flex-direction: column;
     align-items: center;
     max-height: 50vh;
+    background-color: hsl(var(--b1));
   }
   h4 {
     font-size: 20px;

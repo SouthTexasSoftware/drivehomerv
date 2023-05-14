@@ -67,6 +67,7 @@
     box-shadow: 0px 1px 2px grey;
     margin-top: 50px;
     padding: 25px;
+    background-color: hsl(var(--b1));
   }
   h3 {
     font-size: 26px;

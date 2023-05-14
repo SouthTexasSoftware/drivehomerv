@@ -17,10 +17,16 @@
     src: url('./fonts/Ubuntu-Light.ttf');
 }
 
+@font-face {
+    font-family: font-bold;
+    src: url('./fonts/Ubuntu-Bold.ttf');
+}
+
 * {
     font-family: font-regular;
     box-sizing: border-box;
     user-select: none;
+    
 }
 
 body, html {
