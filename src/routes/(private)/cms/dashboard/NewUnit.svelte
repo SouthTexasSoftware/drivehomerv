@@ -252,7 +252,7 @@
 
 <style>
   .new-unit-container {
-    /* background-color: lightblue; */
+    background-color: hsl(var(--b1));
     padding: 25px;
     display: flex;
     flex-direction: column;

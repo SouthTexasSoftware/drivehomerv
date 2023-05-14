@@ -4,7 +4,7 @@
   import { unitStore } from "$lib/stores";
   import { unitLookup } from "$lib/helpers";
   import { page } from "$app/stores";
-  import LoadingUnit from "./LoadingUnit.svelte";
+  import PageDataLoading from "../../../../lib/components/PageDataLoading.svelte";
 
   export let unitObject: Unit;
 
@@ -38,7 +38,7 @@
     </p>
   </div>
 {:else}
-  <LoadingUnit />
+  <PageDataLoading />
 {/if}
 
 <style>

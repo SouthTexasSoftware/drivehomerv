@@ -33,6 +33,9 @@
     padding: 25px;
     display: flex;
     flex-direction: column;
+    background-color: hsl(var(--b1));
+    border: 1px solid hsl(var(--b3));
+    border-radius: 4px;
   }
   h4 {
     text-align: center;

@@ -37,15 +37,17 @@
   }
   .utilities-column {
     flex-basis: 600px;
-    /* background-color: antiquewhite; */
     padding: 25px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: flex-start;
+  }
+  :global(.utilities-column div) {
+    margin-bottom: 25px;
   }
   .calendar-view {
     flex-grow: 2;
-    /* background-color: aliceblue; */
     padding: 25px;
     display: flex;
     flex-direction: column;

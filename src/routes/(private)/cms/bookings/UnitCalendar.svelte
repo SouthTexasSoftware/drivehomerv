@@ -54,4 +54,12 @@
     height: 0;
     color: transparent;
   }
+  h3 {
+    background-color: hsl(var(--b1));
+    width: 100%;
+    text-align: center;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px grey;
+    margin-bottom: 3px;
+  }
 </style>

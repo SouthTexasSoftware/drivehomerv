@@ -42,6 +42,8 @@
 
 <NavigationLoader />
 
+<div class="background-stripe" />
+
 <style>
   #page-content {
     min-height: 95vh;
@@ -49,5 +51,33 @@
     flex-direction: column;
     /* justify-content: center; */
     align-items: center;
+  }
+
+  .background-stripe {
+    position: absolute;
+    width: 200vw;
+    height: 300px;
+    left: -50vw;
+    background: hsl(var(--p));
+    transform: rotate(-16deg);
+    z-index: -1;
+  }
+
+  @media (max-width: 500px) {
+    .background-stripe {
+      top: 250px;
+    }
+  }
+
+  @media (min-width: 500px) and (max-width: 1000px) {
+    .background-stripe {
+      top: 300px;
+    }
+  }
+
+  @media (min-width: 1000px) {
+    .background-stripe {
+      top: 350px;
+    }
   }
 </style>
