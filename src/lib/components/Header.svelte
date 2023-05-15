@@ -31,7 +31,7 @@
 
   function closeMobileMenu(event: Event) {
     if (!showMobileMenu) return;
-    if (mobileMenuElement.contains(event.target as Node)) return;
+    //if (mobileMenuElement.contains(event.target as Node)) return;
 
     showMobileMenu = false;
   }
@@ -79,10 +79,7 @@
               href="https://drivehomerv.com/#section-jQ3IZF8px"
               class="mobile-nav-link">About Us</a
             >
-            <a
-              href="https://drivehomerv.com/#section-UBMrEP5rr"
-              class="mobile-nav-link">Rentals</a
-            >
+            <a href="/rentals" class="mobile-nav-link">Rentals</a>
             <a
               href="https://drivehomerv.com/#section-vCVCUb6is"
               class="mobile-nav-link">Team</a
@@ -103,9 +100,7 @@
           <a href="https://drivehomerv.com/#section-jQ3IZF8px" class="nav-link"
             >About Us</a
           >
-          <a href="https://drivehomerv.com/#section-UBMrEP5rr" class="nav-link"
-            >Rentals</a
-          >
+          <a href="/rentals" class="nav-link">Rentals</a>
           <a href="https://drivehomerv.com/#section-vCVCUb6is" class="nav-link"
             >Team</a
           >

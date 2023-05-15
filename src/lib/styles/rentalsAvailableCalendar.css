@@ -1,5 +1,5 @@
 :host{
-    --color-bg-default:#fff;
+    --color-bg-default:hsl(var(--b1));
     --color-bg-secondary:#f9f9f9;
     --color-fg-default:#333;
     --color-fg-primary:hsl(var(--p));
@@ -27,8 +27,8 @@
     --color-btn-secondary-disabled-border:#b5bbc4;
     --color-border-default:#ddd;
     --color-border-locked:#f9f9f9;
-    --day-width:42px;
-    --day-height:37px;
+    --day-width:50px;
+    --day-height:45px;
     --border-radius:2px;
     --primary-color:#6b82ff;
     --secondary-color:#748194;
@@ -53,8 +53,9 @@
     pointer-events:all;
     position:absolute;
     transform:scale(0);
-    transform-origin:top left;
-    transition:transform .3s ease-out
+    transform-origin:bottom left;
+    transition:transform .3s ease-out;
+    top: 0;
 }
 .container.calc{
     height:auto;
@@ -65,7 +66,8 @@
 .container.show{
     box-shadow:0 0 3px rgba(0,0,0,.3);
     height:auto;
-    transform:scale(1)
+    transform:scale(1);
+    
 }
 .container.inline{
     box-shadow:0 7px 14px 0 rgba(65,69,88,.1),0 3px 6px 0 rgba(0,0,0,.07);
@@ -291,12 +293,12 @@
         display:none
     }
     .calendars .calendar>.days-grid>.day{
-        height:50px;
+        height:55px;
         max-height:unset;
         max-width:unset;
         min-height:unset;
         min-width:unset;
-        width:auto
+        width:auto;
     }
     .calendars .calendar>.header:not(.no-next-month) .next-button{
         visibility:visible
@@ -603,4 +605,3 @@
 .container.lock-plugin .calendar>.days-grid>.day.locked:not(.start):not(.end) {
     background-image: repeating-linear-gradient(135deg, transparent, hsl(var(--a)) 2px, transparent 0, transparent 4px);
 }
-

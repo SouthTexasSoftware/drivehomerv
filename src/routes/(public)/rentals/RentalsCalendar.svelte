@@ -1,46 +1,39 @@
 <script lang="ts">
   import { easepick } from "@easepick/bundle";
-  import { DateTime } from "@easepick/datetime";
   import { RangePlugin } from "@easepick/range-plugin";
   import { LockPlugin } from "@easepick/lock-plugin";
   import { onMount, createEventDispatcher } from "svelte";
-  import publicPickerCalendar from "$lib/styles/publicPickerCalendar.css?inline";
-  import type { Unit } from "$lib/types";
+  import rentalsAvailableCalendar from "$lib/styles/rentalsAvailableCalendar.css?inline";
   import { bookingStore } from "$lib/stores";
-
-  export let unitObject: Unit;
+  import { DateTime } from "@easepick/datetime";
 
   let dispatch = createEventDispatcher();
   let screenWidth: number;
 
-  let selectedTripStart: string = "Start Date";
-  let selectedTripEnd: string = "End Date";
+  let selectedTripStart = "Start Date";
+  let selectedTripEnd = "End Date";
 
   onMount(() => {
-    if ($bookingStore.start && $bookingStore.end) {
-      selectedTripStart = $bookingStore.start;
-      selectedTripEnd = $bookingStore.end;
+    if ($bookingStore) {
+      if ($bookingStore.start && $bookingStore.end) {
+        selectedTripStart = $bookingStore.start;
+        selectedTripEnd = $bookingStore.end;
 
-      dispatch("selection", {
-        start: new DateTime(selectedTripStart, "MMM-DD-YYYY"),
-        end: new DateTime(selectedTripEnd, "MMM-DD-YYYY"),
-      });
+        dispatch("selection", {
+          start: new DateTime(selectedTripStart, "MMM-DD-YYYY"),
+          end: new DateTime(selectedTripEnd, "MMM-DD-YYYY"),
+        });
+      }
     }
-    buildUnitCalendar();
+
+    buildAvailableCalendar();
   });
 
-  function buildUnitCalendar() {
-    const bookedDates = unitObject.bookings;
-
-    let inlineCalendar = false;
-    if (screenWidth > 500) {
-      inlineCalendar = true;
-    }
-
+  function buildAvailableCalendar() {
     const picker = new easepick.create({
       element: "#calendar-button",
-      inline: inlineCalendar, // always visible - TODO: change this in mobile only
-      css: publicPickerCalendar,
+      inline: false,
+      css: rentalsAvailableCalendar,
       zIndex: 110,
       firstDay: 0, // sets the calendar to have SUNDAY on the left
       plugins: [RangePlugin, LockPlugin],
@@ -62,21 +55,7 @@
       },
       LockPlugin: {
         minDate: new Date(),
-        minDays: unitObject.min_booking_days,
         inseparable: true,
-        filter(date, picked) {
-          if (picked.length === 1) {
-            //TODO: why is TS not picking these methods up?
-            //@ts-ignore
-            const incl = date.isBefore(picked[0]) ? "[)" : "(]";
-            return (
-              //@ts-ignore
-              !picked[0].isSame(date, "day") && date.inArray(bookedDates, incl)
-            );
-          }
-          //@ts-ignore
-          return date.inArray(bookedDates, "[)");
-        },
       },
     });
   }
@@ -90,11 +69,9 @@
 
     dispatch("selection", selection);
 
-    bookingStore.update((storeData) => {
-      storeData.start = selectedTripStart;
-      storeData.end = selectedTripEnd;
-
-      return storeData;
+    bookingStore.set({
+      start: selectedTripStart,
+      end: selectedTripEnd,
     });
   }
 
@@ -106,8 +83,6 @@
     return dateString;
   }
 </script>
-
-<svelte:window bind:innerWidth={screenWidth} />
 
 <div class="row stack dates">
   <strong class="dates">Dates</strong>
@@ -157,7 +132,7 @@
 
 <style>
   #calendar-button {
-    height: 0;
+    height: 0px;
     outline: none;
     position: relative;
   }
@@ -165,7 +140,6 @@
     display: flex;
     justify-content: space-between;
     margin: 5px 0px;
-    position: relative;
     /* left/right margin for the rows is set in .col */
   }
   .row.stack {
@@ -201,15 +175,11 @@
     display: flex;
     justify-content: center;
   }
-  @media (max-width: 500px) {
-    .row.stack.dates {
-      align-items: center;
-    }
+  @media (max-width: 480px) {
     :global(.easepick-wrapper) {
       width: 90vw;
     }
   }
-
   @media (min-width: 500px) and (max-width: 1000px) {
   }
 
