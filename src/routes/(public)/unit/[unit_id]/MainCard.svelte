@@ -14,10 +14,18 @@
   export let unitObject: Unit;
 
   if (unitObject) {
-    bookingStore.set({
-      unit_id: unitObject.id,
-      unit_name: unitObject.name,
-    });
+    if ($bookingStore) {
+      bookingStore.update((storeData) => {
+        storeData.unit_id = unitObject.id;
+        storeData.unit_name = unitObject.name;
+        return storeData;
+      });
+    } else {
+      bookingStore.set({
+        unit_id: unitObject.id,
+        unit_name: unitObject.name,
+      });
+    }
   }
 </script>
 

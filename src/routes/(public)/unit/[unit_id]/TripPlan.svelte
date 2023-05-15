@@ -4,14 +4,14 @@
   import Calendar from "./Calendar.svelte";
   import TempFeatureList from "./TempFeatureList.svelte";
   import ReserveButton from "./ReserveButton.svelte";
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
 
   export let unitObject: Unit;
   export let showRequest: boolean;
 
   let dispatch = createEventDispatcher();
   let screenWidth: number;
-  let selectedTripLength: number = unitObject.min_booking_days;
+  let selectedTripLength: number = 0;
 
   $: nightlyRateSum = unitObject.default_price * selectedTripLength;
   $: additionalFeesTotal = calculateAdditionalFeesSum(selectedTripLength);
