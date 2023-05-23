@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { bookingStore } from "$lib/stores";
+  import { customerStore } from "$lib/stores";
   import type { Unit, Booking } from "$lib/types";
   import Calendar from "./Calendar.svelte";
   import TempFeatureList from "./TempFeatureList.svelte";
@@ -18,7 +18,7 @@
   $: totalBookingPrice = nightlyRateSum + additionalFeesTotal;
 
   $: {
-    bookingStore.update((storeData) => {
+    customerStore.update((storeData) => {
       storeData.total_price = totalBookingPrice;
       return storeData;
     });

@@ -2,32 +2,20 @@
   import { unitStore } from "$lib/stores";
   import type { Unit } from "$lib/types";
   import { page } from "$app/stores";
-  import { unitLookup } from "$lib/helpers";
 
   import EditUnitDetails from "./EditUnitDetails.svelte";
   import EditUnitPhotos from "./EditUnitPhotos.svelte";
   import AddUnitPhotos from "./AddUnitPhotos.svelte";
 
-  let unitObject: Unit;
+  let unitObject: Unit | undefined;
 
   let loadingUnit = true;
   let editUnitDetailsKey = false;
   let addPhotoKey = false;
 
-  unitStore.subscribe((storeData) => {
-    let lookupResult = unitLookup($page.params.unit_id);
-
-    if (lookupResult != undefined) {
-      unitObject = lookupResult;
-    }
-
-    // if lookup produced results, allow page to continue loading.
-
-    if (unitObject != undefined) {
-      loadingUnit = false;
-      return;
-    }
-  });
+  $: if ($unitStore.isPopulated) {
+    unitObject = $unitStore.getUnit($page.params.unit_id);
+  }
 </script>
 
 <div class="content-container">

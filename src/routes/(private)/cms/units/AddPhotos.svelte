@@ -78,8 +78,8 @@
       required
     >
       <option selected disabled>Choose Unit</option>
-      {#if $unitStore != undefined}
-        {#each $unitStore as unitObject}
+      {#if $unitStore.isPopulated}
+        {#each $unitStore.units as unitObject}
           <option value={unitObject.id}>{unitObject.name}</option>
         {/each}
       {/if}

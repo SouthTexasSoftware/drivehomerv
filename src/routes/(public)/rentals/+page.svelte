@@ -11,8 +11,8 @@
   let availableUnits: Unit[];
 
   unitStore.subscribe((storeData) => {
-    if (storeData != undefined) {
-      availableUnits = storeData;
+    if (storeData.isPopulated) {
+      availableUnits = storeData.units;
       loadingUnitStore = false;
     }
   });
@@ -31,20 +31,16 @@
     let tempNewArray: Unit[] = [];
 
     //@ts-ignore
-    $unitStore.forEach((unit: Unit, index: number): Unit => {
+    $unitStore.units.forEach((unit: Unit, index: number): Unit => {
       // compare selection to bookings
       // auto set unit to available by default
       let unitIsAvailable = true;
 
-      unit.bookings?.forEach((booking: DateTime[]) => {
+      unit.bookingDates?.forEach((booking: { start: Date; end: Date }) => {
         //convert both booking entries to JSDates and then integers for comparison
 
-        let booking0 = booking[0].getTime();
-        let booking1 = booking[1].getTime();
-
-        // ternary = if 0 < 1 , return 0 else 1 , etc.
-        let bookingStart = booking0 < booking1 ? booking0 : booking1;
-        let bookingEnd = booking0 < booking1 ? booking1 : booking0;
+        let bookingStart = booking.start.getTime();
+        let bookingEnd = booking.end.getTime();
 
         // if selection start or end == a booking start or end, no good.
         if (

@@ -27,7 +27,6 @@
 </script>
 
 {#if userLoggedIn}
-  <div class="divider" />
   <div class="cms-container">
     <MenuDrawer />
     <slot />
@@ -37,16 +36,10 @@
 {/if}
 
 <style>
-  .divider {
-    width: 100%;
-    height: 1px;
-    background-color: hsl(var(--b3));
-  }
   .cms-container {
     display: flex;
     width: 100%;
-    min-height: 85vh;
-    padding: 25px;
-    max-width: 1800px;
+    min-height: 100vh;
+    background-color: var(--cms-bgColor);
   }
 </style>

@@ -1,9 +1,18 @@
 import { firebaseClientConfig } from "../config";
-import { collection, query, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  query,
+  onSnapshot,
+  getDocs,
+  type DocumentData,
+  QuerySnapshot,
+} from "firebase/firestore";
 import { get } from "svelte/store";
-import type { Unit, Booking } from "./types";
+import type { Unit, Booking, FirebaseStore } from "./types";
 import { firebaseStore, unitStore } from "./stores";
 import { DateTime } from "@easepick/bundle";
+import { getAnalytics } from "firebase/analytics";
+import { init } from "svelte/internal";
 
 // TODO: needs a fallback when a failure is caught. Display a message, etc.
 
@@ -47,104 +56,64 @@ export async function connectToFirebase() {
 
 /**
  * Database query that updates the unitStore with latest information
+ * @params fbStore Is the copy of firebaseStore already created
  *
  */
-export async function populateUnitStore() {
+export async function populateUnitStore(fbStore: FirebaseStore) {
   if (typeof window != undefined) {
     try {
-      let fb = get(firebaseStore);
+      const unitCollectionDocs = await getDocs(collection(fbStore.db, "units"));
 
-      const dbQuery = query(collection(fb.db, "units"));
-
-      const unsubscribeCallback = onSnapshot(dbQuery, (snapshot) => {
-        let unitsList: Unit[] = [];
-        snapshot.forEach((doc) => {
-          let loadedUnit = doc.data() as Unit;
-          unitsList.push(loadedUnit);
-          // Sorting can happen here if needed.
-        });
-        unitStore.set(unitsList);
-        unitsList.forEach((unitObj) => {
-          attachUnitBookingsListener(unitObj);
-        });
-
-        // TODO: set listeners off of this, so that things can get triggered on update.
+      let initialUnits: Unit[] = [];
+      unitCollectionDocs.forEach((doc) => {
+        initialUnits.push(doc.data() as Unit);
       });
+
+      for (let unit of initialUnits) {
+        let unitBookings = await getDocs(
+          collection(fbStore.db, "units", unit.id, "bookings")
+        );
+
+        unitBookings.forEach((doc) => {
+          let booking = doc.data();
+
+          let bookingDates = {
+            start: new DateTime(booking.start, "MMM-DD-YYYY"),
+            end: new DateTime(booking.end, "MMM-DD-YYYY"),
+          };
+
+          // initialize the empty arrays...
+          unit.bookings = [];
+          unit.bookingDates = [];
+
+          unit.bookingDates.push(bookingDates);
+          unit.bookings.push(booking);
+        });
+      }
+
+      unitStore.update((data) => {
+        data.units = initialUnits;
+        data.isPopulated = true;
+
+        return data;
+      });
+
+      return;
     } catch (error) {
-      console.warn("Error in populating UnitStore");
+      console.warn("Error in initial unitStore population");
       console.warn(error);
     }
   }
 }
 
 /**
- * Pass in unitobject ot setup unit bookings listeners, updates automatically on addition of booking to unit
- * @param unitObject
- *
+ *  For now, this will be called in an onMount function only. And check for deployed url vs dev server
  */
-async function attachUnitBookingsListener(unitObject: Unit) {
-  let fb = get(firebaseStore);
+export function connectAnalytics() {
+  if (get(firebaseStore)) {
+    let fb = get(firebaseStore);
+    const analytics = getAnalytics(fb.app);
 
-  let collectionReference = collection(
-    fb.db,
-    "units",
-    unitObject.id,
-    "bookings"
-  );
-
-  const q = query(collectionReference);
-  let localStorageBookings: DateTime[][] = [];
-
-  const unsubscribe = onSnapshot(q, (querySnapshot) => {
-    const snapshotBookings: DateTime[][] = [];
-
-    querySnapshot.forEach((booking: Booking) => {
-      //@ts-ignore
-      const bookingData = booking.data();
-
-      const start = new DateTime(bookingData.start, "MMM-DD-YYYY");
-      const end = new DateTime(bookingData.end, "MMM-DD-YYYY");
-
-      snapshotBookings.push([start, end]);
-    });
-
-    unitStore.update((units) => {
-      units.forEach((unit) => {
-        if (unit.id == unitObject.id) {
-          unit.bookings = snapshotBookings;
-        }
-      });
-
-      return units;
-    });
-  });
-}
-
-/**
- * Lookup and return the information in unitStore associated with this ID
- * @param id - string id pulled from user input/request
- * @returns Unit - unit object with associated information
- */
-export function unitLookup(id: string): Unit | undefined {
-  let currentUnitList = get(unitStore);
-
-  if (!currentUnitList) {
-    console.log("Unit Lookup failed on undefined unitStore.");
-    return undefined;
+    return analytics;
   }
-
-  let unitFound: Unit | undefined = undefined;
-
-  currentUnitList.forEach((unit) => {
-    if (unit.id == id.trim()) {
-      unitFound = unit;
-    }
-  });
-
-  if (!unitFound) {
-    console.warn("Unit Lookup found 0 results.");
-  } else {
-    // console.log("Matching Unit Found: ", unitFound);
-  }
-  return unitFound;
 }

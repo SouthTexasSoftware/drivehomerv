@@ -60,13 +60,13 @@
 
     await updateDoc(existingUnitDocRef, updatedUnitObject);
 
-    unitStore.update((unitsList) => {
-      unitsList.forEach((unit) => {
+    unitStore.update((data) => {
+      data.units.forEach((unit) => {
         if (unit.id == unitObject.id) {
           unit = updatedUnitObject as Unit;
         }
       });
-      return unitsList;
+      return data;
     });
 
     savingUnit = false;

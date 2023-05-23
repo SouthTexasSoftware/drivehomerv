@@ -2,31 +2,32 @@
   import MainCard from "./MainCard.svelte";
   import type { Unit } from "$lib/types";
   import { unitStore } from "$lib/stores";
-  import { unitLookup } from "$lib/helpers";
   import { page } from "$app/stores";
   import PageDataLoading from "../../../../lib/components/PageDataLoading.svelte";
+  import { onMount } from "svelte";
 
-  export let unitObject: Unit;
-
+  let unitObject: Unit;
   let loadingUnit = true;
 
-  unitStore.subscribe((storeData) => {
-    let lookupResult = unitLookup($page.params.unit_id);
+  onMount(loadUnit);
 
-    if (lookupResult != undefined) {
-      unitObject = lookupResult;
-    }
-
-    // if lookup produced results, allow page to continue loading.
-
-    if (unitObject != undefined) {
-      loadingUnit = false;
+  function loadUnit() {
+    if ($unitStore.isPopulated) {
+      let loadedUnit = $unitStore.getUnit($page.params.unit_id);
+      if (loadedUnit) {
+        unitObject = loadedUnit;
+        loadingUnit = false;
+        return;
+      }
+      // TODO: show 'NO UNIT FOUND' error message..
       return;
     }
-  });
+
+    setTimeout(loadUnit, 200);
+  }
 </script>
 
-{#if unitObject}
+{#if !loadingUnit}
   <h2>Plan Your Trip</h2>
   <p class="small">with</p>
   <p class="unit-name">{unitObject?.name}</p>
