@@ -1,21 +1,12 @@
 import { firebaseClientConfig } from "../config";
-import {
-  collection,
-  query,
-  onSnapshot,
-  getDocs,
-  type DocumentData,
-  QuerySnapshot,
-} from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { get } from "svelte/store";
-import type { Unit, Booking, FirebaseStore } from "./types";
+import type { Unit, FirebaseStore } from "./types";
 import { firebaseStore, unitStore } from "./stores";
 import { DateTime } from "@easepick/bundle";
 import { getAnalytics } from "firebase/analytics";
-import { init } from "svelte/internal";
 
 // TODO: needs a fallback when a failure is caught. Display a message, etc.
-
 /**
  * Asynchronous call to establish connection with Firebase
  * @returns boolean
@@ -116,4 +107,158 @@ export function connectAnalytics() {
 
     return analytics;
   }
+}
+
+export const newUnitModel: Unit = {
+  default_price: 0,
+  name: "",
+  id: "",
+  min_booking_days: 1,
+
+  publicly_visible: false,
+  cms_edited: false,
+  information: {
+    bullet_points: {
+      summary: {
+        pickup_location: "",
+        sleeps: "",
+        year_built: "",
+        vehicle_type: "",
+        length: "",
+        additional_options: {},
+      },
+      rv_details: {
+        year_built: "",
+        manufacturer: "",
+        make: "",
+        model: "",
+        vehicle_type: "",
+        sleeps: "",
+        number_of_beds: "",
+        slides: "",
+        fresh_water_tank: "",
+        length: "",
+        height: "",
+        additional_options: {},
+      },
+      drivable_features: {
+        transmission: "",
+        cruise_control: false,
+        seatbelts: false,
+        fuel_type: "",
+        fuel_capacity: "",
+        fuel_consumption: "",
+        electrical_service: "",
+        dual_battery: "",
+        power_steering: false,
+        gross_weight: "",
+        dry_weight: "",
+        cargo_weight: "",
+        additional_options: {},
+      },
+      campsite_essentials: {
+        electrical_service: "",
+        fresh_water_tank: "",
+        length: "",
+        electric_generator: false,
+        hot_and_cold_water: false,
+        additional_options: {},
+      },
+      kitchen: {
+        refrigerator: false,
+        kitchen_sink: false,
+        slide_out: false,
+        microwave: false,
+        range: false,
+        additional_options: {},
+      },
+      bathroom: {
+        toilet: false,
+        shower: false,
+        bathroom_sink: false,
+        additional_options: {},
+      },
+      temperature_control: {
+        hot_and_cold_water: false,
+        dash_air_conditioning: false,
+        roof_air_conditioning: false,
+        additional_options: {},
+      },
+      entertainment: {
+        tv: false,
+        additional_options: {},
+      },
+      additional: {
+        electric_generator: false,
+        rear_view_camera: false,
+        fire_extinguisher: false,
+        additional_options: {},
+      },
+    },
+    paragraphs: {
+      description: "",
+      notes: "",
+    },
+    rules_and_policies: {
+      rental: {
+        pickup_time: "",
+        dropoff_time: "",
+        minimum_renter_age: "",
+        pets_allowed: "",
+        late_dropoff_or_early_pickup: "",
+        additional_options: {},
+      },
+      cancellation: {
+        full_refund_policy: "",
+        half_refund_policy: "",
+        no_refund_policy: "",
+        additional_options: {},
+      },
+    },
+    rates_and_fees: {
+      pricing: {
+        mileage_overage: 0,
+        generator_usage: 0,
+        weekly_discount: 0,
+        monthly_discount: 0,
+        minimum_nights: 0,
+        security_deposit: 0,
+        cleaning_and_restocking: 0,
+        kitchen_utensils: 0,
+        late_dropoff_fee: 0,
+        additional_options: {},
+      },
+      delivery: {
+        price_per_mile: 0,
+        additional_options: {},
+      },
+      upgrades: {
+        dumping: 0,
+        marshmellow_kit: 0,
+        folding_chairs_and_table: 0,
+        propane_refill: 0,
+        additional_options: {},
+      },
+    },
+  },
+};
+
+export function newUUID(): string {
+  // Alphanumeric characters
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let autoId = "";
+  for (let i = 0; i < 20; i++) {
+    autoId += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return autoId;
+}
+
+export function objectKeyToLabel(key: string) {
+  let label = key.replaceAll("_", " ");
+  label = label.replaceAll("and", "&");
+
+  return label.replace(/(^|\s)\S/g, function (t) {
+    return t.toUpperCase();
+  });
 }

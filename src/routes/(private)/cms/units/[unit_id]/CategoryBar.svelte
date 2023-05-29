@@ -4,6 +4,9 @@
 
   export let unitObject: Unit;
   console.log($page.params);
+
+  // TODO: Incorporate 'DELETE UNIT' into category bar?
+  // or in the maintenance category
 </script>
 
 <div class="bar-container">
@@ -110,6 +113,7 @@
     width: 300px;
     justify-content: flex-end;
     border-right: 1px solid var(--cms-boxShadow);
+    min-width: 300px;
   }
   .icon-bar {
     display: flex;

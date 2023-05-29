@@ -25,9 +25,9 @@ export interface UnitStore {
 }
 
 export interface Unit {
-  additional_fees: Array<Fee>;
-  created_by: string;
-  created_on: Timestamp;
+  additional_fees?: Array<Fee>;
+  created_by?: string;
+  created_on?: Timestamp;
   daily_fees_total?: number;
   default_price: number;
   description?: string;
@@ -45,16 +45,19 @@ export interface Unit {
   bookings?: Booking[];
   bookingDates?: { start: Date; end: Date }[];
   prices?: CollectionReference;
-  min_booking_days: number;
+  min_booking_days: number; //TODO: should be NIGHTS
   feature_sleeps?: string;
   feature_vehicle_class?: string;
   feature_year_built?: string;
   feature_length?: string;
-  information?: {
+
+  publicly_visible: boolean;
+  cms_edited: boolean;
+  information: {
     bullet_points: InformationBulletPoints;
     paragraphs: InformationParagraphs;
-    rules_policies: InformationRulesPolicies;
-    rates_fees: InformationRatesFees;
+    rules_and_policies: InformationRulesPolicies;
+    rates_and_fees: InformationRatesFees;
   };
 }
 
@@ -67,7 +70,7 @@ interface InformationBulletPoints {
   bathroom: OptionBathroom;
   temperature_control: OptionTemperatureControl;
   entertainment: OptionEntertainment;
-  additional: OptionAdditional;
+  additional: OptionBulletsAdditional;
 }
 
 interface OptionSummary {
@@ -100,14 +103,14 @@ interface OptionRvDetails {
 
 interface OptionDrivableFeatures {
   transmission: string;
-  cruise_control: string;
-  seatbelts: string;
+  cruise_control: boolean;
+  seatbelts: boolean;
   fuel_type: string;
   fuel_capacity: string;
   fuel_consumption: string;
   electrical_service: string;
   dual_battery: string;
-  power_steering: string;
+  power_steering: boolean;
   gross_weight: string;
   dry_weight: string;
   cargo_weight: string;
@@ -120,8 +123,8 @@ interface OptionCampsiteEssentials {
   electrical_service: string;
   fresh_water_tank: string;
   length: string;
-  electric_generator: string;
-  hot_and_cold_water: string;
+  electric_generator: boolean;
+  hot_and_cold_water: boolean;
   additional_options: {
     [option_name: string]: string;
   };
@@ -149,8 +152,8 @@ interface OptionBathroom {
 
 interface OptionTemperatureControl {
   hot_and_cold_water: boolean;
-  dash_air_con: boolean;
-  roof_air_con: boolean;
+  dash_air_conditioning: boolean;
+  roof_air_conditioning: boolean;
   additional_options: {
     [option_name: string]: boolean;
   };
@@ -163,7 +166,7 @@ interface OptionEntertainment {
   };
 }
 
-interface OptionAdditional {
+interface OptionBulletsAdditional {
   electric_generator: boolean;
   rear_view_camera: boolean;
   fire_extinguisher: boolean;
@@ -187,15 +190,15 @@ interface OptionRentalRules {
   dropoff_time: string;
   minimum_renter_age: string;
   pets_allowed: string;
-  late_early: string;
+  late_dropoff_or_early_pickup: string;
   additional_options: {
     [option_name: string]: string;
   };
 }
 interface OptionCancellationPolicy {
-  full_refund_days: string;
-  half_refund_days: string;
-  no_refund_days: string;
+  full_refund_policy: string;
+  half_refund_policy: string;
+  no_refund_policy: string;
   additional_options: {
     [option_name: string]: string;
   };
@@ -214,21 +217,32 @@ interface OptionPricing {
   monthly_discount: number;
   minimum_nights: number;
   security_deposit: number;
-  cleaning_restocking: number;
+  cleaning_and_restocking: number;
   kitchen_utensils: number;
-  late_fee: number;
+  late_dropoff_fee: number;
+  additional_options: {
+    [option_name: string]: number;
+  };
 }
 
 interface OptionUpgrades {
   dumping: number;
   marshmellow_kit: number;
-  folding_chairs_table: number;
+  folding_chairs_and_table: number;
   propane_refill: number;
+  additional_options: {
+    [option_name: string]: number;
+  };
 }
 interface OptionDelivery {
   price_per_mile: number;
+  additional_options: {
+    [option_name: string]: number;
+  };
 }
 
+// TODO: add pickup, dropoff time and location
+// TODO: add booking referrer
 export interface Booking {
   id?: string;
   customer?: string;

@@ -6,6 +6,12 @@
   $: categorySelected = $page.params.category
     ? $page.params.category
     : "information";
+
+  $: subcategorySelected = $page.params.subcategory
+    ? "/" + $page.params.subcategory
+    : "";
+
+  $: optionSelected = $page.params.option ? "/" + $page.params.option : "";
 </script>
 
 <div class="unit-selection-container">
@@ -15,7 +21,7 @@
     {#if $unitStore.isPopulated}
       {#each $unitStore.units as unit}
         <a
-          href="/cms/units/{unit.id}/{categorySelected}"
+          href="/cms/units/{unit.id}/{categorySelected}{subcategorySelected}{optionSelected}"
           class:active={$page.url.pathname.includes(unit.id)}>{unit.name}</a
         >
       {/each}
