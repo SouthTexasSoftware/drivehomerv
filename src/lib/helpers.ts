@@ -97,6 +97,7 @@ async function attachUnitBookingsListener(unitObject: Unit) {
 
   const unsubscribe = onSnapshot(q, (querySnapshot) => {
     const snapshotBookings: DateTime[][] = [];
+    const allBookingsList: Booking[] = [];
 
     querySnapshot.forEach((booking: Booking) => {
       //@ts-ignore
@@ -106,12 +107,14 @@ async function attachUnitBookingsListener(unitObject: Unit) {
       const end = new DateTime(bookingData.end, "MMM-DD-YYYY");
 
       snapshotBookings.push([start, end]);
+      allBookingsList.push(bookingData);
     });
 
     unitStore.update((units) => {
       units.forEach((unit) => {
         if (unit.id == unitObject.id) {
           unit.bookings = snapshotBookings;
+          unit.bookingObjects = allBookingsList;
         }
       });
 

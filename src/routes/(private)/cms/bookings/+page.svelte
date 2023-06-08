@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import UnitCalendar from "./UnitCalendar.svelte";
   import NewBooking from "../dashboard/NewBooking.svelte";
+  import BookingsList from "./BookingsList.svelte";
 
   let bookingsCollected = false;
   let newBookingKey = false;
@@ -29,6 +30,7 @@
       {#each $unitStore as unit}
         <UnitCalendar unitObj={unit} />
       {/each}
+      <BookingsList />
     {/if}
   {:else}
     <div class="spinner" />

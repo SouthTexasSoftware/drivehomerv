@@ -34,6 +34,7 @@ export interface Unit {
   photo_list?: Array<Photo>;
   updated_on?: Timestamp;
   bookings?: DateTime[][];
+  bookingObjects?: Booking[];
   prices?: CollectionReference;
   min_booking_days: number;
   feature_sleeps?: string;
@@ -52,6 +53,7 @@ export interface Booking {
   total_price?: number;
   created?: Timestamp;
   status?: BookingStatus;
+  customerObject?: Customer;
 }
 
 enum BookingStatus {
