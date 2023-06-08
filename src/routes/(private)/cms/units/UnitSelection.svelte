@@ -25,6 +25,8 @@
           class:active={$page.url.pathname.includes(unit.id)}>{unit.name}</a
         >
       {/each}
+    {:else}
+      <div class="spinner" />
     {/if}
     <a class="create-link" href="/cms/units/create">+ Create Unit</a>
   </div>
@@ -119,6 +121,29 @@
       text-decoration: underline;
       text-decoration-color: hsl(var(--p));
       text-decoration-thickness: 3px;
+    }
+  }
+  .spinner {
+    content: "";
+    border-radius: 50%;
+    border-top: 2px solid hsl(var(--p));
+    border-right: 2px solid transparent;
+    animation-name: spinning;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    opacity: 1;
+    transition: all 0.2s;
+    width: 30px;
+    height: 30px;
+    margin: 25px;
+  }
+  @keyframes spinning {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
     }
   }
 </style>

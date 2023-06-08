@@ -86,7 +86,7 @@
     }
   }
 
-  function recordChange(target: HTMLInputElement) {
+  function recordChange(target: HTMLInputElement | HTMLTextAreaElement) {
     // get value, parse target id, set event change flag
     // save value to unitStore?
     let changedValue = target.value;
@@ -124,26 +124,45 @@
         )}"
       >
         <p class="label">{objectKeyToLabel(property)}</p>
-
-        <input
-          class="property-input"
-          id={option + "?" + property}
-          type={convertToInputType(
-            //@ts-ignore
-            typeof newUnitModel.information[subcategory][option][property]
-          )}
-          value={getPropertyValueIfDefined(property)}
-          on:input={({ currentTarget }) => {
-            recordChange(currentTarget);
-          }}
-          on:click={({ currentTarget }) => {
-            if (currentTarget.type == "button") {
-              let newValue = currentTarget.value == "false" ? "true" : "false";
-              currentTarget.value = newValue;
+        {#if property == "content"}
+          <textarea
+            class="property-input textarea"
+            id={option + "?" + property}
+            value={getPropertyValueIfDefined(property)}
+            on:input={({ currentTarget }) => {
               recordChange(currentTarget);
-            }
-          }}
-        />
+            }}
+            on:click={({ currentTarget }) => {
+              if (currentTarget.type == "button") {
+                let newValue =
+                  currentTarget.value == "false" ? "true" : "false";
+                currentTarget.value = newValue;
+                recordChange(currentTarget);
+              }
+            }}
+          />
+        {:else}
+          <input
+            class="property-input"
+            id={option + "?" + property}
+            type={convertToInputType(
+              //@ts-ignore
+              typeof newUnitModel.information[subcategory][option][property]
+            )}
+            value={getPropertyValueIfDefined(property)}
+            on:input={({ currentTarget }) => {
+              recordChange(currentTarget);
+            }}
+            on:click={({ currentTarget }) => {
+              if (currentTarget.type == "button") {
+                let newValue =
+                  currentTarget.value == "false" ? "true" : "false";
+                currentTarget.value = newValue;
+                recordChange(currentTarget);
+              }
+            }}
+          />
+        {/if}
       </div>
     {/each}
   </div>
@@ -302,6 +321,9 @@
     margin-top: -10px;
     outline: none;
     width: 100%;
+  }
+  .property-input.textarea {
+    min-height: 300px;
   }
   .nav-container {
     width: 100%;

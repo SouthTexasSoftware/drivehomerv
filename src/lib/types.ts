@@ -42,6 +42,7 @@ export interface Unit {
   short_name?: string;
   photo_list?: Array<Photo>;
   updated_on?: Timestamp;
+  updated_by?: string;
   bookings?: Booking[];
   bookingDates?: { start: Date; end: Date }[];
   prices?: CollectionReference;
@@ -58,6 +59,28 @@ export interface Unit {
     paragraphs: InformationParagraphs;
     rules_and_policies: InformationRulesPolicies;
     rates_and_fees: InformationRatesFees;
+  };
+  photos: {
+    public: PhotosPublic;
+    records: PhotosRecords;
+  };
+}
+
+interface PhotosPublic {
+  carousel: PhotosOption;
+  album: PhotosOption;
+}
+interface PhotosRecords {
+  bookings: PhotosOption;
+  maintenance: PhotosOption;
+}
+
+interface PhotosOption {
+  [photo_name: string]: {
+    file_size: string;
+    resolution: string;
+    index: number;
+    date_added: Timestamp;
   };
 }
 
@@ -176,8 +199,15 @@ interface OptionBulletsAdditional {
 }
 
 interface InformationParagraphs {
-  description: string;
-  notes: string;
+  description: OptionDescription;
+  notes: OptionNotes;
+}
+
+interface OptionDescription {
+  content: string;
+}
+interface OptionNotes {
+  content: string;
 }
 
 interface InformationRulesPolicies {

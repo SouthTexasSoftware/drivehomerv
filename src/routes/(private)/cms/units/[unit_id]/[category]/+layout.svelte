@@ -3,7 +3,7 @@
   import { unitStore } from "$lib/stores";
   import { page } from "$app/stores";
   import { beforeUpdate } from "svelte";
-  import Information from "./Information.svelte";
+  import CategoryColumn from "./CategoryColumn.svelte";
 
   let unitObject: Unit | undefined;
 
@@ -22,10 +22,10 @@
 <div class="category-container">
   <div class="options-column">
     {#if unitObject}
-      <!-- render category selected options  -->
-      {#if $page.params.category == "information"}
-        <Information />
-      {/if}
+      <!-- render categorys subcategories and options  -->
+      {#key $page.params.category}
+        <CategoryColumn />
+      {/key}
     {/if}
   </div>
   <slot />

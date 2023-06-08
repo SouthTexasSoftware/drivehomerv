@@ -196,8 +196,12 @@ export const newUnitModel: Unit = {
       },
     },
     paragraphs: {
-      description: "",
-      notes: "",
+      description: {
+        content: "",
+      },
+      notes: {
+        content: "",
+      },
     },
     rules_and_policies: {
       rental: {
@@ -239,6 +243,16 @@ export const newUnitModel: Unit = {
         propane_refill: 0,
         additional_options: {},
       },
+    },
+  },
+  photos: {
+    public: {
+      carousel: {},
+      album: {},
+    },
+    records: {
+      bookings: {},
+      maintenance: {},
     },
   },
 };

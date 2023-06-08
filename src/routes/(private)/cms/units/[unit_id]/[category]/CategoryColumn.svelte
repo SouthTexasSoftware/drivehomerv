@@ -1,41 +1,40 @@
 <script lang="ts">
-  import type { Unit } from "$lib/types";
-  import { page } from "$app/stores";
   import { newUnitModel, objectKeyToLabel } from "$lib/helpers";
-  import { beforeUpdate } from "svelte";
+  import { page } from "$app/stores";
 
   // list of unaltered keys
-  let informationKeys = Object.keys(newUnitModel.information);
+  //@ts-ignore
+  let subcategoryList = Object.keys(newUnitModel[$page.params.category]);
 
   // list of formatted string keys
-  let informationKeyLabels = informationKeys.map((key) => {
+  let subcategoryLabels = subcategoryList.map((key) => {
     return objectKeyToLabel(key);
   });
 
   // used to un/collapse subcategories
-  let showingKeyOptions: { [key: string]: boolean } = {};
-  informationKeys.forEach((key: string) => {
-    showingKeyOptions[key] = false;
+  let showingSubcategory: { [key: string]: boolean } = {};
+  subcategoryList.forEach((key: string) => {
+    showingSubcategory[key] = false;
   });
 
   function getOptions(key: string) {
     //@ts-ignore
-    return Object.keys(newUnitModel.information[key]);
+    return Object.keys(newUnitModel[$page.params.category][key]);
   }
 </script>
 
 <div class="column-container">
-  {#each informationKeyLabels as subcategory, index}
+  {#each subcategoryLabels as subcategory, index}
     <button
       class="subcategory-title"
       on:click={() =>
-        (showingKeyOptions[subcategory] = !showingKeyOptions[subcategory])}
+        (showingSubcategory[subcategory] = !showingSubcategory[subcategory])}
     >
-      <p class:active={$page.params.subcategory == informationKeys[index]}>
+      <p class:active={$page.params.subcategory == subcategoryList[index]}>
         {subcategory.toUpperCase()}
       </p>
       <svg
-        class:showing={showingKeyOptions[subcategory]}
+        class:showing={showingSubcategory[subcategory]}
         xmlns="http://www.w3.org/2000/svg"
         width="9"
         height="5"
@@ -62,12 +61,12 @@
         </defs>
       </svg>
     </button>
-    {#if showingKeyOptions[subcategory]}
+    {#if showingSubcategory[subcategory]}
       <div class="subcategory-options">
-        {#each getOptions(informationKeys[index]) as option}
+        {#each getOptions(subcategoryList[index]) as option}
           <a
             href="/cms/units/{$page.params
-              .unit_id}/information/{informationKeys[index]}/{option}"
+              .unit_id}/information/{subcategoryList[index]}/{option}"
             class:active={$page.params.option == option}
             class="option-link"
           >
