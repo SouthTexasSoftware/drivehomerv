@@ -4,11 +4,14 @@
   import { DateTime } from "@easepick/bundle";
   import { collection, getDocs } from "firebase/firestore";
   import { onMount } from "svelte";
+  import BookingPopup from "./BookingPopup.svelte";
 
   // load all bookings into a list, sort by date and display in #each
   let allBookingsList: Booking[] = [];
   let bookingsListGenerated = false;
   let customersList: Customer[] = [];
+  let showPopup = false;
+  let popupBooking: Booking;
 
   onMount(getCustomerData);
 
@@ -70,37 +73,68 @@
   function sortByStart() {
     createBookingsList("dateStart");
   }
+
+  function isPast(endDate: string) {
+    let now = new DateTime();
+    console.log(now);
+    let end = new DateTime(endDate, "MMM-DD-YYYY");
+
+    if (end.isAfter(now, "MMM-DD-YYYY")) {
+      return true;
+    }
+
+    return false;
+  }
 </script>
 
 <div class="bookings-container">
-  <div class="booking-element title">
-    <button class="unit-name" on:click={sortByUnit}>Unit Name</button>
+  <div class="title">
+    <button class="unit-name sort-button" on:click={sortByUnit}
+      >Unit Name</button
+    >
     <!-- <p class="customer-id">Customer ID</p> -->
     <p class="customer-name">Customer</p>
-    <p class="customer-phone">Phone</p>
-    <p class="customer-email">Email</p>
-    <button class="start-date" on:click={sortByStart}>Start Date</button>
+    <p class="customer-name">Status</p>
+    <button class="start-date sort-button" on:click={sortByStart}
+      >Start Date</button
+    >
     <p class="end-date">End Date</p>
   </div>
   {#if bookingsListGenerated}
     {#each allBookingsList as booking}
-      <div class="booking-element">
+      <button
+        class="booking-element"
+        on:click={() => {
+          popupBooking = booking;
+          showPopup = true;
+        }}
+      >
         <p class="unit-name">{booking.unit_name}</p>
         {#if booking.customerObject}
-          <p class="customer-name">{booking.customerObject.first_name}</p>
-          <p class="customer-phone">{booking.customerObject.phone}</p>
-          <p class="customer-email">{booking.customerObject.email}</p>
+          <p class="customer-name">
+            {booking.customerObject.first_name}
+            {booking.customerObject.last_name}
+          </p>
         {:else}
-          <p class="customer-name">*manual entry</p>
-          <p class="customer-phone">-</p>
-          <p class="customer-email">-</p>
+          <p class="customer-name" />
         {/if}
+        <p class="booking-status">{booking.status}</p>
         <p class="start-date">{booking.start}</p>
         <p class="end-date">{booking.end}</p>
-      </div>
+      </button>
     {/each}
   {/if}
 </div>
+
+{#if showPopup}
+  <BookingPopup
+    {popupBooking}
+    on:close={() => {
+      showPopup = false;
+      createBookingsList("dateStart");
+    }}
+  />
+{/if}
 
 <style>
   .bookings-container {
@@ -108,16 +142,18 @@
     display: flex;
     flex-direction: column;
   }
-  .bookings-container .booking-element.title * {
+  .title * {
     font-size: 18px;
     font-family: font-bold;
     text-align: left;
   }
-  button {
+  .sort-button {
     text-decoration: underline;
     color: #497ee3;
   }
-  .booking-element {
+
+  .booking-element,
+  .title {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -127,6 +163,15 @@
     border-radius: 4px;
     margin: 8px 0;
     background-color: #f7f7f7;
-    /* color: #444; */
+    text-align: left;
+  }
+  .title {
+    border: none;
+    background-color: transparent;
+    border-bottom: 1px solid black;
+    border-radius: 0px;
+  }
+  .booking-element:hover {
+    background-color: #f3f3f3;
   }
 </style>
