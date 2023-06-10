@@ -44,21 +44,26 @@ export interface Unit {
 }
 
 export interface Booking {
-  id?: string;
+  id: string;
   customer?: string;
-  unit_id?: string;
+  unit_id: string;
   unit_name?: string;
-  start?: string; //MMM-DD-YYYY
-  end?: string; //MMM-DD-YYYY
+  start: string; //MMM-DD-YYYY
+  end: string; //MMM-DD-YYYY
   total_price?: number;
   created?: Timestamp;
   status?: BookingStatus;
   customerObject?: Customer;
+  pickup_time?: string;
+  pickup_location?: string;
+  dropoff_time?: string;
+  dropoff_location?: string;
+  platform_booked_on?: string;
 }
 
 enum BookingStatus {
   requested,
-  reserved,
+  confirmed,
   paid,
   completed,
   manualEntry,
@@ -108,10 +113,10 @@ export interface Extra {
 }
 
 export interface Customer {
-  id?: string;
+  id: string;
   first_name: string;
   last_name: string;
-  created: Timestamp;
+  created?: Timestamp;
   phone: string;
   email: string;
   address?: null;

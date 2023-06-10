@@ -151,3 +151,32 @@ export function unitLookup(id: string): Unit | undefined {
   }
   return unitFound;
 }
+
+export function objectKeyToLabel(key: string) {
+  let label = key.replaceAll("_", " ");
+  label = label.replaceAll("and", "&");
+
+  return label.replace(/(^|\s)\S/g, function (t) {
+    return t.toUpperCase();
+  });
+}
+
+export function formatPhoneNumber(phoneNumberString: string) {
+  var cleaned = ("" + phoneNumberString).replace(/\D/g, "");
+  var match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+  if (match) {
+    return "(" + match[1] + ") " + match[2] + "-" + match[3];
+  }
+  return null;
+}
+
+export function newUUID(): string {
+  // Alphanumeric characters
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let autoId = "";
+  for (let i = 0; i < 20; i++) {
+    autoId += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return autoId;
+}
