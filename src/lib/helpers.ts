@@ -1,7 +1,7 @@
 import { firebaseClientConfig } from "../config";
 import { collection, getDocs } from "firebase/firestore";
 import { get } from "svelte/store";
-import type { Unit, FirebaseStore } from "./types";
+import type { Unit, FirebaseStore, PhotoDocument } from "./types";
 import { firebaseStore, unitStore } from "./stores";
 import { DateTime } from "@easepick/bundle";
 import { getAnalytics } from "firebase/analytics";
@@ -61,9 +61,14 @@ export async function populateUnitStore(fbStore: FirebaseStore) {
       });
 
       for (let unit of initialUnits) {
+        // *** BOOKINGS SUBCOLLECTION DATA PULL
         let unitBookings = await getDocs(
           collection(fbStore.db, "units", unit.id, "bookings")
         );
+
+        // initialize the empty arrays...
+        unit.bookings = [];
+        unit.bookingDates = [];
 
         unitBookings.forEach((doc) => {
           let booking = doc.data();
@@ -73,12 +78,25 @@ export async function populateUnitStore(fbStore: FirebaseStore) {
             end: new DateTime(booking.end, "MMM-DD-YYYY"),
           };
 
-          // initialize the empty arrays...
-          unit.bookings = [];
-          unit.bookingDates = [];
+          if (unit.bookingDates && unit.bookings) {
+            unit.bookingDates.push(bookingDates);
+            unit.bookings.push(booking);
+          }
+        });
 
-          unit.bookingDates.push(bookingDates);
-          unit.bookings.push(booking);
+        // *** PHOTOS SUBCOLLECTION DATA PULL
+        let unitPhotos = await getDocs(
+          collection(fbStore.db, "units", unit.id, "photos")
+        );
+
+        unit.photos = [];
+
+        unitPhotos.forEach((doc) => {
+          let photoDoc = doc.data() as PhotoDocument;
+
+          if (unit.photos) {
+            unit.photos.push(photoDoc);
+          }
         });
       }
 
@@ -247,12 +265,12 @@ export const newUnitModel: Unit = {
   },
   photos: {
     public: {
-      carousel: {},
-      album: {},
+      carousel: [],
+      album: [],
     },
     records: {
-      bookings: {},
-      maintenance: {},
+      bookings: [],
+      maintenance: [],
     },
   },
 };
@@ -268,6 +286,10 @@ export function newUUID(): string {
   return autoId;
 }
 
+/**
+ * Converts a snake_case variable to Snake Case formatting
+ * @param key String to be formatted
+ */
 export function objectKeyToLabel(key: string) {
   let label = key.replaceAll("_", " ");
   label = label.replaceAll("and", "&");

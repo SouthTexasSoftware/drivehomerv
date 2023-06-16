@@ -65,8 +65,8 @@
       <div class="subcategory-options">
         {#each getOptions(subcategoryList[index]) as option}
           <a
-            href="/cms/units/{$page.params
-              .unit_id}/information/{subcategoryList[index]}/{option}"
+            href="/cms/units/{$page.params.unit_id}/{$page.params
+              .category}/{subcategoryList[index]}/{option}"
             class:active={$page.params.option == option}
             class="option-link"
           >

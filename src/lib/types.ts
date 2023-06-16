@@ -60,27 +60,26 @@ export interface Unit {
     rules_and_policies: InformationRulesPolicies;
     rates_and_fees: InformationRatesFees;
   };
-  photos: {
-    public: PhotosPublic;
-    records: PhotosRecords;
-  };
+  photos: PhotoDocument[];
 }
 
-interface PhotosPublic {
-  carousel: PhotosOption;
-  album: PhotosOption;
-}
-interface PhotosRecords {
-  bookings: PhotosOption;
-  maintenance: PhotosOption;
-}
-
-interface PhotosOption {
-  [photo_name: string]: {
-    file_size: string;
-    resolution: string;
-    index: number;
+ export interface PhotoDocument  {
+    id: string;
+    label: string;
+    filename: string;
+    file_size: string; // in KiloBytes
+    resolution?: string;
+    index?: number;
     date_added: Timestamp;
+    file_path: string;
+    downloadURL: string;
+    unit_id: string;
+    subcategory: string;
+    option: string;
+    references?: {
+      type: string;
+      id: string;
+    }[];
   };
 }
 

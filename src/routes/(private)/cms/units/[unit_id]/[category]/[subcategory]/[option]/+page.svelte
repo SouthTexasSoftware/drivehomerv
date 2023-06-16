@@ -3,7 +3,8 @@
   import { unitStore } from "$lib/stores";
   import { page } from "$app/stores";
   import { beforeUpdate } from "svelte";
-  import InformationOption from "./InformationOption.svelte";
+  import InformationContent from "./InformationContent.svelte";
+  import PhotosContent from "./PhotosContent.svelte";
 
   let unitObject: Unit | undefined;
 
@@ -23,7 +24,14 @@
 
 {#if unitObject}
   {#if $page.params.category == "information"}
-    <InformationOption
+    <InformationContent
+      {unitObject}
+      subcategory={$page.params.subcategory}
+      option={$page.params.option}
+    />
+  {/if}
+  {#if $page.params.category == "photos"}
+    <PhotosContent
       {unitObject}
       subcategory={$page.params.subcategory}
       option={$page.params.option}
