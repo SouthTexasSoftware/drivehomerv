@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { firebaseStore } from "$lib/stores";
+  import { firebaseStore, unitStore } from "$lib/stores";
   import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
   import { page } from "$app/stores";
   import {
@@ -12,8 +12,12 @@
   } from "firebase/firestore";
   import { createEventDispatcher } from "svelte";
   import { newUUID } from "$lib/helpers";
-  import type { Photo } from "$lib/types";
+  import type { Unit } from "$lib/types";
   import { slide } from "svelte/transition";
+
+  export let unitObject: Unit;
+  export let option: string;
+  export let subcategory: string;
 
   let fileReady = false;
   let buttonText = "Choose File ...";
@@ -62,6 +66,22 @@
       "photos"
     );
 
+    let newPhotoIndex = 0;
+    let indexCounter = 0;
+    // calculate the new index of this photos from the unitObject passed in..
+    if (unitObject.photos) {
+      for (let photoObject of unitObject.photos) {
+        if (
+          photoObject.option == option &&
+          photoObject.subcategory == subcategory
+        ) {
+          indexCounter++;
+        }
+      }
+    }
+    // if you had one photo at index 0, your next photo would = the index counter
+    newPhotoIndex = indexCounter + 1;
+
     let newPhotoId = newUUID();
     let newPhotoDocRef = doc(photosSubcollectionRef, newPhotoId);
 
@@ -76,9 +96,19 @@
       unit_id: $page.params.unit_id,
       subcategory: $page.params.subcategory,
       option: $page.params.option,
+      index: newPhotoIndex,
     };
 
     await setDoc(newPhotoDocRef, newPhotoDoc);
+
+    unitStore.update((storeData) => {
+      for (let unit of storeData.units) {
+        if (unit.id == $page.params.unit_id) {
+          unit.photos.push(newPhotoDoc);
+        }
+      }
+      return storeData;
+    });
 
     dispatch("added", true);
 

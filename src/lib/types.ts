@@ -67,9 +67,9 @@ export interface Unit {
     id: string;
     label: string;
     filename: string;
-    file_size: string; // in KiloBytes
+    file_size: number; // in KiloBytes
     resolution?: string;
-    index?: number;
+    index: number;
     date_added: Timestamp;
     file_path: string;
     downloadURL: string;
