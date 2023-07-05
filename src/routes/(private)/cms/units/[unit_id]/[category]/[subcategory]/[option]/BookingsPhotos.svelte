@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { Booking, PhotoDocument, Unit } from "$lib/types";
-  import { objectKeyToLabel } from "$lib/helpers";
   import AddPhotoDropdown from "./AddPhotoDropdown.svelte";
   import { fade, fly, slide } from "svelte/transition";
   import { afterUpdate, beforeUpdate, onMount } from "svelte";
