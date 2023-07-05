@@ -54,7 +54,9 @@
           fill="black"
         />
       </svg>
-      <p>Sleeps {unitObject.feature_sleeps}</p>
+      <p class="feature-label">
+        Sleeps {unitObject.information.bullet_points.summary.sleeps}
+      </p>
     </div>
     <div class="feature-item">
       <svg
@@ -81,11 +83,15 @@
           fill="black"
         />
       </svg>
-      <p>Class {unitObject.feature_vehicle_class}</p>
+      <p class="feature-label">
+        {unitObject.information.bullet_points.summary.vehicle_type}
+      </p>
     </div>
   </div>
   <div class="unit-price-row">
-    <p class="price">${unitObject.default_price}&nbsp;</p>
+    <p class="price">
+      ${unitObject.information.rates_and_fees.pricing.base_rental_fee}&nbsp;
+    </p>
     <p>per night</p>
   </div>
 </a>
@@ -124,15 +130,18 @@
   }
   .features-row {
     display: flex;
-    width: 70%;
+    width: 100%;
     justify-content: space-between;
     margin: 10px 0;
   }
   .feature-item {
     display: flex;
     align-items: center;
-    width: 90px;
-    justify-content: space-around;
+    width: 50%;
+    justify-content: flex-start;
+  }
+  .feature-label {
+    margin-left: 5px;
   }
   .unit-price-row {
     display: flex;

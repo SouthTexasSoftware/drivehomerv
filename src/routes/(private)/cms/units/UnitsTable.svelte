@@ -11,8 +11,8 @@
     <p class="col-title" />
   </div>
 
-  {#if $unitStore != undefined}
-    {#each $unitStore as unit}
+  {#if $unitStore.isPopulated}
+    {#each $unitStore.units as unit}
       <div class="table-row">
         <p class="col-data">{unit.name}</p>
 

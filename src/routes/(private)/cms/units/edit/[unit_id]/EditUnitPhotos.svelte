@@ -62,13 +62,13 @@
       photo_list: unitObject.photo_list,
     });
 
-    unitStore.update((unitList) => {
-      unitList.forEach((unit) => {
+    unitStore.update((data) => {
+      data.units.forEach((unit) => {
         if (unit.id == unitObject.id) {
           unit.photo_list = unitObject.photo_list;
         }
       });
-      return unitList;
+      return data;
     });
   }
 </script>

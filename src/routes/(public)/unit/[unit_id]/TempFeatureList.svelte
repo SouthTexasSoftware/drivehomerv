@@ -19,13 +19,13 @@
         fill="black"
       />
     </svg>
-    <p>Sleeps {unitObject.feature_sleeps}</p>
+    <p>Sleeps {unitObject.information.bullet_points.summary.sleeps}</p>
   </div>
 
   <div class="feature-item">
     <svg
-      width="26"
-      height="14"
+      width="32"
+      height="23"
       viewBox="0 0 26 14"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -47,7 +47,7 @@
         fill="black"
       />
     </svg>
-    <p>Class {unitObject.feature_vehicle_class}</p>
+    <p>{unitObject.information.bullet_points.summary.vehicle_type}</p>
   </div>
 
   <div class="feature-item">
@@ -73,7 +73,7 @@
         />
       </clipPath>
     </svg>
-    <p>{unitObject.feature_year_built}</p>
+    <p>{unitObject.information.bullet_points.summary.year_built}</p>
   </div>
 
   <div class="feature-item">
@@ -89,17 +89,17 @@
         fill="black"
       />
     </svg>
-    <p>{unitObject.feature_length}</p>
+    <p>{unitObject.information.bullet_points.summary.length}</p>
   </div>
 </div>
 
 <style>
   .feature-list-container {
     display: grid;
-    grid-template-columns: 1.3fr 0.7fr;
+    grid-template-columns: 1fr 1fr;
     grid-template-rows: repeat(2, 20px);
     row-gap: 20px;
-    margin: -5px 40px 25px 40px;
+    margin: -5px 10px 25px 10px;
   }
   .feature-item {
     display: flex;
@@ -109,7 +109,9 @@
   p {
     margin-left: 5px;
   }
-
+  svg {
+    width: 26px;
+  }
   @media (max-width: 500px) {
   }
 

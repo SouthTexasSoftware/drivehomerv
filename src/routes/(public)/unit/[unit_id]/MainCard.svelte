@@ -4,7 +4,7 @@
   import type { Unit } from "$lib/types";
   import FeatureList from "./FeatureList.svelte";
   import RequestModal from "./RequestModal.svelte";
-  import { bookingStore } from "$lib/stores";
+  import { customerStore } from "$lib/stores";
   import SuccessModal from "./SuccessModal.svelte";
 
   let screenWidth: number;
@@ -14,16 +14,17 @@
   export let unitObject: Unit;
 
   if (unitObject) {
-    if ($bookingStore) {
-      bookingStore.update((storeData) => {
+    if ($customerStore) {
+      customerStore.update((storeData) => {
         storeData.unit_id = unitObject.id;
         storeData.unit_name = unitObject.name;
         return storeData;
       });
     } else {
-      bookingStore.set({
+      customerStore.set({
         unit_id: unitObject.id,
         unit_name: unitObject.name,
+        status: "requested",
       });
     }
   }

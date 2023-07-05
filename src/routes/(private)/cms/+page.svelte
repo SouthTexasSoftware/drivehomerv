@@ -8,7 +8,6 @@
 
 <style>
   .page-container {
-    /* background-color: lightblue; */
     text-align: center;
     flex-grow: 2;
     padding: 25px;

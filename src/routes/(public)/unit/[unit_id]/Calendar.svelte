@@ -6,7 +6,7 @@
   import { onMount, createEventDispatcher } from "svelte";
   import publicPickerCalendar from "$lib/styles/publicPickerCalendar.css?inline";
   import type { Unit } from "$lib/types";
-  import { bookingStore } from "$lib/stores";
+  import { customerStore } from "$lib/stores";
 
   export let unitObject: Unit;
 
@@ -17,9 +17,9 @@
   let selectedTripEnd: string = "End Date";
 
   onMount(() => {
-    if ($bookingStore.start && $bookingStore.end) {
-      selectedTripStart = $bookingStore.start;
-      selectedTripEnd = $bookingStore.end;
+    if ($customerStore.start && $customerStore.end) {
+      selectedTripStart = $customerStore.start;
+      selectedTripEnd = $customerStore.end;
 
       dispatch("selection", {
         start: new DateTime(selectedTripStart, "MMM-DD-YYYY"),
@@ -30,7 +30,12 @@
   });
 
   function buildUnitCalendar() {
-    const bookedDates = unitObject.bookings;
+    const bookedDates: Date[][] = [];
+
+    unitObject.bookingDates?.forEach((datesObject) => {
+      let tempArray = [datesObject.start, datesObject.end];
+      bookedDates.push(tempArray);
+    });
 
     let inlineCalendar = false;
     if (screenWidth > 500) {
@@ -90,7 +95,7 @@
 
     dispatch("selection", selection);
 
-    bookingStore.update((storeData) => {
+    customerStore.update((storeData) => {
       storeData.start = selectedTripStart;
       storeData.end = selectedTripEnd;
 
