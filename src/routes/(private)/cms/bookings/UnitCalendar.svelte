@@ -27,8 +27,11 @@
       LockPlugin: {
         filter(date) {
           // return true when booked, false when not..
-          //@ts-ignore
-          return date.inArray(bookedDates, "[)");
+
+          try {
+            //@ts-ignore
+            return date.inArray(bookedDates, "[)");
+          } catch (err) {}
         },
       },
     });
