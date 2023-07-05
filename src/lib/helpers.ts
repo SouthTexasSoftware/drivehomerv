@@ -1,7 +1,7 @@
 import { firebaseClientConfig } from "../config";
 import { collection, getDocs } from "firebase/firestore";
 import { get } from "svelte/store";
-import type { Unit, FirebaseStore, PhotoDocument } from "./types";
+import type { Unit, FirebaseStore, PhotoDocument, Booking } from "./types";
 import { firebaseStore, unitStore } from "./stores";
 import { DateTime } from "@easepick/bundle";
 import { getAnalytics } from "firebase/analytics";
@@ -71,7 +71,7 @@ export async function populateUnitStore(fbStore: FirebaseStore) {
         unit.bookingDates = [];
 
         unitBookings.forEach((doc) => {
-          let booking = doc.data();
+          let booking = doc.data() as Booking;
 
           let bookingDates = {
             start: new DateTime(booking.start, "MMM-DD-YYYY"),
@@ -239,6 +239,9 @@ export const newUnitModel: Unit = {
     },
     rates_and_fees: {
       pricing: {
+        base_rental_fee: 0,
+        taxes_and_insurance: 0,
+        service_fee: 0,
         mileage_overage: 0,
         generator_usage: 0,
         weekly_discount: 0,
@@ -264,6 +267,7 @@ export const newUnitModel: Unit = {
     },
   },
   photos: {
+    //@ts-ignore
     public: {
       carousel: [],
       album: [],

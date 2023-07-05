@@ -35,7 +35,7 @@
   <div id="information-container">
     <h2>More Info</h2>
     <p id="description">
-      {unitObject.description}
+      {unitObject.information.paragraphs.description.content}
     </p>
   </div>
 {:else}
@@ -56,6 +56,7 @@
     color: hsl(var(--p));
     font-size: 32px;
     margin-top: -10px;
+    text-align: center;
   }
   #information-container {
     max-width: 1700px;

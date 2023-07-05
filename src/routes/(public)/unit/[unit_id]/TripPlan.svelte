@@ -13,8 +13,10 @@
   let screenWidth: number;
   let selectedTripLength: number = 0;
 
-  $: nightlyRateSum = unitObject.default_price * selectedTripLength;
-  $: additionalFeesTotal = calculateAdditionalFeesSum(selectedTripLength);
+  $: nightlyRateSum =
+    unitObject.information.rates_and_fees.pricing.base_rental_fee *
+    selectedTripLength;
+  $: additionalFeesTotal = sumOfFees(selectedTripLength); // must pass in the dynamic value to rerun
   $: totalBookingPrice = nightlyRateSum + additionalFeesTotal;
 
   $: {
@@ -24,16 +26,20 @@
     });
   }
 
-  function calculateAdditionalFeesSum(tripLength: number) {
+  function sumOfFees(tripLength: number) {
     let sum = 0;
+    let service_fee = 0;
 
-    unitObject.additional_fees?.forEach((fee) => {
-      if (fee.per_day) {
-        sum += fee.amount * tripLength;
-      } else {
-        sum += fee.amount;
-      }
-    });
+    let taxes_and_insurance =
+      unitObject.information.rates_and_fees.pricing.taxes_and_insurance *
+      tripLength;
+
+    if (tripLength != 0) {
+      service_fee = unitObject.information.rates_and_fees.pricing.service_fee;
+    }
+    //@ts-ignore
+    sum = parseInt(taxes_and_insurance) + parseInt(service_fee);
+    console.log(sum);
 
     return sum;
   }
@@ -56,30 +62,36 @@
     <div class="col estimate">
       <div class="row stack location">
         <strong id="state">New York</strong>
-        <p id="pickup-location">Modena Pickup Location</p>
+        <p id="pickup-location">
+          {unitObject.information.bullet_points.summary.pickup_location} Pickup Location
+        </p>
       </div>
       <TempFeatureList {unitObject} />
       <div class="row fee nightly-rate">
         <p>
-          ${unitObject.default_price} x {selectedTripLength} Nights
+          ${unitObject.information.rates_and_fees.pricing.base_rental_fee} x {selectedTripLength}
+          Nights
         </p>
         <p>
           ${nightlyRateSum}
         </p>
       </div>
 
-      {#if unitObject.additional_fees}
-        {#each unitObject.additional_fees as fee}
-          <div class="row fee">
-            <p>{fee.name}</p>
-            {#if fee.per_day}
-              <p>${fee.amount * selectedTripLength}</p>
-            {:else}
-              <p>${fee.amount}</p>
-            {/if}
-          </div>
-        {/each}
-      {/if}
+      <div class="row fee">
+        <p>Service Fee</p>
+        {#if selectedTripLength == 0}
+          <p>$0</p>
+        {:else}
+          <p>${unitObject.information.rates_and_fees.pricing.service_fee}</p>
+        {/if}
+      </div>
+      <div class="row fee">
+        <p>Taxes & Insurance</p>
+        <p>
+          ${unitObject.information.rates_and_fees.pricing.taxes_and_insurance *
+            selectedTripLength}
+        </p>
+      </div>
 
       <div class="row fee mi-per-night">
         <p>100 mi per night ($0.00/night)</p>
@@ -90,12 +102,19 @@
           <p>Miles included</p>
           <p>{100 * selectedTripLength} mi</p>
         </div>
-        <p class="row fee small-note">Additional miles: $0.58/mi</p>
+        <p class="row fee small-note">
+          Additional miles: ${unitObject.information.rates_and_fees.pricing
+            .mileage_overage}/mi
+        </p>
       </div>
       <div class="bar" />
       <div class="row total">
         <p>Total</p>
-        <p>${totalBookingPrice}</p>
+        {#if selectedTripLength == 0}
+          <p>Select Dates</p>
+        {:else}
+          <p>${totalBookingPrice}</p>
+        {/if}
       </div>
       {#if screenWidth > 500}
         <button class="reserve-button" on:click={dispatchShowModal}

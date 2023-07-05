@@ -1,17 +1,25 @@
 <script lang="ts">
   import { unitStore } from "$lib/stores";
-  import type { Unit } from "$lib/types";
   import { page } from "$app/stores";
+  import { afterUpdate, beforeUpdate } from "svelte";
 
   $: categorySelected = $page.params.category
     ? $page.params.category
     : "information";
 
+  // these are left out because they do not work with bookings..
   $: subcategorySelected = $page.params.subcategory
     ? "/" + $page.params.subcategory
     : "";
 
   $: optionSelected = $page.params.option ? "/" + $page.params.option : "";
+
+  beforeUpdate(() => {
+    if (categorySelected == "bookings") {
+      subcategorySelected = "";
+      optionSelected = "";
+    }
+  });
 </script>
 
 <div class="unit-selection-container">

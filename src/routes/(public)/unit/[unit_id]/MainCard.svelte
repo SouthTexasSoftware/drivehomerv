@@ -24,6 +24,7 @@
       customerStore.set({
         unit_id: unitObject.id,
         unit_name: unitObject.name,
+        status: "requested",
       });
     }
   }

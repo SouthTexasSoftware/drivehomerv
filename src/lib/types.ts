@@ -63,24 +63,23 @@ export interface Unit {
   photos: PhotoDocument[];
 }
 
- export interface PhotoDocument  {
+export interface PhotoDocument {
+  id: string;
+  label: string;
+  filename: string;
+  file_size: number; // in KiloBytes
+  resolution?: string;
+  index: number;
+  date_added: Timestamp;
+  file_path: string;
+  downloadURL: string;
+  unit_id: string;
+  subcategory: string;
+  option: string;
+  references?: {
+    type: string;
     id: string;
-    label: string;
-    filename: string;
-    file_size: number; // in KiloBytes
-    resolution?: string;
-    index: number;
-    date_added: Timestamp;
-    file_path: string;
-    downloadURL: string;
-    unit_id: string;
-    subcategory: string;
-    option: string;
-    references?: {
-      type: string;
-      id: string;
-    }[];
-  };
+  }[];
 }
 
 interface InformationBulletPoints {
@@ -240,6 +239,9 @@ interface InformationRatesFees {
 }
 
 interface OptionPricing {
+  base_rental_fee: number;
+  taxes_and_insurance: number;
+  service_fee: number;
   mileage_overage: number;
   generator_usage: number;
   weekly_discount: number;
@@ -275,21 +277,53 @@ interface OptionDelivery {
 export interface Booking {
   id?: string;
   customer?: string;
+  customerObject?: Customer;
   unit_id?: string;
   unit_name?: string;
   start?: string; //MMM-DD-YYYY
   end?: string; //MMM-DD-YYYY
   total_price?: number;
   created?: Timestamp;
-  status?: BookingStatus;
+  updated?: Timestamp;
+  status: string;
+  pickup_time?: string;
+  pickup_location?: string;
+  dropoff_time?: string;
+  dropoff_location?: string;
+  payment_status?: PaymentStatus;
+  agreement_status?: AgreementStatus;
+  event_list?: BookingEvent[];
+  photos?: PhotoDocument[];
+}
+
+interface BookingEvent {
+  created: Timestamp;
+  triggered_by: string;
+  title: string;
+  description?: string;
+  id: string;
+  booking_id: string;
 }
 
 enum BookingStatus {
   requested,
-  reserved,
-  paid,
+  approved,
+  inProgress,
   completed,
   manualEntry,
+}
+
+enum PaymentStatus {
+  quoted,
+  invoiced,
+  paid_deposit,
+  paid_in_full,
+}
+enum AgreementStatus {
+  drafted,
+  sent,
+  accepted,
+  denied,
 }
 
 export interface Fee {
@@ -347,5 +381,4 @@ export interface Customer {
   terms_agreement?: boolean;
   bookings?: string[];
   age_over_25?: boolean;
-  documents?: Document[];
 }

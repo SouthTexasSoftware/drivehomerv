@@ -16,13 +16,18 @@
   let propertyList: string[] = [];
 
   beforeUpdate(() => {
-    //@ts-ignore
-    propertyList = Object.keys(newUnitModel.information[subcategory][option]);
+    if (option) {
+      //@ts-ignore
+      propertyList = Object.keys(newUnitModel.information[subcategory][option]);
+    }
   });
 
   afterUpdate(() => {
     if (propertiesScrollContainer) {
-      console.log(propertiesScrollContainer.scrollWidth);
+      if (option == "description" || option == "notes") {
+        showNavContainer = false;
+        return;
+      }
       if (propertiesScrollContainer.scrollWidth > 300) {
         showNavContainer = true;
       } else {
@@ -113,152 +118,158 @@
   }
 </script>
 
-<div class="information-option-container">
-  <div class="properties-list" bind:this={propertiesScrollContainer}>
-    {#each propertyList as property}
-      <!-- TODO: Add #if check for additional_options and display accordingly -->
-      <div
-        class="property {convertToInputType(
-          //@ts-ignore
-          typeof newUnitModel.information[subcategory][option][property]
-        )}"
-      >
-        <p class="label">{objectKeyToLabel(property)}</p>
-        {#if property == "content"}
-          <textarea
-            class="property-input textarea"
-            id={option + "?" + property}
-            value={getPropertyValueIfDefined(property)}
-            on:input={({ currentTarget }) => {
-              recordChange(currentTarget);
-            }}
-            on:click={({ currentTarget }) => {
-              if (currentTarget.type == "button") {
-                let newValue =
-                  currentTarget.value == "false" ? "true" : "false";
-                currentTarget.value = newValue;
+{#if option}
+  <div
+    class="information-option-container"
+    class:widen={option == "description" || option == "notes"}
+  >
+    <div class="properties-list" bind:this={propertiesScrollContainer}>
+      {#each propertyList as property}
+        <!-- TODO: Add #if check for additional_options and display accordingly -->
+        <div
+          class="property {convertToInputType(
+            //@ts-ignore
+            typeof newUnitModel.information[subcategory][option][property]
+          )}"
+          class:widen={option == "description" || option == "notes"}
+        >
+          <p class="label">{objectKeyToLabel(property)}</p>
+          {#if property == "content"}
+            <textarea
+              class="property-input textarea"
+              id={option + "?" + property}
+              value={getPropertyValueIfDefined(property)}
+              on:input={({ currentTarget }) => {
                 recordChange(currentTarget);
-              }
-            }}
-          />
-        {:else}
-          <input
-            class="property-input"
-            id={option + "?" + property}
-            type={convertToInputType(
-              //@ts-ignore
-              typeof newUnitModel.information[subcategory][option][property]
-            )}
-            value={getPropertyValueIfDefined(property)}
-            on:input={({ currentTarget }) => {
-              recordChange(currentTarget);
-            }}
-            on:click={({ currentTarget }) => {
-              if (currentTarget.type == "button") {
-                let newValue =
-                  currentTarget.value == "false" ? "true" : "false";
-                currentTarget.value = newValue;
+              }}
+              on:click={({ currentTarget }) => {
+                if (currentTarget.type == "button") {
+                  let newValue =
+                    currentTarget.value == "false" ? "true" : "false";
+                  currentTarget.value = newValue;
+                  recordChange(currentTarget);
+                }
+              }}
+            />
+          {:else}
+            <input
+              class="property-input"
+              id={option + "?" + property}
+              type={convertToInputType(
+                //@ts-ignore
+                typeof newUnitModel.information[subcategory][option][property]
+              )}
+              value={getPropertyValueIfDefined(property)}
+              on:input={({ currentTarget }) => {
                 recordChange(currentTarget);
-              }
+              }}
+              on:click={({ currentTarget }) => {
+                if (currentTarget.type == "button") {
+                  let newValue =
+                    currentTarget.value == "false" ? "true" : "false";
+                  currentTarget.value = newValue;
+                  recordChange(currentTarget);
+                }
+              }}
+            />
+          {/if}
+        </div>
+      {/each}
+    </div>
+    {#if showNavContainer}
+      <div class="nav-container">
+        {#if scrollPositionLeft > 0}
+          <button
+            class="left"
+            transition:fade
+            on:click={() => {
+              propertiesScrollContainer.scrollTo({
+                left: scrollPositionLeft - 300,
+                behavior: "smooth",
+              });
+              scrollPositionLeft -= 300;
             }}
-          />
+          >
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <g id="Complete">
+                <g>
+                  <g>
+                    <polyline
+                      data-name="Left"
+                      fill="none"
+                      id="Right-2"
+                      points="16.4 7 21.5 12 16.4 17"
+                      stroke="#000000"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                    />
+
+                    <line
+                      fill="none"
+                      stroke="#000000"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      x1="2.5"
+                      x2="19.2"
+                      y1="12"
+                      y2="12"
+                    />
+                  </g>
+                </g>
+              </g>
+            </svg></button
+          >
+        {/if}
+        {#if scrollPositionLeft < propertiesScrollContainer.scrollWidth - 300}
+          <button
+            class="right"
+            transition:fade
+            on:click={() => {
+              propertiesScrollContainer.scrollTo({
+                left: scrollPositionLeft + 300,
+                behavior: "smooth",
+              });
+              scrollPositionLeft += 300;
+            }}
+          >
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <g id="Complete">
+                <g>
+                  <g>
+                    <polyline
+                      data-name="Right"
+                      fill="none"
+                      id="Right-2"
+                      points="16.4 7 21.5 12 16.4 17"
+                      stroke="#000000"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                    />
+
+                    <line
+                      fill="none"
+                      stroke="#000000"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      x1="2.5"
+                      x2="19.2"
+                      y1="12"
+                      y2="12"
+                    />
+                  </g>
+                </g>
+              </g>
+            </svg></button
+          >
         {/if}
       </div>
-    {/each}
+    {/if}
   </div>
-  {#if showNavContainer}
-    <div class="nav-container">
-      {#if scrollPositionLeft > 0}
-        <button
-          class="left"
-          transition:fade
-          on:click={() => {
-            propertiesScrollContainer.scrollTo({
-              left: scrollPositionLeft - 300,
-              behavior: "smooth",
-            });
-            scrollPositionLeft -= 300;
-          }}
-        >
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <g id="Complete">
-              <g>
-                <g>
-                  <polyline
-                    data-name="Left"
-                    fill="none"
-                    id="Right-2"
-                    points="16.4 7 21.5 12 16.4 17"
-                    stroke="#000000"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                  />
-
-                  <line
-                    fill="none"
-                    stroke="#000000"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    x1="2.5"
-                    x2="19.2"
-                    y1="12"
-                    y2="12"
-                  />
-                </g>
-              </g>
-            </g>
-          </svg></button
-        >
-      {/if}
-      {#if scrollPositionLeft < propertiesScrollContainer.scrollWidth - 300}
-        <button
-          class="right"
-          transition:fade
-          on:click={() => {
-            propertiesScrollContainer.scrollTo({
-              left: scrollPositionLeft + 300,
-              behavior: "smooth",
-            });
-            scrollPositionLeft += 300;
-          }}
-        >
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <g id="Complete">
-              <g>
-                <g>
-                  <polyline
-                    data-name="Right"
-                    fill="none"
-                    id="Right-2"
-                    points="16.4 7 21.5 12 16.4 17"
-                    stroke="#000000"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                  />
-
-                  <line
-                    fill="none"
-                    stroke="#000000"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    x1="2.5"
-                    x2="19.2"
-                    y1="12"
-                    y2="12"
-                  />
-                </g>
-              </g>
-            </g>
-          </svg></button
-        >
-      {/if}
-    </div>
-  {/if}
-</div>
+{/if}
 
 <style>
   .information-option-container {
@@ -272,6 +283,9 @@
     flex-direction: column;
     padding-top: 20px;
     width: 300px;
+  }
+  .information-option-container.widen {
+    width: 100%;
   }
   .information-option-container::-webkit-scrollbar {
     display: none;
@@ -297,7 +311,6 @@
     margin-top: 16px;
     border: none;
   }
-
   .property.button input {
     width: 75px;
     margin-top: 0;
@@ -305,6 +318,9 @@
     padding: 1px;
     margin-left: 5px;
     cursor: pointer;
+  }
+  .property.widen {
+    width: 100%;
   }
   .label {
     font-family: cms-semibold;
@@ -323,7 +339,7 @@
     width: 100%;
   }
   .property-input.textarea {
-    min-height: 300px;
+    min-height: 420px;
   }
   .nav-container {
     width: 100%;

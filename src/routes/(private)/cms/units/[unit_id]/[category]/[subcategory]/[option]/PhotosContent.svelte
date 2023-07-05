@@ -36,7 +36,9 @@
 
   onMount(() => {
     updateAndSortShowingArray();
-    makeSortable();
+    if (sortableContainer) {
+      makeSortable();
+    }
   });
 
   function updateAndSortShowingArray() {
@@ -97,8 +99,12 @@
     let photoDocRef = doc(photosSubcollectionRef, photoDocument.id);
     await deleteDoc(photoDocRef);
 
-    let storageRef = ref($firebaseStore.storage, photoDocument.file_path);
-    await deleteObject(storageRef);
+    try {
+      let storageRef = ref($firebaseStore.storage, photoDocument.file_path);
+      await deleteObject(storageRef);
+    } catch (e) {
+      console.log("error deleting storage file --- ", e);
+    }
 
     for (
       let photoIndex = 0;

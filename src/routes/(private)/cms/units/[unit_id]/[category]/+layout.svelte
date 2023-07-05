@@ -24,7 +24,7 @@
     {#if unitObject}
       <!-- render categorys subcategories and options  -->
       {#key $page.params.category}
-        <CategoryColumn />
+        <CategoryColumn {unitObject} />
       {/key}
     {/if}
   </div>

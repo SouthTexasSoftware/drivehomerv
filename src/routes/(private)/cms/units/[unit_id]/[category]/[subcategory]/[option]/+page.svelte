@@ -5,6 +5,7 @@
   import { beforeUpdate } from "svelte";
   import InformationContent from "./InformationContent.svelte";
   import PhotosContent from "./PhotosContent.svelte";
+  import BookingsWrapper from "./BookingsWrapper.svelte";
 
   let unitObject: Unit | undefined;
 
@@ -32,6 +33,13 @@
   {/if}
   {#if $page.params.category == "photos"}
     <PhotosContent
+      {unitObject}
+      subcategory={$page.params.subcategory}
+      option={$page.params.option}
+    />
+  {/if}
+  {#if $page.params.category == "bookings"}
+    <BookingsWrapper
       {unitObject}
       subcategory={$page.params.subcategory}
       option={$page.params.option}
