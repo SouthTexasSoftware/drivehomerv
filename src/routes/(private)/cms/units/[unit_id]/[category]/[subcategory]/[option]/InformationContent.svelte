@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Unit } from "$lib/types";
-  import { newUnitModel, objectKeyToLabel } from "$lib/helpers";
+  import { newUnitModel } from "$lib/helpers";
   import { afterUpdate, beforeUpdate, onMount } from "svelte";
   import { fade } from "svelte/transition";
   import { unitStore } from "$lib/stores";
@@ -115,6 +115,15 @@
       return data;
     });
     // dispatch event listener to trigger changed button popup?
+  }
+
+  function objectKeyToLabel(key: string) {
+    let label = key.replaceAll("_", " ");
+    label = label.replaceAll("and", "&");
+
+    return label.replace(/(^|\s)\S/g, function (t) {
+      return t.toUpperCase();
+    });
   }
 </script>
 

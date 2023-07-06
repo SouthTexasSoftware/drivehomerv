@@ -278,27 +278,3 @@ export const newUnitModel: Unit = {
     },
   },
 };
-
-export function newUUID(): string {
-  // Alphanumeric characters
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let autoId = "";
-  for (let i = 0; i < 20; i++) {
-    autoId += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return autoId;
-}
-// try again
-/**
- * Converts a snake_case variable to Snake Case formatting
- * @param key String to be formatted
- */
-export function objectKeyToLabel(key: string) {
-  let label = key.replaceAll("_", " ");
-  label = label.replaceAll("and", "&");
-
-  return label.replace(/(^|\s)\S/g, function (t) {
-    return t.toUpperCase();
-  });
-}

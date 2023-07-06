@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { newUnitModel, objectKeyToLabel } from "$lib/helpers";
+  import { newUnitModel } from "$lib/helpers";
   import { page } from "$app/stores";
   import { beforeUpdate } from "svelte";
   import type { Unit } from "$lib/types";
@@ -118,6 +118,15 @@
       return i + "rd";
     }
     return i + "th";
+  }
+
+  function objectKeyToLabel(key: string) {
+    let label = key.replaceAll("_", " ");
+    label = label.replaceAll("and", "&");
+
+    return label.replace(/(^|\s)\S/g, function (t) {
+      return t.toUpperCase();
+    });
   }
 </script>
 
