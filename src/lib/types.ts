@@ -275,13 +275,13 @@ interface OptionDelivery {
 // TODO: add pickup, dropoff time and location
 // TODO: add booking referrer
 export interface Booking {
-  id?: string;
+  id: string;
   customer?: string;
   customerObject?: Customer;
   unit_id?: string;
   unit_name?: string;
-  start?: string; //MMM-DD-YYYY
-  end?: string; //MMM-DD-YYYY
+  start: string; //MMM-DD-YYYY
+  end: string; //MMM-DD-YYYY
   total_price?: number;
   created?: Timestamp;
   updated?: Timestamp;
@@ -309,6 +309,7 @@ enum BookingStatus {
   requested,
   approved,
   inProgress,
+
   completed,
   manualEntry,
 }
@@ -370,10 +371,10 @@ export interface Extra {
 }
 
 export interface Customer {
-  id?: string;
+  id: string;
   first_name: string;
   last_name: string;
-  created: Timestamp;
+  created?: Timestamp;
   phone: string;
   email: string;
   address?: null;

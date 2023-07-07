@@ -30,6 +30,7 @@
       {#each $unitStore.units as unit}
         <UnitCalendar unitObj={unit} />
       {/each}
+      <BookingsList />
     {/if}
     <BookingsTable />
   {:else}
