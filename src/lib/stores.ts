@@ -2,7 +2,7 @@ import { writable } from "svelte/store";
 import type { UnitStore, Booking, FirebaseStore, Unit } from "./types";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { get } from "svelte/store";
-import { DateTime } from "@easepick/bundle";
+import { DateTime } from "@easepick/datetime";
 
 export const firebaseStore = writable<FirebaseStore>(undefined);
 
