@@ -1,9 +1,11 @@
 <script lang="ts">
-  import { easepick } from "@easepick/bundle";
+  import { RangePlugin, easepick } from "@easepick/bundle";
   import { LockPlugin } from "@easepick/lock-plugin";
   import { onMount } from "svelte";
   import cmsUnitCalendar from "$lib/styles/cmsUnitCalendar.css?inline";
   import type { Unit } from "$lib/types";
+
+  let calendarLoaded = false;
 
   onMount(() => {
     buildOverviewCalendar();
@@ -15,7 +17,12 @@
   let calendarInstance: easepick.Core | undefined;
 
   async function buildOverviewCalendar() {
-    let bookedDates = unitObj.bookings;
+    const bookedDates: Date[][] = [];
+
+    unitObj.bookingDates?.forEach((datesObject) => {
+      let tempArray = [datesObject.start, datesObject.end];
+      bookedDates.push(tempArray);
+    });
 
     calendarInstance = new easepick.create({
       element: "#" + uniqueCssId,
@@ -23,7 +30,7 @@
       css: cmsUnitCalendar,
       zIndex: 100,
       firstDay: 0, // sets the calendar to have SUNDAY on the left
-      plugins: [LockPlugin],
+      plugins: [LockPlugin, RangePlugin],
       LockPlugin: {
         filter(date) {
           // return true when booked, false when not..
