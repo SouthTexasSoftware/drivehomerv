@@ -20,7 +20,6 @@ export interface FirebaseStore {
 export interface UnitStore {
   units: Unit[];
   getUnit(unitId: string): Unit | undefined;
-  updateUnit(unitId: string): void;
   isPopulated: boolean;
 }
 
