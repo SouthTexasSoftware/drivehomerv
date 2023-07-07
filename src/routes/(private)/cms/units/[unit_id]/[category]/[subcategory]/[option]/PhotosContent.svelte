@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { PhotoDocument, Unit } from "$lib/types";
-  import { objectKeyToLabel } from "$lib/helpers";
   import AddPhotoDropdown from "./AddPhotoDropdown.svelte";
   import { fade, fly, slide } from "svelte/transition";
   import { beforeUpdate, onMount } from "svelte";
@@ -156,6 +155,15 @@
     setTimeout(() => {
       saved = false;
     }, 2000);
+  }
+
+  function objectKeyToLabel(key: string) {
+    let label = key.replaceAll("_", " ");
+    label = label.replaceAll("and", "&");
+
+    return label.replace(/(^|\s)\S/g, function (t) {
+      return t.toUpperCase();
+    });
   }
 </script>
 

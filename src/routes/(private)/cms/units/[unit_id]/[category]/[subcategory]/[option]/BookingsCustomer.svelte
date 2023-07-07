@@ -1,6 +1,5 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { newUUID } from "$lib/helpers";
   import { firebaseStore } from "$lib/stores";
   import type { Booking, Customer } from "$lib/types";
   import {
@@ -94,6 +93,17 @@
     setTimeout(() => {
       saved = false;
     }, 2000);
+  }
+
+  function newUUID(): string {
+    // Alphanumeric characters
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let autoId = "";
+    for (let i = 0; i < 20; i++) {
+      autoId += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return autoId;
   }
 </script>
 

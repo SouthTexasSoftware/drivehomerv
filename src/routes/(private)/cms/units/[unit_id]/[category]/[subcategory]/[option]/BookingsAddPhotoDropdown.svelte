@@ -11,7 +11,6 @@
     setDoc,
   } from "firebase/firestore";
   import { createEventDispatcher } from "svelte";
-  import { newUUID } from "$lib/helpers";
   import type { Booking, Unit } from "$lib/types";
   import { slide } from "svelte/transition";
 
@@ -92,6 +91,17 @@
     dispatch("added", true);
 
     uploadingPhoto = false;
+  }
+
+  function newUUID(): string {
+    // Alphanumeric characters
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let autoId = "";
+    for (let i = 0; i < 20; i++) {
+      autoId += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return autoId;
   }
 </script>
 
