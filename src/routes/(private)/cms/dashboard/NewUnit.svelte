@@ -252,7 +252,7 @@
 
 <style>
   .new-unit-container {
-    /* background-color: lightblue; */
+    background-color: hsl(var(--b1));
     padding: 25px;
     display: flex;
     flex-direction: column;
@@ -270,7 +270,9 @@
     align-items: flex-start;
     width: 100%;
   }
-
+  .textarea {
+    min-height: 200px;
+  }
   label {
     font-size: 14px;
     margin-top: 10px;

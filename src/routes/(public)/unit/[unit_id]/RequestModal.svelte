@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { bookingStore, customerStore, firebaseStore } from "$lib/stores";
+  import { customerStore, firebaseStore } from "$lib/stores";
   import { createEventDispatcher, onMount } from "svelte";
   import { enhance } from "$app/forms";
   import {
@@ -65,7 +65,7 @@
       let newCustomerDocRef = doc(customerCollection);
       const newCustomerId = newCustomerDocRef.id;
 
-      let unitId = $bookingStore.unit_id;
+      let unitId = $customerStore.unit_id;
       if (!unitId) {
         unitId = "unitIdWasNotFound";
       }
@@ -90,7 +90,7 @@
       };
 
       //@ts-ignore
-      customerStore.set(newCustomer);
+      //customerStore.set(newCustomer);
 
       let newBookingRequest = {
         id: newBookingId,
@@ -139,7 +139,7 @@
 
     <p class="label">DATES</p>
     <div class="dates-row">
-      <p>{$bookingStore.start}</p>
+      <p>{$customerStore.start}</p>
       <div class="arrow-container">
         <svg
           id="right-arrow"
@@ -176,25 +176,25 @@
           </g>
         </svg>
       </div>
-      <p>{$bookingStore.end}</p>
+      <p>{$customerStore.end}</p>
     </div>
 
-    <input hidden name="start-date" value={$bookingStore.start} />
-    <input hidden name="end-date" value={$bookingStore.end} />
-    <input hidden name="total-price" value={$bookingStore.total_price} />
-    <input hidden name="unit-id" value={$bookingStore.unit_id} />
-    <input hidden name="unit-name" value={$bookingStore.unit_name} />
+    <input hidden name="start-date" value={$customerStore.start} />
+    <input hidden name="end-date" value={$customerStore.end} />
+    <input hidden name="total-price" value={$customerStore.total_price} />
+    <input hidden name="unit-id" value={$customerStore.unit_id} />
+    <input hidden name="unit-name" value={$customerStore.unit_name} />
 
     <p class="label">PICKUP</p>
     <p class="info">Modena, New York</p>
 
     <p class="label">VEHICLE</p>
-    <p class="info">{$bookingStore.unit_name}</p>
+    <p class="info">{$customerStore.unit_name}</p>
 
     <p class="terms">
       By clicking ‘Request to Book’, you agree to receive follow up
       communications from our sales team to answer any further questions, and
-      receive an invoice of 50% of the total booking value of ${$bookingStore.total_price}.
+      receive an invoice of 50% of the total booking value of ${$customerStore.total_price}.
     </p>
 
     <button id="submit" type="submit">

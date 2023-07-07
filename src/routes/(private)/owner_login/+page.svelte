@@ -65,8 +65,9 @@
     max-width: 600px;
     border-radius: 4px;
     box-shadow: 0px 1px 2px grey;
-    margin-top: 50px;
+    margin: 25vh auto;
     padding: 25px;
+    background-color: hsl(var(--b1));
   }
   h3 {
     font-size: 26px;

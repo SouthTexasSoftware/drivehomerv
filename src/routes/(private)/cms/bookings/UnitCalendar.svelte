@@ -27,8 +27,11 @@
       LockPlugin: {
         filter(date) {
           // return true when booked, false when not..
-          //@ts-ignore
-          return date.inArray(bookedDates, "[)");
+
+          try {
+            //@ts-ignore
+            return date.inArray(bookedDates, "[)");
+          } catch (err) {}
         },
       },
     });
@@ -53,5 +56,13 @@
   #unit-calendar {
     height: 0;
     color: transparent;
+  }
+  h3 {
+    background-color: hsl(var(--b1));
+    width: 100%;
+    text-align: center;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px grey;
+    margin-bottom: 3px;
   }
 </style>

@@ -1,10 +1,20 @@
 import { writable } from "svelte/store";
-import type { Unit, Booking, FirebaseStore, Customer } from "./types";
+import type { UnitStore, Booking, FirebaseStore, Unit } from "./types";
 
 export const firebaseStore = writable<FirebaseStore>(undefined);
 
-export const unitStore = writable<Unit[]>(undefined);
+export const unitStore = writable<UnitStore>({
+  units: [],
+  isPopulated: false,
+  getUnit(unitId) {
+    let foundUnit: Unit | undefined = undefined;
+    this.units.forEach((unit) => {
+      if (unit.id == unitId) {
+        foundUnit = unit;
+      }
+    });
+    return foundUnit;
+  },
+});
 
-export const bookingStore = writable<Booking>(undefined);
-
-export const customerStore = writable<Customer>(undefined);
+export const customerStore = writable<Booking>(undefined);

@@ -1,10 +1,4 @@
 <script lang="ts">
-  import type { Unit } from "$lib/types";
-  import { unitStore } from "$lib/stores";
-  import { unitLookup } from "$lib/helpers";
-  import { page } from "$app/stores";
-  import LoadingUnit from "./LoadingUnit.svelte";
-
   // TODO: no built-in fallback to display unit not found right now..
   // This needs some sort of timer, or check to see if it is still waiting on the unitStore
   // to be populated. Right now, the subscription just keeps it updated live.

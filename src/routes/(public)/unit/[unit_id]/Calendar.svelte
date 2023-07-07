@@ -6,27 +6,36 @@
   import { onMount, createEventDispatcher } from "svelte";
   import publicPickerCalendar from "$lib/styles/publicPickerCalendar.css?inline";
   import type { Unit } from "$lib/types";
-  import { bookingStore } from "$lib/stores";
+  import { customerStore } from "$lib/stores";
 
   export let unitObject: Unit;
 
   let dispatch = createEventDispatcher();
   let screenWidth: number;
 
-  // TODO: this needs to be algorithmic eventually
-  let selectedTripStart: string = "Jul-01-2023";
-  let selectedTripEnd: string =
-    "Jul-0" + (1 + unitObject.min_booking_days) + "-2023";
+  let selectedTripStart: string = "Start Date";
+  let selectedTripEnd: string = "End Date";
 
   onMount(() => {
-    buildUnitCalendar();
+    if ($customerStore.start && $customerStore.end) {
+      selectedTripStart = $customerStore.start;
+      selectedTripEnd = $customerStore.end;
 
-    $bookingStore.start = selectedTripStart;
-    $bookingStore.end = selectedTripEnd;
+      dispatch("selection", {
+        start: new DateTime(selectedTripStart, "MMM-DD-YYYY"),
+        end: new DateTime(selectedTripEnd, "MMM-DD-YYYY"),
+      });
+    }
+    buildUnitCalendar();
   });
 
   function buildUnitCalendar() {
-    const bookedDates = unitObject.bookings;
+    const bookedDates: Date[][] = [];
+
+    unitObject.bookingDates?.forEach((datesObject) => {
+      let tempArray = [datesObject.start, datesObject.end];
+      bookedDates.push(tempArray);
+    });
 
     let inlineCalendar = false;
     if (screenWidth > 500) {
@@ -86,7 +95,7 @@
 
     dispatch("selection", selection);
 
-    bookingStore.update((storeData) => {
+    customerStore.update((storeData) => {
       storeData.start = selectedTripStart;
       storeData.end = selectedTripEnd;
 
@@ -161,6 +170,7 @@
     display: flex;
     justify-content: space-between;
     margin: 5px 0px;
+    position: relative;
     /* left/right margin for the rows is set in .col */
   }
   .row.stack {
@@ -201,8 +211,7 @@
       align-items: center;
     }
     :global(.easepick-wrapper) {
-      position: absolute;
-      bottom: 50px;
+      width: 90vw;
     }
   }
 

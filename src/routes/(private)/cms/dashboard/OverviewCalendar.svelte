@@ -12,16 +12,12 @@
   let calendarInstance: easepick.Core | undefined;
 
   async function buildOverviewCalendar() {
-    if ($unitStore == undefined) {
-      setTimeout(buildOverviewCalendar, 200);
-      return;
-    }
-    if ($unitStore[0].bookings == undefined) {
+    if (!$unitStore.isPopulated) {
       setTimeout(buildOverviewCalendar, 200);
       return;
     }
 
-    let bookedDates = $unitStore[0].bookings;
+    let bookedDates = $unitStore.units[0].bookings;
 
     calendarInstance = new easepick.create({
       element: "#overview-calendar",
@@ -44,8 +40,8 @@
 <div class="calendar-container">
   <div id="overview-calendar" />
   <div class="unit-selection-container">
-    {#if $unitStore != undefined}
-      {#each $unitStore as unitObject}
+    {#if $unitStore.isPopulated}
+      {#each $unitStore.units as unitObject}
         <button class:active={true}>{unitObject.name}</button>
       {/each}
     {/if}

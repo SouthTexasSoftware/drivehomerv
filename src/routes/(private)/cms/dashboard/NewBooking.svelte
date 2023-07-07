@@ -16,6 +16,8 @@
     newBookingStart = selection.start;
     newBookingEnd = selection.end;
   }
+
+  // TODO: This needs to be re-written to allow the user to input price, a 'fake' input for unit id..
 </script>
 
 <div class="new-booking-container">
@@ -96,8 +98,8 @@
       required
     >
       <option selected disabled>Choose Unit</option>
-      {#if $unitStore != undefined}
-        {#each $unitStore as unitObject}
+      {#if $unitStore.isPopulated}
+        {#each $unitStore.units as unitObject}
           <option value={unitObject.id}>{unitObject.name}</option>
         {/each}
       {/if}
@@ -122,6 +124,7 @@
     justify-content: center;
     border-radius: 4px;
     border: 1px solid hsl(var(--b3));
+    background-color: hsl(var(--b1));
   }
   h4 {
     font-size: 20px;

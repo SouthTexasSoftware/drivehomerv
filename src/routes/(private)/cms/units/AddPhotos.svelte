@@ -78,8 +78,8 @@
       required
     >
       <option selected disabled>Choose Unit</option>
-      {#if $unitStore != undefined}
-        {#each $unitStore as unitObject}
+      {#if $unitStore.isPopulated}
+        {#each $unitStore.units as unitObject}
           <option value={unitObject.id}>{unitObject.name}</option>
         {/each}
       {/if}
@@ -110,6 +110,7 @@
     flex-direction: column;
     align-items: center;
     max-height: 50vh;
+    background-color: hsl(var(--b1));
   }
   h4 {
     font-size: 20px;
