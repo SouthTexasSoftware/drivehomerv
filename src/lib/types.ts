@@ -60,6 +60,7 @@ export interface Unit {
     rates_and_fees: InformationRatesFees;
   };
   photos: PhotoDocument[];
+  documents?: FileDocument[];
 }
 
 export interface PhotoDocument {
@@ -73,6 +74,26 @@ export interface PhotoDocument {
   file_path: string;
   downloadURL: string;
   unit_id: string;
+  booking_id?: string;
+  subcategory: string;
+  option: string;
+  references?: {
+    type: string;
+    id: string;
+  }[];
+}
+
+export interface FileDocument {
+  id: string;
+  label: string;
+  filename: string;
+  file_size: number; // in KiloBytes
+  index: number;
+  date_added: Timestamp;
+  file_path: string;
+  downloadURL: string;
+  unit_id: string;
+  booking_id?: string;
   subcategory: string;
   option: string;
   references?: {
@@ -292,7 +313,8 @@ export interface Booking {
   payment_status?: PaymentStatus;
   agreement_status?: AgreementStatus;
   event_list?: BookingEvent[];
-  photos?: PhotoDocument[];
+  photos: PhotoDocument[];
+  documents: FileDocument[];
 }
 
 interface BookingEvent {
