@@ -310,6 +310,7 @@ export interface Booking {
   pickup_location?: string;
   dropoff_time?: string;
   dropoff_location?: string;
+  pickup_dropoff_price_addition?: number;
   payment_status?: PaymentStatus;
   agreement_status?: AgreementStatus;
   event_list?: BookingEvent[];

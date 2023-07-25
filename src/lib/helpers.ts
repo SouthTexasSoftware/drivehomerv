@@ -1,5 +1,5 @@
 import { firebaseClientConfig } from "../config";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs } from "@firebase/firestore";
 import { get } from "svelte/store";
 import type {
   Unit,

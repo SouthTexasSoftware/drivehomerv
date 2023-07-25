@@ -12,6 +12,7 @@
   let dispatch = createEventDispatcher();
   let screenWidth: number;
   let selectedTripLength: number = 0;
+  let pickup_dropoff_price_addition = 0;
 
   $: nightlyRateSum =
     unitObject.information.rates_and_fees.pricing.base_rental_fee *
@@ -37,19 +38,46 @@
     if (tripLength != 0) {
       service_fee = unitObject.information.rates_and_fees.pricing.service_fee;
     }
-    //@ts-ignore
-    sum = parseInt(taxes_and_insurance) + parseInt(service_fee);
-    console.log(sum);
+
+    sum =
+      //@ts-ignore
+      parseInt(taxes_and_insurance) +
+      //@ts-ignore
+      parseInt(service_fee) +
+      //@ts-ignore
+      parseInt(pickup_dropoff_price_addition);
 
     return sum;
   }
 
   function handleNewCalendarSelection(event: CustomEvent) {
+    pickup_dropoff_price_addition = 0;
+    if (event.detail.pickup) {
+      if (event.detail.pickup.price > 0) {
+        pickup_dropoff_price_addition += event.detail.pickup.price;
+      }
+      if (event.detail.dropoff.price > 0) {
+        pickup_dropoff_price_addition += event.detail.dropoff.price;
+      }
+    }
+
+    customerStore.update((storeData) => {
+      storeData.pickup_dropoff_price_addition = pickup_dropoff_price_addition;
+
+      return storeData;
+    });
+
     let differenceInTime =
       event.detail.end.getTime() - event.detail.start.getTime();
     let differenceInDays = differenceInTime / (1000 * 3600 * 24);
 
     selectedTripLength = differenceInDays;
+    console.log(selectedTripLength);
+
+    additionalFeesTotal = sumOfFees(selectedTripLength);
+
+    // handle pickup_dropoff modifiers...
+    console.log($customerStore);
   }
 
   function dispatchShowModal() {
@@ -117,9 +145,13 @@
         {/if}
       </div>
       {#if screenWidth > 500}
-        <button class="reserve-button" on:click={dispatchShowModal}
-          ><p>REQUEST NOW</p></button
-        >
+        {#if !selectedTripLength}
+          <button class="reserve-button"><p>SELECT DATES</p></button>
+        {:else}
+          <button class="reserve-button" on:click={dispatchShowModal}
+            ><p>REQUEST NOW</p></button
+          >
+        {/if}
       {/if}
     </div>
 
@@ -134,7 +166,11 @@
   </section>
 
   {#if screenWidth < 500}
-    <ReserveButton {showRequest} on:showModal={dispatchShowModal} />
+    <ReserveButton
+      {showRequest}
+      {selectedTripLength}
+      on:showModal={dispatchShowModal}
+    />
   {/if}
 </div>
 
@@ -157,6 +193,7 @@
     width: 100%;
     justify-content: space-evenly;
     height: 100%;
+    padding-bottom: 15px;
   }
   .col {
     flex-basis: 300px;
