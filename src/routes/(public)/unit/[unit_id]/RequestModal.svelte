@@ -1,6 +1,7 @@
 <script lang="ts">
   import { customerStore, firebaseStore } from "$lib/stores";
   import { createEventDispatcher, onMount } from "svelte";
+  import { DateTime } from "@easepick/bundle";
   import { enhance } from "$app/forms";
   import {
     collection,
@@ -25,6 +26,40 @@
 
   function dispatchRequestSuccess() {
     dispatch("requestSuccess", true);
+  }
+
+  function getMonthString(dateString: string | undefined) {
+    if (!dateString || dateString == "undefined") {
+      return "None";
+    }
+    let dateTimeObject = new DateTime(dateString, "MMM-DD-YYYY");
+
+    let dayString = dateTimeObject.toLocaleString("en-us", {
+      weekday: "long",
+    });
+    let monthString = dateTimeObject.toLocaleString("en-us", {
+      month: "long",
+    });
+
+    let dayNumber = dateTimeObject.getDate();
+    let dayNumberFormatted = ordinal_suffix_of(dayNumber);
+
+    return monthString + " " + dayNumberFormatted;
+  }
+
+  function ordinal_suffix_of(i: number) {
+    var j = i % 10,
+      k = i % 100;
+    if (j == 1 && k != 11) {
+      return i + "st";
+    }
+    if (j == 2 && k != 12) {
+      return i + "nd";
+    }
+    if (j == 3 && k != 13) {
+      return i + "rd";
+    }
+    return i + "th";
   }
 
   // form submission handled inline on form element via use:enhance
@@ -139,7 +174,10 @@
 
     <p class="label">DATES</p>
     <div class="dates-row">
-      <p>{$customerStore.start}</p>
+      <p class="date-box">
+        {getMonthString($customerStore.start)}
+        <span class="pd-time">@ {$customerStore.pickup_time}</span>
+      </p>
       <div class="arrow-container">
         <svg
           id="right-arrow"
@@ -176,7 +214,10 @@
           </g>
         </svg>
       </div>
-      <p>{$customerStore.end}</p>
+      <p class="date-box">
+        {getMonthString($customerStore.end)}
+        <span class="pd-time">@ {$customerStore.dropoff_time}</span>
+      </p>
     </div>
 
     <input hidden name="start-date" value={$customerStore.start} />
@@ -285,7 +326,22 @@
     height: 50px;
     font-family: font-light;
   }
+  .pd-time {
+    font-family: font-light;
+    font-size: 15px;
+  }
   @media (max-width: 500px) {
+    .date-box {
+      position: relative;
+      margin-bottom: 10px;
+    }
+    .pd-time {
+      font-family: font-light;
+      font-size: 13px;
+      position: absolute;
+      bottom: -10px;
+      left: 30%;
+    }
     .request-container {
       position: absolute;
       width: 90vw;

@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte";
 
   export let showRequest: boolean;
+  export let selectedTripLength: number;
 
   let dispatch = createEventDispatcher();
 
@@ -10,7 +11,9 @@
   }
 </script>
 
-{#if !showRequest}
+{#if !selectedTripLength}
+  <button class="reserve fixed"> <p>SELECT DATES</p></button>
+{:else if !showRequest}
   <button class="reserve fixed" on:click={dispatchShowModal}>
     <svg
       width="20px"

@@ -57,6 +57,8 @@
   function getTimeString(time: string | undefined) {
     if (!time) {
       return "No Time";
+    } else {
+      return time;
     }
   }
 
