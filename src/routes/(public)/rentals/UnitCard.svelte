@@ -1,8 +1,5 @@
 <script lang="ts">
   import type { Unit } from "$lib/types";
-  import { firebaseStore } from "$lib/stores";
-  import { ref, getDownloadURL } from "firebase/storage";
-  import { onMount } from "svelte";
   import { fade } from "svelte/transition";
 
   export let unitObject: Unit;
@@ -10,21 +7,15 @@
   let photoUrl: string | undefined = undefined;
   let photoLoaded = false;
 
-  onMount(loadImage);
-
-  async function loadImage() {
-    let storagePath = "units/" + unitObject.id + "/photos";
-    let photoList = unitObject.photo_list;
-    let photoName = undefined;
-    if (photoList) {
-      photoName = photoList[0].filename;
+  unitObject.photos.forEach((photoObj) => {
+    if (photoObj.index == 1) {
+      photoUrl = photoObj.downloadURL;
+      photoLoaded = true;
+      return;
     }
+  });
 
-    if (photoName) {
-      let fileRef = ref($firebaseStore.storage, storagePath + "/" + photoName);
-      photoUrl = await getDownloadURL(fileRef);
-    }
-
+  if (photoLoaded == false) {
     photoLoaded = true;
   }
 </script>
@@ -112,12 +103,13 @@
     width: 100%;
     border-radius: 4px;
     height: 175px;
-    background-size: cover;
+    background-size: contain;
     background-repeat: no-repeat;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: hsl(var(--b2));
+    background-position: center;
   }
   .no-photos-tag {
     font-family: "font-medium";
