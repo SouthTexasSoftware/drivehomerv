@@ -32,7 +32,7 @@
     </svg>
   </button>
   {#if $customerStore}
-    <h3>Thank you {$customerStore.first_name}!</h3>
+    <h3>Thank you {$customerStore.customerObject?.first_name}!</h3>
   {/if}
   <a class="logo-link" href="https://drivehomerv.com/"
     ><img src={companyLogo} alt="Company Logo" /></a

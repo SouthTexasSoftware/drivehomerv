@@ -14,7 +14,7 @@
 
   export let bookingObject: Booking | undefined;
 
-  let customerObjectCopy: Customer;
+  let customerObjectCopy: { [prop: string]: any } = {};
   let dataLoaded = false;
   let saving = false;
   let saved = false;
@@ -30,6 +30,9 @@
 
   beforeUpdate(() => {
     dataLoaded = false;
+    if (!bookingObject) {
+      return;
+    }
     if (bookingObject?.customerObject) {
       customerObjectCopy = bookingObject.customerObject;
       dataLoaded = true;
@@ -65,11 +68,11 @@
       //@ts-ignore
       let bookingDoc = doc(bookingsSubcollectionRef, bookingObject.id);
       await updateDoc(bookingDoc, {
-        "customer": customerObjectCopy.id,
+        customer: customerObjectCopy.id,
       });
 
       if (bookingObject) {
-        bookingObject.customerObject = customerObjectCopy;
+        bookingObject.customerObject = customerObjectCopy as Customer;
       }
 
       doneSaving();
@@ -80,7 +83,7 @@
     await setDoc(customerDoc, customerObjectCopy);
 
     if (bookingObject) {
-      bookingObject.customerObject = customerObjectCopy;
+      bookingObject.customerObject = customerObjectCopy as Customer;
     }
 
     doneSaving();

@@ -61,6 +61,7 @@ export interface Unit {
   };
   photos: PhotoDocument[];
   documents?: FileDocument[];
+  stripe_product_id?: string;
 }
 
 export interface PhotoDocument {
@@ -316,6 +317,16 @@ export interface Booking {
   event_list?: BookingEvent[];
   photos: PhotoDocument[];
   documents: FileDocument[];
+
+  stripe_price_id_list?: [string];
+  stripe_invoiceItem_id_list?: [string];
+  stripe_invoices?: [
+    {
+      id: string;
+      status: string;
+      amount: number;
+    }
+  ];
 }
 
 interface BookingEvent {
@@ -404,4 +415,5 @@ export interface Customer {
   terms_agreement?: boolean;
   bookings?: string[];
   age_over_25?: boolean;
+  stripe_id: string;
 }
