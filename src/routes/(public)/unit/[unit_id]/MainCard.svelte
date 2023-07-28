@@ -34,6 +34,7 @@
 <svelte:window bind:innerWidth={screenWidth} />
 {#if showRequest}
   <RequestModal
+    {unitObject}
     on:close={() => {
       showRequest = false;
     }}

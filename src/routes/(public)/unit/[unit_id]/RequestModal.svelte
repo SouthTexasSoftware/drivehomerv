@@ -9,8 +9,12 @@
     Timestamp,
     doc,
     arrayUnion,
+    updateDoc,
   } from "firebase/firestore";
   import { fade } from "svelte/transition";
+  import type { Unit } from "lib/types";
+
+  export let unitObject: Unit;
 
   let dispatch = createEventDispatcher();
   let submittingForm = false;
@@ -124,8 +128,12 @@
         bookings: [newBookingId],
       };
 
-      //@ts-ignore
-      //customerStore.set(newCustomer);
+      customerStore.update((storeData) => {
+        //@ts-ignore
+        storeData.customerObject = newCustomer;
+
+        return storeData;
+      });
 
       let newBookingRequest = {
         id: newBookingId,
@@ -138,10 +146,69 @@
         customer: newCustomerId,
         created: Timestamp.now(),
         status: "requested",
+        pickup_time: data.get("pickup-time"),
+        dropoff_time: data.get("dropoff-time"),
+        pickup_dropoff_price_addition: data.get(
+          "pickup-dropoff-price-addition"
+        ),
       };
 
       let createCustomer = await setDoc(newCustomerDocRef, newCustomer);
       let createBooking = await setDoc(newBookingDocRef, newBookingRequest);
+
+      //***  CREATE STRIPE CUSTOMER ***
+      let createStripeCustomer = await fetch("/api/stripe/createCustomer", {
+        method: "POST",
+        body: JSON.stringify(newCustomer),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      let customerResponse = await createStripeCustomer.json();
+
+      if (customerResponse.error) {
+        throw new Error(customerResponse.error);
+      } else {
+        // add stripeId to the our database..
+        console.log("Stripe Customer Created: ", customerResponse);
+        await updateDoc(newCustomerDocRef, {
+          stripe_id: customerResponse.stripe_id,
+        });
+      }
+
+      //***  CREATE STRIPE BOOKING PRICE OBJECT  ***
+      let createStripePrice = await fetch(
+        "/api/stripe/createInvoiceFromBooking",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            bookingRequest: newBookingRequest,
+            customerId: customerResponse.stripe_id,
+            stripe_product_id: unitObject.stripe_product_id,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      let priceResponse = await createStripePrice.json();
+
+      if (priceResponse.error) {
+        throw new Error(priceResponse.error);
+      } else {
+        // add priceId to the our database..
+        console.log(priceResponse);
+
+        await updateDoc(newBookingDocRef, {
+          stripe_price_id_list: arrayUnion(...priceResponse.price_id_list),
+          stripe_invoiceItem_id_list: arrayUnion(
+            ...priceResponse.invoice_items_list
+          ),
+          stripe_invoices: arrayUnion(...priceResponse.invoices),
+        });
+      }
 
       submittingForm = false;
 
@@ -225,6 +292,13 @@
     <input hidden name="total-price" value={$customerStore.total_price} />
     <input hidden name="unit-id" value={$customerStore.unit_id} />
     <input hidden name="unit-name" value={$customerStore.unit_name} />
+    <input hidden name="pickup-time" value={$customerStore.pickup_time} />
+    <input hidden name="dropoff-time" value={$customerStore.dropoff_time} />
+    <input
+      hidden
+      name="pickup-dropoff-price-addition"
+      value={$customerStore.pickup_dropoff_price_addition}
+    />
 
     <p class="label">PICKUP</p>
     <p class="info">Modena, New York</p>

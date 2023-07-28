@@ -23,3 +23,10 @@ export const sendgridConfig = {
   //@ts-ignore
   apiKey: p.VITE_SENDGRID_API_KEY,
 };
+
+export const stripeConfig = {
+  //@ts-ignore
+  privateKey: p.VITE_STRIPE_PRIVATE_KEY,
+  //@ts-ignore
+  publicKey: p.VITE_STRIPE_PUBLIC_KEY,
+};

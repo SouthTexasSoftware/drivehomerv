@@ -155,7 +155,7 @@
       {/if}
     </div>
     {#if option == "Overview"}
-      <BookingsOverview {bookingObject} />
+      <BookingsOverview {bookingObject} {unitObject} />
     {/if}
     {#if option == "Customer"}
       <BookingsCustomer {bookingObject} />
