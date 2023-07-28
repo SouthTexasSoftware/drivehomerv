@@ -2,7 +2,6 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import Stripe from "stripe";
 import { stripeConfig } from "../../../../../config";
-import type { Customer } from "lib/types";
 
 interface RequestData {
   invoiceID: string;

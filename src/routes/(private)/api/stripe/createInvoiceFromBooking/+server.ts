@@ -4,7 +4,9 @@ import type { RequestHandler } from "./$types";
 import Stripe from "stripe";
 import { stripeConfig } from "../../../../../config";
 import type { Booking } from "lib/types";
-import { DateTime } from "@easepick/bundle";
+import datetime from "@easepick/datetime";
+
+const DateTime = datetime.DateTime;
 
 interface BookingAndID {
   bookingRequest: Booking;
