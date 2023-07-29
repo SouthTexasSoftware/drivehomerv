@@ -39,6 +39,9 @@
   let selectedTripStart: string = "Start Date";
   let selectedTripEnd: string = "End Date";
 
+  let tripStartLabel = "Departure";
+  let tripEndLabel = "Return";
+
   onMount(() => {
     if ($customerStore.start && $customerStore.end) {
       selectedTripStart = $customerStore.start;
@@ -52,6 +55,7 @@
 
     buildUnitCalendar();
     updatePickupDropoff();
+    updateTripStartEndLabels();
   });
 
   function buildUnitCalendar() {
@@ -134,6 +138,20 @@
     dateString = dateString.substring(4);
     dateString = dateString.replaceAll(" ", "-");
     return dateString;
+  }
+
+  function updateTripStartEndLabels() {
+    if (
+      unitObject.information.bullet_points.summary.vehicle_type.includes(
+        "Class"
+      )
+    ) {
+      tripStartLabel = "Departure";
+      tripEndLabel = "Return";
+    } else {
+      tripStartLabel = "Delivery";
+      tripEndLabel = "Pick-up";
+    }
   }
 
   // use the bookings list on the unitObject to develop a pricing scheme for the pickupDropoffObject above.
@@ -345,7 +363,7 @@
 <div class="row pickup-dropoff">
   <div class="row stack">
     <label class="p-d" for="pickup-time"
-      >Pickup
+      >{tripStartLabel}
       {#if updatingPickupDropoff}
         <div class="spinner" />
       {/if}
@@ -378,7 +396,7 @@
   </div>
   <div class="row stack">
     <label class="p-d" for="dropoff-time"
-      >Dropoff
+      >{tripEndLabel}
       {#if updatingPickupDropoff}
         <div class="spinner" />
       {/if}

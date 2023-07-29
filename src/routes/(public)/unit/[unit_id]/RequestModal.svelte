@@ -20,9 +20,22 @@
   let submittingForm = false;
   let formElement: HTMLFormElement;
 
+  let invoicePercentage = "50";
+
   onMount(() => {
     window.scrollTo(0, 150);
+    setInvoicePercentageString();
   });
+
+  function setInvoicePercentageString() {
+    let selectedStartDate = new DateTime($customerStore.start, "MMM-DD-YYYY");
+    let todaysDate = new DateTime();
+    if (selectedStartDate.diff(todaysDate) < 30) {
+      invoicePercentage = "100";
+    } else {
+      invoicePercentage = "50";
+    }
+  }
 
   function dispatchCloseModal() {
     dispatch("close", true);
@@ -309,7 +322,8 @@
     <p class="terms">
       By clicking ‘Request to Book’, you agree to receive follow up
       communications from our sales team to answer any further questions, and
-      receive an invoice of 50% of the total booking value of ${$customerStore.total_price}.
+      receive an invoice for {invoicePercentage}% of the total booking value of
+      ${$customerStore.total_price}.
     </p>
 
     <button id="submit" type="submit">
