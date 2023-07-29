@@ -5,6 +5,7 @@
   import type { Booking, Customer, Unit } from "$lib/types";
   import { DateTime } from "@easepick/bundle";
   import { arrayUnion, collection, doc, updateDoc } from "firebase/firestore";
+  import { beforeUpdate } from "svelte";
   import { fade } from "svelte/transition";
 
   export let bookingObject: Booking | undefined;
@@ -19,6 +20,9 @@
   let generateInvoiceError = false;
   let generatingInvoice = false;
 
+  let tripStartLabel = "Departure";
+  let tripEndLabel = "Return";
+
   let bookingsSubcollectionRef = collection(
     $firebaseStore.db,
     "units",
@@ -29,6 +33,24 @@
   beforeNavigate(() => {
     generateInvoiceError = false;
   });
+
+  beforeUpdate(() => {
+    updateTripStartEndLabels();
+  });
+
+  function updateTripStartEndLabels() {
+    if (
+      unitObject.information.bullet_points.summary.vehicle_type.includes(
+        "Class"
+      )
+    ) {
+      tripStartLabel = "Departure";
+      tripEndLabel = "Return";
+    } else {
+      tripStartLabel = "Delivery";
+      tripEndLabel = "Pick-up";
+    }
+  }
 
   // format the date string stored in booking to a nice string
   function getMonthString(dateString: string | undefined) {
@@ -300,7 +322,7 @@
   {#if bookingObject}
     <div class="pickup-dropoff-container">
       <div class="calendar-square">
-        <p class="calendar-square-title">Pickup</p>
+        <p class="calendar-square-title">{tripStartLabel}</p>
         <div class="separating-bar" />
 
         <p class="day">{getDayString(bookingObject.start)}</p>
@@ -308,7 +330,7 @@
         <p class="time">{getTimeString(bookingObject.pickup_time)}</p>
       </div>
       <div class="calendar-square">
-        <p class="calendar-square-title">Dropoff</p>
+        <p class="calendar-square-title">{tripEndLabel}</p>
         <div class="separating-bar" />
 
         <p class="day">{getDayString(bookingObject.end)}</p>
