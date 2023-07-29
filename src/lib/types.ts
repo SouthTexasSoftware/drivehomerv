@@ -20,7 +20,6 @@ export interface FirebaseStore {
 export interface UnitStore {
   units: Unit[];
   getUnit(unitId: string): Unit | undefined;
-  updateUnit(unitId: string): void;
   isPopulated: boolean;
 }
 
@@ -61,6 +60,8 @@ export interface Unit {
     rates_and_fees: InformationRatesFees;
   };
   photos: PhotoDocument[];
+  documents?: FileDocument[];
+  stripe_product_id?: string;
 }
 
 export interface PhotoDocument {
@@ -74,6 +75,26 @@ export interface PhotoDocument {
   file_path: string;
   downloadURL: string;
   unit_id: string;
+  booking_id?: string;
+  subcategory: string;
+  option: string;
+  references?: {
+    type: string;
+    id: string;
+  }[];
+}
+
+export interface FileDocument {
+  id: string;
+  label: string;
+  filename: string;
+  file_size: number; // in KiloBytes
+  index: number;
+  date_added: Timestamp;
+  file_path: string;
+  downloadURL: string;
+  unit_id: string;
+  booking_id?: string;
   subcategory: string;
   option: string;
   references?: {
@@ -290,10 +311,22 @@ export interface Booking {
   pickup_location?: string;
   dropoff_time?: string;
   dropoff_location?: string;
+  pickup_dropoff_price_addition?: number;
   payment_status?: PaymentStatus;
   agreement_status?: AgreementStatus;
   event_list?: BookingEvent[];
-  photos?: PhotoDocument[];
+  photos: PhotoDocument[];
+  documents: FileDocument[];
+
+  stripe_price_id_list?: [string];
+  stripe_invoiceItem_id_list?: [string];
+  stripe_invoices?: [
+    {
+      id: string;
+      status: string;
+      amount: number;
+    }
+  ];
 }
 
 interface BookingEvent {
@@ -382,4 +415,5 @@ export interface Customer {
   terms_agreement?: boolean;
   bookings?: string[];
   age_over_25?: boolean;
+  stripe_id: string;
 }

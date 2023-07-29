@@ -88,6 +88,11 @@
     if (bookingObject) {
       bookingObject.photos.push(newPhotoDoc);
     }
+
+    bookingObject?.photos.push(newPhotoDoc);
+
+    console.log("added photo to bookingObject", bookingObject);
+
     dispatch("added", true);
 
     uploadingPhoto = false;

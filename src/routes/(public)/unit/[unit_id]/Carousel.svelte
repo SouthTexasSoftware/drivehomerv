@@ -2,8 +2,9 @@
   import type { Photo, Unit } from "$lib/types";
   import { firebaseStore, unitStore } from "$lib/stores";
   import { ref, getDownloadURL } from "firebase/storage";
-  import { onMount } from "svelte";
+  import { beforeUpdate, onMount } from "svelte";
   import { fade } from "svelte/transition";
+  import { afterNavigate } from "$app/navigation";
   // carousel needs a loader/shimmer effect, while we bring in photos/files
 
   // photos can be assigned as backgrounds to generated divs, in order to keep the sizing the same always..
@@ -15,10 +16,26 @@
   let carouselPhotoUrls: string[] = [];
   let photosLoaded = false;
 
+  sortAndSetPhotoList();
+
+  function sortAndSetPhotoList() {
+    let sortedPhotoList = unitObject.photos.sort((photoA, photoB) => {
+      if (photoA.index > photoB.index) {
+        return 1;
+      }
+      return 0;
+    });
+
+    carouselPhotoUrls = sortedPhotoList.map((photoObj) => {
+      return photoObj.downloadURL;
+    });
+    console.log(carouselPhotoUrls);
+    photosLoaded = true;
+  }
+
   onMount(() => {
-    if (unitObject.photo_list) {
-      createPhotoElements(unitObject.photo_list);
-    }
+    // reset showing photo index
+    showingPhotoIndex = 0;
   });
 
   /*
@@ -57,6 +74,14 @@
   }
 </script>
 
+<svelte:head>
+  {#if photosLoaded}
+    {#each carouselPhotoUrls as downloadURL}
+      <link rel="preload" as="image" href={downloadURL} />
+    {/each}
+  {/if}
+</svelte:head>
+
 <div class="carousel-container">
   <button class="arrow left" on:click={previousPhoto}>
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -79,13 +104,12 @@
   </button>
   <div class="photos-wrapper">
     {#if photosLoaded}
-      {#each [carouselPhotoUrls[showingPhotoIndex]] as src (showingPhotoIndex)}
+      {#key showingPhotoIndex}
         <div
           class="carousel-photo"
-          style="background-image:url('{src}')"
-          in:fade
+          style="background-image:url('{carouselPhotoUrls[showingPhotoIndex]}')"
         />
-      {/each}
+      {/key}
     {/if}
   </div>
 </div>

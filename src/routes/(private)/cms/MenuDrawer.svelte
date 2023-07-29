@@ -4,9 +4,7 @@
 </script>
 
 <div class="menu-container">
-  <a class="logo-link" href="https://drivehomerv.com/"
-    ><img src={companyLogo} alt="Company Logo" /></a
-  >
+  <a class="logo-link" href="/"><img src={companyLogo} alt="Company Logo" /></a>
   <div class="divider" />
   <a
     class="cms-link home"

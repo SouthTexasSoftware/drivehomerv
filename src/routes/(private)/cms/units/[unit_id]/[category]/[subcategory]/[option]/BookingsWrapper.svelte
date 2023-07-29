@@ -73,7 +73,7 @@
     <div class="container-header">
       <p class="option-title">Booking {$page.params.option}</p>
 
-      {#if option == "PhotosOnHold***"}
+      {#if option == "Photos"}
         <button
           class="add-photo"
           on:click={() => (addPhotoShowing = !addPhotoShowing)}
@@ -155,7 +155,7 @@
       {/if}
     </div>
     {#if option == "Overview"}
-      <BookingsOverview {bookingObject} />
+      <BookingsOverview {bookingObject} {unitObject} />
     {/if}
     {#if option == "Customer"}
       <BookingsCustomer {bookingObject} />

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { customerStore, firebaseStore } from "$lib/stores";
   import { createEventDispatcher, onMount } from "svelte";
+  import { DateTime } from "@easepick/bundle";
   import { enhance } from "$app/forms";
   import {
     collection,
@@ -8,16 +9,33 @@
     Timestamp,
     doc,
     arrayUnion,
+    updateDoc,
   } from "firebase/firestore";
   import { fade } from "svelte/transition";
+  import type { Unit } from "lib/types";
+
+  export let unitObject: Unit;
 
   let dispatch = createEventDispatcher();
   let submittingForm = false;
   let formElement: HTMLFormElement;
 
+  let invoicePercentage = "50";
+
   onMount(() => {
     window.scrollTo(0, 150);
+    setInvoicePercentageString();
   });
+
+  function setInvoicePercentageString() {
+    let selectedStartDate = new DateTime($customerStore.start, "MMM-DD-YYYY");
+    let todaysDate = new DateTime();
+    if (selectedStartDate.diff(todaysDate) < 30) {
+      invoicePercentage = "100";
+    } else {
+      invoicePercentage = "50";
+    }
+  }
 
   function dispatchCloseModal() {
     dispatch("close", true);
@@ -25,6 +43,40 @@
 
   function dispatchRequestSuccess() {
     dispatch("requestSuccess", true);
+  }
+
+  function getMonthString(dateString: string | undefined) {
+    if (!dateString || dateString == "undefined") {
+      return "None";
+    }
+    let dateTimeObject = new DateTime(dateString, "MMM-DD-YYYY");
+
+    let dayString = dateTimeObject.toLocaleString("en-us", {
+      weekday: "long",
+    });
+    let monthString = dateTimeObject.toLocaleString("en-us", {
+      month: "long",
+    });
+
+    let dayNumber = dateTimeObject.getDate();
+    let dayNumberFormatted = ordinal_suffix_of(dayNumber);
+
+    return monthString + " " + dayNumberFormatted;
+  }
+
+  function ordinal_suffix_of(i: number) {
+    var j = i % 10,
+      k = i % 100;
+    if (j == 1 && k != 11) {
+      return i + "st";
+    }
+    if (j == 2 && k != 12) {
+      return i + "nd";
+    }
+    if (j == 3 && k != 13) {
+      return i + "rd";
+    }
+    return i + "th";
   }
 
   // form submission handled inline on form element via use:enhance
@@ -89,8 +141,12 @@
         bookings: [newBookingId],
       };
 
-      //@ts-ignore
-      //customerStore.set(newCustomer);
+      customerStore.update((storeData) => {
+        //@ts-ignore
+        storeData.customerObject = newCustomer;
+
+        return storeData;
+      });
 
       let newBookingRequest = {
         id: newBookingId,
@@ -103,10 +159,69 @@
         customer: newCustomerId,
         created: Timestamp.now(),
         status: "requested",
+        pickup_time: data.get("pickup-time"),
+        dropoff_time: data.get("dropoff-time"),
+        pickup_dropoff_price_addition: data.get(
+          "pickup-dropoff-price-addition"
+        ),
       };
 
       let createCustomer = await setDoc(newCustomerDocRef, newCustomer);
       let createBooking = await setDoc(newBookingDocRef, newBookingRequest);
+
+      //***  CREATE STRIPE CUSTOMER ***
+      let createStripeCustomer = await fetch("/api/stripe/createCustomer", {
+        method: "POST",
+        body: JSON.stringify(newCustomer),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      let customerResponse = await createStripeCustomer.json();
+
+      if (customerResponse.error) {
+        throw new Error(customerResponse.error);
+      } else {
+        // add stripeId to the our database..
+        console.log("Stripe Customer Created: ", customerResponse);
+        await updateDoc(newCustomerDocRef, {
+          stripe_id: customerResponse.stripe_id,
+        });
+      }
+
+      //***  CREATE STRIPE BOOKING PRICE OBJECT  ***
+      let createStripePrice = await fetch(
+        "/api/stripe/createInvoiceFromBooking",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            bookingRequest: newBookingRequest,
+            customerId: customerResponse.stripe_id,
+            stripe_product_id: unitObject.stripe_product_id,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      let priceResponse = await createStripePrice.json();
+
+      if (priceResponse.error) {
+        throw new Error(priceResponse.error);
+      } else {
+        // add priceId to the our database..
+        console.log(priceResponse);
+
+        await updateDoc(newBookingDocRef, {
+          stripe_price_id_list: arrayUnion(...priceResponse.price_id_list),
+          stripe_invoiceItem_id_list: arrayUnion(
+            ...priceResponse.invoice_items_list
+          ),
+          stripe_invoices: arrayUnion(...priceResponse.invoices),
+        });
+      }
 
       submittingForm = false;
 
@@ -139,7 +254,10 @@
 
     <p class="label">DATES</p>
     <div class="dates-row">
-      <p>{$customerStore.start}</p>
+      <p class="date-box">
+        {getMonthString($customerStore.start)}
+        <span class="pd-time">@ {$customerStore.pickup_time}</span>
+      </p>
       <div class="arrow-container">
         <svg
           id="right-arrow"
@@ -176,7 +294,10 @@
           </g>
         </svg>
       </div>
-      <p>{$customerStore.end}</p>
+      <p class="date-box">
+        {getMonthString($customerStore.end)}
+        <span class="pd-time">@ {$customerStore.dropoff_time}</span>
+      </p>
     </div>
 
     <input hidden name="start-date" value={$customerStore.start} />
@@ -184,6 +305,13 @@
     <input hidden name="total-price" value={$customerStore.total_price} />
     <input hidden name="unit-id" value={$customerStore.unit_id} />
     <input hidden name="unit-name" value={$customerStore.unit_name} />
+    <input hidden name="pickup-time" value={$customerStore.pickup_time} />
+    <input hidden name="dropoff-time" value={$customerStore.dropoff_time} />
+    <input
+      hidden
+      name="pickup-dropoff-price-addition"
+      value={$customerStore.pickup_dropoff_price_addition}
+    />
 
     <p class="label">PICKUP</p>
     <p class="info">Modena, New York</p>
@@ -194,7 +322,8 @@
     <p class="terms">
       By clicking ‘Request to Book’, you agree to receive follow up
       communications from our sales team to answer any further questions, and
-      receive an invoice of 50% of the total booking value of ${$customerStore.total_price}.
+      receive an invoice for {invoicePercentage}% of the total booking value of
+      ${$customerStore.total_price}.
     </p>
 
     <button id="submit" type="submit">
@@ -285,7 +414,22 @@
     height: 50px;
     font-family: font-light;
   }
+  .pd-time {
+    font-family: font-light;
+    font-size: 15px;
+  }
   @media (max-width: 500px) {
+    .date-box {
+      position: relative;
+      margin-bottom: 10px;
+    }
+    .pd-time {
+      font-family: font-light;
+      font-size: 13px;
+      position: absolute;
+      bottom: -10px;
+      left: 30%;
+    }
     .request-container {
       position: absolute;
       width: 90vw;
