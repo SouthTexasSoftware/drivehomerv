@@ -55,9 +55,9 @@ export const POST = (async ({ request }) => {
     bookingAndId.bookingRequest.start,
     "MMM-DD-YYYY"
   );
-  let unixStart = Math.floor(bookingStart.getTime() / 1000);
+  let unixStart = Math.ceil(bookingStart.getTime() / 1000);
   let bookingEnd = new DateTime(bookingAndId.bookingRequest.end, "MMM-DD-YYYY");
-  let unixEnd = Math.floor(bookingEnd.getTime() / 1000);
+  let unixEnd = Math.ceil(bookingEnd.getTime() / 1000);
 
   if (tripInvoiceSplit) {
     // TWO SEPERATE PRICE OBJECTS - AND THE FIRST INVOICE ITEM CREATED

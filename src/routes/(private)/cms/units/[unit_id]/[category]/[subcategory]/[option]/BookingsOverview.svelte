@@ -395,7 +395,7 @@
         {#if bookingObject.customerObject?.stripe_id}
           <a
             class="stripe-product"
-            href="https://dashboard.stripe.com/test/customers/{bookingObject
+            href="https://dashboard.stripe.com/customers/{bookingObject
               .customerObject?.stripe_id}"
             target="_blank">CUSTOMER</a
           >
@@ -406,7 +406,7 @@
           <a
             target="_blank"
             class="stripe-invoice"
-            href="https://dashboard.stripe.com/test/invoices/{invoiceObj.id}"
+            href="https://dashboard.stripe.com/invoices/{invoiceObj.id}"
           >
             ${invoiceObj.amount} invoice
           </a>
