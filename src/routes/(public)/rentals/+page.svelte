@@ -1,14 +1,15 @@
 <script lang="ts">
   import { unitStore } from "$lib/stores";
-  import type { Booking, Unit } from "$lib/types";
+  import type { Unit } from "$lib/types";
   import DateSelector from "./DateSelector.svelte";
   import UnitCard from "./UnitCard.svelte";
   import PageDataLoading from "$lib/components/PageDataLoading.svelte";
-  import type { DateTime } from "@easepick/datetime";
+  import UnitCardLoader from "./UnitCardLoader.svelte";
 
   let loadingUnitStore = true;
 
   let availableUnits: Unit[];
+  let loaderUnits = [0, 1, 2, 3, 4, 5, 6];
 
   unitStore.subscribe((storeData) => {
     if (storeData.isPopulated) {
@@ -87,16 +88,18 @@
 </script>
 
 <h2>Available Rentals</h2>
-{#if loadingUnitStore}
-  <PageDataLoading />
-{:else}
-  <div class="flex-card-container">
+<div class="flex-card-container">
+  {#if loadingUnitStore}
+    {#each loaderUnits as loader}
+      <UnitCardLoader />
+    {/each}
+  {:else}
     <DateSelector on:selection={updateAvailableUnits} />
     {#each availableUnits as unit (unit.id)}
       <UnitCard unitObject={unit} />
     {/each}
-  </div>
-{/if}
+  {/if}
+</div>
 
 <style>
   h2 {
@@ -111,5 +114,6 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    margin-bottom: 100px;
   }
 </style>

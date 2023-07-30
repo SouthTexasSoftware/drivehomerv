@@ -2,23 +2,24 @@
   import { page } from "$app/stores";
   import { firebaseStore } from "$lib/stores";
   import type { Booking, Customer } from "$lib/types";
-  import {
-    Timestamp,
-    collection,
-    doc,
-    setDoc,
-    updateDoc,
-  } from "firebase/firestore";
+  import { collection, doc, setDoc, updateDoc } from "firebase/firestore";
   import { beforeUpdate } from "svelte";
   import { fade } from "svelte/transition";
 
   export let bookingObject: Booking | undefined;
 
-  let customerObjectCopy: { [prop: string]: any } = {};
-  let dataLoaded = false;
-  let saving = false;
-  let saved = false;
-  let timerOn = false;
+  let customerObject: Customer | undefined = bookingObject?.customerObject;
+
+  let changesMade = false;
+  let savingChanges = false;
+  let cancelingChanges = false;
+
+  let inputElements: { [label: string]: HTMLInputElement | null } = {
+    firstNameElement: null,
+    lastNameElement: null,
+    phoneElement: null,
+    emailElement: null,
+  };
 
   let customerCollectionRef = collection($firebaseStore.db, "customers");
   let bookingsSubcollectionRef = collection(
@@ -28,74 +29,104 @@
     "bookings"
   );
 
-  beforeUpdate(() => {
-    dataLoaded = false;
-    if (!bookingObject) {
-      return;
-    }
-    if (bookingObject?.customerObject) {
-      customerObjectCopy = bookingObject.customerObject;
-      dataLoaded = true;
-      return;
-    }
+  beforeUpdate(() => {});
 
-    customerObjectCopy = {
-      first_name: "",
-      last_name: "",
-      phone: "",
-      email: "",
-      created: Timestamp.now(),
-      //@ts-ignore
-      bookings: [bookingObject.id],
-    };
-    dataLoaded = true;
-  });
-
-  function triggerTimer() {
-    if (timerOn) return;
-    timerOn = true;
-    setTimeout(saveCustomerInfo, 5000);
+  function handleChangedValue() {
+    changesMade = true;
   }
 
-  async function saveCustomerInfo() {
-    timerOn = false;
-    saving = true;
-    if (!customerObjectCopy.id) {
-      customerObjectCopy.id = newUUID();
-      let newCustomerDoc = doc(customerCollectionRef, customerObjectCopy.id);
-      await setDoc(newCustomerDoc, customerObjectCopy);
+  async function saveChanges() {
+    if (savingChanges) {
+      return;
+    }
+    savingChanges = true;
+
+    if (!customerObject) {
+      // create a new customer object in the db...
+      let newCustomer: Customer = {
+        id: newUUID(),
+        first_name: inputElements.firstNameElement?.value
+          ? inputElements.firstNameElement.value
+          : "",
+        last_name: inputElements.lastNameElement?.value
+          ? inputElements.lastNameElement.value
+          : "",
+        phone: inputElements.phoneElement?.value
+          ? inputElements.phoneElement.value
+          : "",
+        email: inputElements.emailElement?.value
+          ? inputElements.emailElement.value
+          : "",
+      };
+      let newCustomerDocRef = doc(customerCollectionRef, newCustomer.id);
+      await setDoc(newCustomerDocRef, newCustomer);
 
       //@ts-ignore
       let bookingDoc = doc(bookingsSubcollectionRef, bookingObject.id);
       await updateDoc(bookingDoc, {
-        customer: customerObjectCopy.id,
+        customer: newCustomer.id,
       });
 
-      if (bookingObject) {
-        bookingObject.customerObject = customerObjectCopy as Customer;
-      }
+      //@ts-ignore
+      bookingObject.customerObject = newCustomer;
+      customerObject = newCustomer;
+    } else {
+      //just update the existing customer
+      let customerDocRef = doc(customerCollectionRef, customerObject.id);
 
-      doneSaving();
-      return;
+      let updatedCustomer: Customer = {
+        id: customerObject.id,
+        first_name: inputElements.firstNameElement?.value
+          ? inputElements.firstNameElement.value
+          : "",
+        last_name: inputElements.lastNameElement?.value
+          ? inputElements.lastNameElement.value
+          : "",
+        phone: inputElements.phoneElement?.value
+          ? inputElements.phoneElement.value
+          : "",
+        email: inputElements.emailElement?.value
+          ? inputElements.emailElement.value
+          : "",
+      };
+
+      await setDoc(customerDocRef, updatedCustomer);
+
+      //@ts-ignore
+      bookingObject.customerObject = updatedCustomer;
+      customerObject = updatedCustomer;
     }
 
-    let customerDoc = doc(customerCollectionRef, customerObjectCopy.id);
-    await setDoc(customerDoc, customerObjectCopy);
-
-    if (bookingObject) {
-      bookingObject.customerObject = customerObjectCopy as Customer;
-    }
-
-    doneSaving();
-    return;
+    changesMade = false;
+    savingChanges = false;
   }
 
-  function doneSaving() {
-    saving = false;
-    saved = true;
-    setTimeout(() => {
-      saved = false;
-    }, 2000);
+  function cancelChanges() {
+    if (cancelingChanges) {
+      return;
+    }
+    cancelingChanges = true;
+
+    // reset values back to original = customerObject at beginning. (it doesn't like switching from strings to undefined..)
+    //@ts-ignore
+    inputElements.firstNameElement.value = customerObject?.first_name
+      ? customerObject?.first_name
+      : "";
+    //@ts-ignore
+    inputElements.lastNameElement.value = customerObject?.last_name
+      ? customerObject?.last_name
+      : "";
+    //@ts-ignore
+    inputElements.phoneElement.value = customerObject?.phone
+      ? customerObject?.phone
+      : "";
+    //@ts-ignore
+    inputElements.emailElement.value = customerObject?.email
+      ? customerObject?.email
+      : "";
+
+    changesMade = false;
+    cancelingChanges = false;
   }
 
   function newUUID(): string {
@@ -111,61 +142,92 @@
 </script>
 
 <div class="customer-container">
-  {#if dataLoaded}
-    <div class="section">
-      <div class="section-label">First Name</div>
-      <input
-        type="text"
-        on:input={triggerTimer}
-        bind:value={customerObjectCopy.first_name}
-      />
-    </div>
-    <div class="section">
-      <div class="section-label">Last Name</div>
-      <input
-        type="text"
-        on:input={triggerTimer}
-        bind:value={customerObjectCopy.last_name}
-      />
-    </div>
-    <div class="section">
-      <div class="section-label">Phone</div>
-      <input
-        type="text"
-        on:input={triggerTimer}
-        bind:value={customerObjectCopy.phone}
-      />
-    </div>
-    <div class="section">
-      <div class="section-label">Email</div>
-      <input
-        type="text"
-        on:input={triggerTimer}
-        bind:value={customerObjectCopy.email}
-      />
+  <div class="section">
+    <div class="section-label">First Name</div>
+    <input
+      type="text"
+      on:input={handleChangedValue}
+      name="first-name"
+      value={customerObject?.first_name ? customerObject.first_name : ""}
+      bind:this={inputElements.firstNameElement}
+    />
+  </div>
+  <div class="section">
+    <div class="section-label">Last Name</div>
+    <input
+      type="text"
+      on:input={handleChangedValue}
+      name="last-name"
+      value={customerObject?.last_name ? customerObject.last_name : ""}
+      bind:this={inputElements.lastNameElement}
+    />
+  </div>
+  <div class="section">
+    <div class="section-label">Phone</div>
+    <input
+      type="tel"
+      on:input={handleChangedValue}
+      name="phone"
+      value={customerObject?.phone ? customerObject.phone : ""}
+      bind:this={inputElements.phoneElement}
+    />
+  </div>
+  <div class="section">
+    <div class="section-label">Email</div>
+    <input
+      type="email"
+      on:input={handleChangedValue}
+      name="email"
+      value={customerObject?.email ? customerObject.email : ""}
+      bind:this={inputElements.emailElement}
+    />
+  </div>
+  {#if changesMade}
+    <div class="save-button-container" transition:fade>
+      <button class="cancel" on:click={cancelChanges}>
+        {#if cancelingChanges}
+          <p class="spinner cancel" />
+        {:else}
+          <svg
+            width="9"
+            height="10"
+            viewBox="0 0 9 10"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M4.73646 6.99179L7.67886 9.82699C7.97404 10.1136 8.16609 10.1165 8.46666 9.82699L9.05702 9.25802C9.34623 8.97942 9.36583 8.79654 9.05702 8.49896L5.94189 5.49772L9.0573 2.49648C9.34907 2.2144 9.35475 2.02404 9.0573 1.73715L8.46695 1.16845C8.16069 0.873271 7.97148 0.886907 7.67915 1.16845L4.73646 4.00365L1.79406 1.16872C1.50173 0.887174 1.31252 0.873538 1.00626 1.16872L0.415904 1.73741C0.118169 2.0243 0.123567 2.21467 0.415904 2.49675L3.53104 5.49772L0.415904 8.49896C0.107089 8.79654 0.123567 8.97942 0.415904 9.25802L1.00597 9.82699C1.30399 10.1165 1.49604 10.1136 1.79378 9.82699L4.73646 6.99179Z"
+              fill="#3D3D3D"
+            />
+          </svg>
+          Cancel
+        {/if}
+      </button>
+      <button class="save" on:click={saveChanges}>
+        {#if savingChanges}
+          <p class="spinner" />
+        {:else}
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 10 10"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M1.42259 4.7699C1.09715 4.33601 0.569518 4.33601 0.244076 4.7699C-0.0813585 5.20379 -0.0813585 5.90735 0.244076 6.34124L2.74408 9.67458C3.06952 10.1085 3.59717 10.1085 3.92259 9.67458L9.75594 1.89679C10.0814 1.46287 10.0814 0.759358 9.75594 0.325434C9.43052 -0.108478 8.90285 -0.108478 8.57743 0.325434L3.33334 7.31758L1.42259 4.7699Z"
+              fill="white"
+            />
+          </svg>
+          Save
+        {/if}
+      </button>
     </div>
   {/if}
-  <div class="saving-container">
-    {#if saving}
-      <div class="spinner" />
-    {/if}
-    {#if saved}
-      <svg
-        width="14"
-        height="12"
-        viewBox="0 0 14 12"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        transition:fade
-      >
-        <path
-          d="M1 5.95654L5.16047 9.74893L12.0943 1.10277"
-          stroke="#AE2623"
-          stroke-width="2.77358"
-        />
-      </svg>
-    {/if}
-  </div>
 </div>
 
 <style>
@@ -173,6 +235,8 @@
     display: flex;
     flex-direction: column;
     padding: 0 15px;
+    margin-bottom: 65px;
+    overflow-y: scroll;
   }
   .section {
     display: flex;
@@ -197,25 +261,54 @@
     outline: none;
     width: 100%;
   }
+  .save-button-container {
+    display: flex;
 
-  .saving-container {
+    justify-content: space-around;
+    align-content: center;
+
     position: absolute;
-    bottom: 5px;
-    right: -25px;
+    bottom: 0;
+    width: 100%;
+    left: 0;
+    padding: 15px;
+    background-color: hsl(var(--b1));
+  }
+  button {
+    width: 90px;
+    border-radius: 4px;
+    height: 28px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  button.cancel {
+    background-color: var(--cms-boxShadow);
+  }
+  button.save {
+    background-color: hsl(var(--p));
+    color: white;
+  }
+  svg {
+    margin: 0 10px;
   }
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--p));
-    border-right: 2px solid transparent;
+    border-top: 1px solid hsl(var(--b1));
+    border-right: 1px solid transparent;
     animation-name: spinning;
-    animation-duration: 1.2s;
+    animation-duration: 1s;
     animation-iteration-count: infinite;
     animation-timing-function: linear;
     opacity: 1;
     transition: all 0.2s;
     width: 15px;
     height: 15px;
+    margin: 0 auto;
+  }
+  .spinner.cancel {
+    border-top: 1px solid var(--cms-text);
   }
   @keyframes spinning {
     0% {

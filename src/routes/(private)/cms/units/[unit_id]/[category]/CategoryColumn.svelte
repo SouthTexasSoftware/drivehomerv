@@ -1,9 +1,11 @@
 <script lang="ts">
   import { newUnitModel } from "$lib/helpers";
   import { page } from "$app/stores";
-  import { beforeUpdate } from "svelte";
+  import { beforeUpdate, onMount } from "svelte";
   import type { Unit } from "$lib/types";
   import { DateTime } from "@easepick/bundle";
+  import { afterNavigate } from "$app/navigation";
+  import { unitStore } from "$lib/stores";
 
   export let unitObject: Unit;
 
@@ -11,11 +13,23 @@
   let subcategoryLabels: string[] = [];
   let showingSubcategory: { [key: string]: boolean } = {};
 
-  beforeUpdate(() => {
+  afterNavigate(() => {
     getUnitModelInformation();
   });
 
+  onMount(() => {
+    if (subcategoryList.length == 0) {
+      getUnitModelInformation();
+    }
+  });
+
   function getUnitModelInformation() {
+    if ($unitStore.isPopulated == false) {
+      console.log("unit store not populated, rerun in .2 seconds");
+      setTimeout(getUnitModelInformation, 200);
+      return;
+    }
+
     try {
       //@ts-ignore
       if (!newUnitModel[$page.params.category]) {
@@ -88,7 +102,7 @@
         showingSubcategory[key] = false;
       });
     } catch (e) {
-      console.warn(e);
+      console.error(e);
     }
   }
 

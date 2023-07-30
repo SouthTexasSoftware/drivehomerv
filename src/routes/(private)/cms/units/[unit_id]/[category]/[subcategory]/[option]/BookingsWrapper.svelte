@@ -57,7 +57,6 @@
   onMount(fetchCustomerData);
 
   async function fetchCustomerData() {
-    console.log("fetching customer data");
     let customerDocs = await getDocs(
       collection($firebaseStore.db, "customers")
     );

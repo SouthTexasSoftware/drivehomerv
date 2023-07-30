@@ -3,7 +3,6 @@
   import { page } from "$app/stores";
 
   export let unitObject: Unit;
-  console.log($page.params);
 
   // TODO: Incorporate 'DELETE UNIT' into category bar?
   // or in the maintenance category
