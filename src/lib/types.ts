@@ -415,5 +415,5 @@ export interface Customer {
   terms_agreement?: boolean;
   bookings?: string[];
   age_over_25?: boolean;
-  stripe_id: string;
+  stripe_id?: string;
 }
