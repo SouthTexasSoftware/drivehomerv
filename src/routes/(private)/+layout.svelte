@@ -23,7 +23,7 @@
       connectToFirebase().then((val) => {
         if (val) {
           console.log("Database connected.");
-          populateUnitStore($firebaseStore);
+          populateUnitStore($firebaseStore, { cms: true });
           if (!dev) {
             let analytics = connectAnalytics();
             console.log(analytics);

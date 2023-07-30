@@ -56,7 +56,10 @@ export async function connectToFirebase() {
  * @params fbStore Is the copy of firebaseStore already created
  *
  */
-export async function populateUnitStore(fbStore: FirebaseStore) {
+export async function populateUnitStore(
+  fbStore: FirebaseStore,
+  options?: { cms: boolean }
+) {
   if (typeof window != undefined) {
     try {
       const unitCollectionDocs = await getDocs(collection(fbStore.db, "units"));
@@ -76,40 +79,45 @@ export async function populateUnitStore(fbStore: FirebaseStore) {
         unit.bookings = [];
         unit.bookingDates = [];
 
-        unitBookings.forEach(async (doc) => {
+        for (let doc of unitBookings.docs) {
           let booking = doc.data() as Booking;
 
-          // PULL BOOKING PHOTOS & DOCUMENTS
-          let bookingPhotosCollection = collection(
-            fbStore.db,
-            "units",
-            unit.id,
-            "bookings",
-            booking.id,
-            "photos"
-          );
-          let bookingDocumentsCollection = collection(
-            fbStore.db,
-            "units",
-            unit.id,
-            "bookings",
-            booking.id,
-            "documents"
-          );
+          if (options) {
+            if (options.cms) {
+              // DO ONLY IF CMS IS PASSED TO THE UNIT STORE LOAD FUNCTION
+              // PULL BOOKING PHOTOS & DOCUMENTS
+              let bookingPhotosCollection = collection(
+                fbStore.db,
+                "units",
+                unit.id,
+                "bookings",
+                booking.id,
+                "photos"
+              );
+              let bookingDocumentsCollection = collection(
+                fbStore.db,
+                "units",
+                unit.id,
+                "bookings",
+                booking.id,
+                "documents"
+              );
 
-          let bookingPhotos = await getDocs(bookingPhotosCollection);
-          let bookingDocuments = await getDocs(bookingDocumentsCollection);
+              let bookingPhotos = await getDocs(bookingPhotosCollection);
+              let bookingDocuments = await getDocs(bookingDocumentsCollection);
 
-          booking.photos = [];
-          booking.documents = [];
-          bookingPhotos.forEach((photoDoc) => {
-            //@ts-ignore
-            booking.photos.push(photoDoc.data() as PhotoDocument);
-          });
-          bookingDocuments.forEach((fileDoc) => {
-            //@ts-ignore
-            booking.documents.push(fileDoc.data() as FileDocument);
-          });
+              booking.photos = [];
+              booking.documents = [];
+              bookingPhotos.forEach((photoDoc) => {
+                //@ts-ignore
+                booking.photos.push(photoDoc.data() as PhotoDocument);
+              });
+              bookingDocuments.forEach((fileDoc) => {
+                //@ts-ignore
+                booking.documents.push(fileDoc.data() as FileDocument);
+              });
+            }
+          }
 
           let bookingDates = {
             start: new DateTime(booking.start, "MMM-DD-YYYY"),
@@ -120,7 +128,7 @@ export async function populateUnitStore(fbStore: FirebaseStore) {
             unit.bookingDates.push(bookingDates);
             unit.bookings.push(booking);
           }
-        });
+        }
 
         // *** PHOTOS SUBCOLLECTION DATA PULL
         let unitPhotos = await getDocs(
