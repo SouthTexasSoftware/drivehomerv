@@ -28,6 +28,7 @@
   let indexUpdated = false;
   let loading = false;
   let saved = false;
+  let saving = false;
 
   $: bookingPhotosSubcollectionRef = collection(
     $firebaseStore.db,

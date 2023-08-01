@@ -6,6 +6,7 @@
   import { DateTime } from "@easepick/bundle";
   import { afterNavigate } from "$app/navigation";
   import { unitStore } from "$lib/stores";
+  import { createEventDispatcher } from "svelte";
 
   export let unitObject: Unit;
 
@@ -13,8 +14,11 @@
   let subcategoryLabels: string[] = [];
   let showingSubcategory: { [key: string]: boolean } = {};
 
+  let dispatch = createEventDispatcher();
+
   afterNavigate(() => {
     getUnitModelInformation();
+    dispatch("closeMobileColumn", true);
   });
 
   onMount(() => {
@@ -37,7 +41,7 @@
         if (unitObject.bookings) {
           unitObject.bookings.sort((bookingA, bookingB) => {
             if (bookingA.start == "undefined") {
-              return 0;
+              return -1;
             }
             if (bookingB.start == "undefined") {
               return 1;
@@ -239,5 +243,13 @@
   .option-link.active {
     background-color: var(--cms-highlightPrimary);
     border-right: 3px solid hsl(var(--p));
+  }
+
+  @media (max-width: 500px) {
+    .column-container {
+      width: 100%;
+      background-color: #fafafa;
+      border: 1px solid hsl(var(--b2));
+    }
   }
 </style>

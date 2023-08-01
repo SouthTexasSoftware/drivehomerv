@@ -33,8 +33,6 @@
           class:active={$page.url.pathname.includes(unit.id)}>{unit.name}</a
         >
       {/each}
-    {:else}
-      <div class="spinner" />
     {/if}
     <a class="create-link" href="/cms/units/create">+ Create Unit</a>
   </div>
@@ -81,13 +79,13 @@
 
   @media (max-width: 1000px) {
     .unit-selection-container {
-      height: 60px;
+      height: 52px;
       display: flex;
       flex-direction: column;
       border: none;
       border-left: 2px solid var(--cms-boxShadow);
       border-top: 1px solid var(--cms-boxShadow);
-      width: 145px;
+      width: 200px;
       position: fixed;
       bottom: 60px;
       right: 0;
@@ -115,8 +113,8 @@
       width: 100%;
       padding-right: 20px;
       font-size: 20px;
-      height: 60px !important;
-      line-height: 60px;
+      height: 52px !important;
+      line-height: 52px;
       padding: 0;
       /* margin-right: 40px; */
       overflow: clip;
@@ -129,29 +127,6 @@
       text-decoration: underline;
       text-decoration-color: hsl(var(--p));
       text-decoration-thickness: 3px;
-    }
-  }
-  .spinner {
-    content: "";
-    border-radius: 50%;
-    border-top: 2px solid hsl(var(--p));
-    border-right: 2px solid transparent;
-    animation-name: spinning;
-    animation-duration: 1s;
-    animation-iteration-count: infinite;
-    animation-timing-function: linear;
-    opacity: 1;
-    transition: all 0.2s;
-    width: 30px;
-    height: 30px;
-    margin: 25px;
-  }
-  @keyframes spinning {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
     }
   }
 </style>

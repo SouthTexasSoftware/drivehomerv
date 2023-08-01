@@ -1,5 +1,10 @@
 import { firebaseClientConfig } from "../config";
-import { collection, getDocs } from "@firebase/firestore";
+import {
+  collection,
+  getDocs,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from "@firebase/firestore";
 import { get } from "svelte/store";
 import type {
   Unit,
@@ -33,7 +38,11 @@ export async function connectToFirebase() {
         "drive-home-rv"
       );
       const auth = authModule.getAuth(app);
-      const db = firestoreModule.getFirestore(app);
+      const db = firestoreModule.initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
+      });
       const storage = storageModule.getStorage(app);
 
       firebaseStore.set({
