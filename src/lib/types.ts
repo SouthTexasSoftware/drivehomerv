@@ -62,6 +62,8 @@ export interface Unit {
   photos: PhotoDocument[];
   documents?: FileDocument[];
   stripe_product_id?: string;
+
+  sessionOnly?: { [key: string]: any };
 }
 
 export interface PhotoDocument {
@@ -303,6 +305,8 @@ export interface Booking {
   unit_name?: string;
   start: string; //MMM-DD-YYYY
   end: string; //MMM-DD-YYYY
+  unix_start?: number;
+  unix_end?: number; // for ease of comparison
   total_price?: number;
   created?: Timestamp;
   updated?: Timestamp;

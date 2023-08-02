@@ -2,11 +2,12 @@
   import { newUnitModel } from "$lib/helpers";
   import { page } from "$app/stores";
   import { beforeUpdate, onMount } from "svelte";
-  import type { Unit } from "$lib/types";
+  import type { Booking, Unit } from "$lib/types";
   import { DateTime } from "@easepick/bundle";
   import { afterNavigate } from "$app/navigation";
-  import { unitStore } from "$lib/stores";
+  import { firebaseStore, unitStore } from "$lib/stores";
   import { createEventDispatcher } from "svelte";
+  import { collection, getDocs, query, where } from "firebase/firestore";
 
   export let unitObject: Unit;
 
@@ -14,16 +15,26 @@
   let subcategoryLabels: string[] = [];
   let showingSubcategory: { [key: string]: boolean } = {};
 
+  let loadingPastBookings = false;
+
   let dispatch = createEventDispatcher();
 
   afterNavigate(() => {
     getUnitModelInformation();
     dispatch("closeMobileColumn", true);
+    if (!unitObject.sessionOnly) {
+      unitObject.sessionOnly = {};
+      unitObject.sessionOnly.pastBookingsLoaded = false;
+    }
   });
 
   onMount(() => {
     if (subcategoryList.length == 0) {
       getUnitModelInformation();
+    }
+    if (!unitObject.sessionOnly) {
+      unitObject.sessionOnly = {};
+      unitObject.sessionOnly.pastBookingsLoaded = false;
     }
   });
 
@@ -146,6 +157,40 @@
       return t.toUpperCase();
     });
   }
+
+  async function loadPastBookings() {
+    if (loadingPastBookings) return;
+    loadingPastBookings = true;
+
+    let bookingsCollection = collection(
+      $firebaseStore.db,
+      "units",
+      unitObject.id,
+      "bookings"
+    );
+    let todaysDate = new DateTime();
+    let todaysUnixTimestamp = Math.ceil(todaysDate.getTime() / 1000);
+    let pastBookingsQuery = query(
+      bookingsCollection,
+      where("unix_end", "<=", todaysUnixTimestamp)
+    );
+
+    let pastBookings = await getDocs(pastBookingsQuery);
+
+    for (let booking of pastBookings.docs) {
+      unitObject.bookings?.push(booking.data() as Booking);
+    }
+
+    getUnitModelInformation();
+
+    if (!unitObject.sessionOnly) {
+      unitObject.sessionOnly = {};
+      unitObject.sessionOnly.pastBookingsLoaded = true;
+    } else {
+      unitObject.sessionOnly.pastBookingsLoaded = true;
+    }
+    loadingPastBookings = false;
+  }
 </script>
 
 <div class="column-container">
@@ -202,12 +247,27 @@
       </div>
     {/if}
   {/each}
+  {#if $page.params.category == "bookings"}
+    {#if unitObject.sessionOnly}
+      {#if unitObject.sessionOnly.pastBookingsLoaded == false}
+        <button class="load-past-bookings" on:click={loadPastBookings}>
+          {#if loadingPastBookings}
+            <div class="spinner" />
+          {:else}
+            Load Past Bookings
+          {/if}
+        </button>
+      {/if}
+    {/if}
+  {/if}
 </div>
 
 <style>
   .column-container {
     overflow-y: scroll;
     padding-bottom: 100px;
+    display: flex;
+    flex-direction: column;
   }
   .subcategory-title {
     display: flex;
@@ -245,11 +305,50 @@
     border-right: 3px solid hsl(var(--p));
   }
 
+  .load-past-bookings {
+    background-color: hsl(var(--p));
+    font-family: font-bold;
+    color: hsl(var(--b1));
+    text-align: center;
+    align-self: flex-start;
+    height: 24px;
+    width: 156px;
+    border-radius: 4px;
+    margin-top: 14px;
+    margin-left: 19px;
+    font-size: 14px;
+  }
+
   @media (max-width: 500px) {
     .column-container {
       width: 100%;
       background-color: #fafafa;
       border: 1px solid hsl(var(--b2));
+    }
+  }
+
+  .spinner {
+    content: "";
+    border-radius: 50%;
+    border-top: 1px solid hsl(var(--b1));
+    border-right: 1px solid transparent;
+    animation-name: spinning;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    opacity: 1;
+    transition: all 0.2s;
+    width: 15px;
+    height: 15px;
+    margin: 0 auto;
+  }
+
+  @keyframes spinning {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
     }
   }
 </style>

@@ -4,6 +4,7 @@
   import NewBookingCalendar from "./NewBookingCalendar.svelte";
   import { collection, setDoc, doc, Timestamp } from "firebase/firestore";
   import { createEventDispatcher } from "svelte";
+  import { DateTime } from "@easepick/bundle";
 
   let dispatch = createEventDispatcher();
 
@@ -53,12 +54,17 @@
       let newBookingDocRef = doc(bookingsCollection);
       let newBookingId = newBookingDocRef.id;
 
+      let startDate = new DateTime(data.get("start-date"), "MMM-DD-YYYY");
+      let endDate = new DateTime(data.get("end-date"), "MMM-DD-YYYY");
+
       let newBookingRequest = {
         id: newBookingId,
         passengers: null,
         total_price: null,
         start: data.get("start-date"),
         end: data.get("end-date"),
+        unix_start: Math.ceil(startDate.getTime() / 1000),
+        unix_end: Math.ceil(endDate.getTime() / 1000),
         unit_id: data.get("unit-select"),
         unit_name: null,
         customer: "manualEntry",

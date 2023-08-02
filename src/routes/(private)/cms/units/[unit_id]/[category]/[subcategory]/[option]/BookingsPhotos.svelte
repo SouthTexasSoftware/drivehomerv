@@ -100,7 +100,7 @@
   async function deletePhoto(photoDocument: PhotoDocument) {
     saving = true;
 
-    let photoDocRef = doc(photosSubcollectionRef, photoDocument.id);
+    let photoDocRef = doc(bookingPhotosSubcollectionRef, photoDocument.id);
     await deleteDoc(photoDocRef);
 
     try {
