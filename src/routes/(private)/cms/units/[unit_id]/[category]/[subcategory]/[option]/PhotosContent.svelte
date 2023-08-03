@@ -53,10 +53,11 @@
 
     photosToShowArray = photosToShowArray.sort((photoA, photoB) => {
       if (photoA.index < photoB.index) {
-        return 0;
+        return -1;
       }
       return 1;
     });
+    indexUpdated = !indexUpdated;
   }
 
   //
@@ -211,7 +212,7 @@
     </div>
 
     <div class="sortable-photo-container" bind:this={sortableContainer}>
-      {#each photosToShowArray as photoObject}
+      {#each photosToShowArray as photoObject (photoObject.index)}
         <div
           class="photo-container"
           data-id={photoObject.id}
@@ -417,6 +418,12 @@
     }
     100% {
       transform: rotate(360deg);
+    }
+  }
+
+  @media (max-width: 500px) {
+    .photos-option-container {
+      width: 100%;
     }
   }
 </style>

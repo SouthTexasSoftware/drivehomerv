@@ -1,5 +1,15 @@
 import { firebaseClientConfig } from "../config";
-import { collection, getDocs } from "@firebase/firestore";
+import type { QuerySnapshot } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  updateDoc,
+  doc,
+  query,
+  where,
+} from "@firebase/firestore";
 import { get } from "svelte/store";
 import type {
   Unit,
@@ -33,7 +43,11 @@ export async function connectToFirebase() {
         "drive-home-rv"
       );
       const auth = authModule.getAuth(app);
-      const db = firestoreModule.getFirestore(app);
+      const db = firestoreModule.initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
+      });
       const storage = storageModule.getStorage(app);
 
       firebaseStore.set({
@@ -58,7 +72,7 @@ export async function connectToFirebase() {
  */
 export async function populateUnitStore(
   fbStore: FirebaseStore,
-  options?: { cms: boolean }
+  options?: { cms?: boolean; all_bookings?: boolean }
 ) {
   if (typeof window != undefined) {
     try {
@@ -71,52 +85,73 @@ export async function populateUnitStore(
 
       for (let unit of initialUnits) {
         // *** BOOKINGS SUBCOLLECTION DATA PULL
-        let unitBookings = await getDocs(
-          collection(fbStore.db, "units", unit.id, "bookings")
+
+        // MODIFY Bookings data pull to only get bookings that have not ended before today()
+        // only pull all bookings when on the CMS views
+        let todaysDate = new DateTime();
+        let todaysUnixTimestamp = Math.ceil(todaysDate.getTime() / 1000);
+
+        let bookingsCollection = collection(
+          fbStore.db,
+          "units",
+          unit.id,
+          "bookings"
         );
+        let publicBookingsQuery = query(
+          bookingsCollection,
+          where("unix_end", ">=", todaysUnixTimestamp)
+        );
+        let privateBookingsQuery = collection(
+          fbStore.db,
+          "units",
+          unit.id,
+          "bookings"
+        );
+
+        let unitBookings: QuerySnapshot;
+
+        unitBookings = await getDocs(publicBookingsQuery);
 
         // initialize the empty arrays...
         unit.bookings = [];
         unit.bookingDates = [];
 
-        for (let doc of unitBookings.docs) {
-          let booking = doc.data() as Booking;
+        for (let bookingDoc of unitBookings.docs) {
+          let booking = bookingDoc.data() as Booking;
 
-          if (options) {
-            if (options.cms) {
-              // DO ONLY IF CMS IS PASSED TO THE UNIT STORE LOAD FUNCTION
-              // PULL BOOKING PHOTOS & DOCUMENTS
-              let bookingPhotosCollection = collection(
-                fbStore.db,
-                "units",
-                unit.id,
-                "bookings",
-                booking.id,
-                "photos"
-              );
-              let bookingDocumentsCollection = collection(
-                fbStore.db,
-                "units",
-                unit.id,
-                "bookings",
-                booking.id,
-                "documents"
-              );
+          if (options?.cms) {
+            // DO ONLY IF CMS IS PASSED TO THE UNIT STORE LOAD FUNCTION
+            // PULL BOOKING PHOTOS & DOCUMENTS
+            let bookingPhotosCollection = collection(
+              fbStore.db,
+              "units",
+              unit.id,
+              "bookings",
+              booking.id,
+              "photos"
+            );
+            let bookingDocumentsCollection = collection(
+              fbStore.db,
+              "units",
+              unit.id,
+              "bookings",
+              booking.id,
+              "documents"
+            );
 
-              let bookingPhotos = await getDocs(bookingPhotosCollection);
-              let bookingDocuments = await getDocs(bookingDocumentsCollection);
+            let bookingPhotos = await getDocs(bookingPhotosCollection);
+            let bookingDocuments = await getDocs(bookingDocumentsCollection);
 
-              booking.photos = [];
-              booking.documents = [];
-              bookingPhotos.forEach((photoDoc) => {
-                //@ts-ignore
-                booking.photos.push(photoDoc.data() as PhotoDocument);
-              });
-              bookingDocuments.forEach((fileDoc) => {
-                //@ts-ignore
-                booking.documents.push(fileDoc.data() as FileDocument);
-              });
-            }
+            booking.photos = [];
+            booking.documents = [];
+            bookingPhotos.forEach((photoDoc) => {
+              //@ts-ignore
+              booking.photos.push(photoDoc.data() as PhotoDocument);
+            });
+            bookingDocuments.forEach((fileDoc) => {
+              //@ts-ignore
+              booking.documents.push(fileDoc.data() as FileDocument);
+            });
           }
 
           let bookingDates = {
@@ -127,6 +162,23 @@ export async function populateUnitStore(
           if (unit.bookingDates && unit.bookings) {
             unit.bookingDates.push(bookingDates);
             unit.bookings.push(booking);
+          }
+
+          // HOW-TO update every booking in the DB...
+          if (!booking.unix_start) {
+            let docRef = doc(
+              fbStore.db,
+              "units",
+              unit.id,
+              "bookings",
+              booking.id
+            );
+            console.log("updating booking ", booking.id);
+            await updateDoc(docRef, {
+              unix_start: Math.ceil(bookingDates.start.getTime() / 1000),
+              unix_end: Math.ceil(bookingDates.end.getTime() / 1000),
+            });
+            console.log("finished updating");
           }
         }
 

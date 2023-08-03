@@ -215,4 +215,9 @@
     align-items: center;
     margin: auto 5px 3px auto;
   }
+  @media (max-width: 500px) {
+    .bookings-option-container {
+      width: 100%;
+    }
+  }
 </style>

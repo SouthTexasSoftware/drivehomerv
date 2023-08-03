@@ -24,21 +24,19 @@
 </script>
 
 {#if unitObject}
-  {#if $page.params.category == "information"}
+  {#if $page.params.category == "information" && $page.params.option}
     <InformationContent
       {unitObject}
       subcategory={$page.params.subcategory}
       option={$page.params.option}
     />
-  {/if}
-  {#if $page.params.category == "photos"}
+  {:else if $page.params.category == "photos"}
     <PhotosContent
       {unitObject}
       subcategory={$page.params.subcategory}
       option={$page.params.option}
     />
-  {/if}
-  {#if $page.params.category == "bookings"}
+  {:else if $page.params.category == "bookings"}
     <BookingsWrapper
       {unitObject}
       subcategory={$page.params.subcategory}

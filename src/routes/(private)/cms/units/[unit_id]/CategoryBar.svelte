@@ -132,4 +132,15 @@
     height: 50px;
     transition: all 0.3s;
   }
+
+  @media (max-width: 500px) {
+    .bar-container {
+      margin-right: 199px;
+      width: 100%;
+      min-width: 0px;
+    }
+    .icon-bar {
+      flex-direction: row-reverse;
+    }
+  }
 </style>

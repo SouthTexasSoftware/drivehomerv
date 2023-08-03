@@ -34,8 +34,6 @@
     delete tempUnit.bookings;
     delete tempUnit.bookingDates;
 
-    console.log(tempUnit);
-
     await setDoc(doc($firebaseStore.db, "units", tempUnit.id), tempUnit);
 
     savingChanges = false;
@@ -163,6 +161,11 @@
     }
     100% {
       transform: rotate(360deg);
+    }
+  }
+  @media (max-width: 500px) {
+    .header-container {
+      display: none;
     }
   }
 </style>
