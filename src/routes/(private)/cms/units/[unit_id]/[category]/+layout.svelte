@@ -20,10 +20,6 @@
 
     setTimeout(checkUnitSelected, 200);
   }
-
-  afterNavigate(() => {
-    console.log($page.params);
-  });
 </script>
 
 <div class="category-container">
@@ -57,7 +53,7 @@
           }}
         />
       </div>
-      <slot />
+      <slot {unitObject} />
     {/key}
   {/if}
 </div>

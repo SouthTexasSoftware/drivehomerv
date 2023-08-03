@@ -305,6 +305,8 @@ export interface Booking {
   unit_name?: string;
   start: string; //MMM-DD-YYYY
   end: string; //MMM-DD-YYYY
+  startDate?: DateTime;
+  endDate?: DateTime;
   unix_start?: number;
   unix_end?: number; // for ease of comparison
   total_price?: number;

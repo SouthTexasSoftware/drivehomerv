@@ -63,7 +63,7 @@
             if (bookingAstart.isBefore(bookingBstart)) {
               return 1;
             }
-            return 0;
+            return -1;
           });
 
           subcategoryList = unitObject.bookings.map((booking) => {
