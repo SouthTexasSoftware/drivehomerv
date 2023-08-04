@@ -5,10 +5,13 @@
   import type { Booking, Unit } from "$lib/types";
   import { collection, deleteDoc, doc } from "firebase/firestore";
   import { deleteObject, ref } from "firebase/storage";
+  import { createEventDispatcher } from "svelte";
   import { slide } from "svelte/transition";
 
   export let bookingObject: Booking | undefined;
   export let unitObject: Unit;
+
+  let dispatch = createEventDispatcher();
 
   let confirmShowing = false;
   let deleting = false;
@@ -57,6 +60,12 @@
 </script>
 
 <div class="settings-dropdown-container" in:slide>
+  <button
+    class="update"
+    on:click={() => {
+      dispatch("update", true);
+    }}>UPDATE BOOKING</button
+  >
   <button class="delete" on:click={deleteBooking}>
     {#if deleting}
       <div class="spinner" />
@@ -83,19 +92,24 @@
     height: 149px;
     justify-content: center;
   }
-  .delete {
+  .delete,
+  .update {
     border: 1px solid var(--cms-boxShadow);
     font-size: 16px;
     font-family: cms-regular;
     padding: 6px 15px;
     border-radius: 4px;
     outline: none;
-    width: 80%;
+    width: 60%;
     background-color: hsl(var(--p));
     color: hsl(var(--b2));
     justify-content: center;
     display: flex;
     height: 35px;
+  }
+  .update {
+    background-color: hsl(var(--su));
+    margin-bottom: 25px;
   }
   .spinner {
     content: "";

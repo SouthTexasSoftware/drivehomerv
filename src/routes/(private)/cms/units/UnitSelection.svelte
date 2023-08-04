@@ -78,13 +78,13 @@
 
   @media (max-width: 1000px) {
     .unit-selection-container {
-      height: 52px;
+      height: 51px;
       display: flex;
       flex-direction: column;
       border: none;
       border-left: 2px solid var(--cms-boxShadow);
       border-top: 1px solid var(--cms-boxShadow);
-      width: 200px;
+      width: 50vw;
       position: fixed;
       bottom: 60px;
       right: 0;

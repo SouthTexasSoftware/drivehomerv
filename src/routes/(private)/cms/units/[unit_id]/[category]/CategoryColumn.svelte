@@ -7,7 +7,13 @@
   import { afterNavigate } from "$app/navigation";
   import { firebaseStore, unitStore } from "$lib/stores";
   import { createEventDispatcher } from "svelte";
-  import { collection, getDocs, query, where } from "firebase/firestore";
+  import {
+    collection,
+    getDocs,
+    onSnapshot,
+    query,
+    where,
+  } from "firebase/firestore";
 
   export let unitObject: Unit;
 
@@ -25,6 +31,9 @@
     if (!unitObject.sessionOnly) {
       unitObject.sessionOnly = {};
       unitObject.sessionOnly.pastBookingsLoaded = false;
+      attachBookingsListener();
+    } else if (!unitObject.sessionOnly.bookingsListener) {
+      attachBookingsListener();
     }
   });
 
@@ -35,6 +44,7 @@
     if (!unitObject.sessionOnly) {
       unitObject.sessionOnly = {};
       unitObject.sessionOnly.pastBookingsLoaded = false;
+      attachBookingsListener();
     }
   });
 
@@ -124,7 +134,7 @@
   function getOptions(key: string) {
     // check if in bookings category.. then just build standard options
     if ($page.params.category == "bookings") {
-      return ["Overview", "Customer", "Photos", "Documents"];
+      return ["Overview", "Photos", "Documents"];
     }
     //@ts-ignore
     return Object.keys(newUnitModel[$page.params.category][key]);
@@ -189,7 +199,47 @@
     } else {
       unitObject.sessionOnly.pastBookingsLoaded = true;
     }
+
+    unitObject.sessionOnly.bookingsListener();
+    attachBookingsListener();
+
     loadingPastBookings = false;
+  }
+
+  async function attachBookingsListener() {
+    let unitsBookingCollectionRef = collection(
+      $firebaseStore.db,
+      "units",
+      unitObject.id,
+      "bookings"
+    );
+
+    let todaysDate = new DateTime();
+    let todaysUnixTimestamp = Math.ceil(todaysDate.getTime() / 1000);
+
+    let collectionQuery = query(
+      unitsBookingCollectionRef,
+      where("unix_end", ">=", todaysUnixTimestamp)
+    );
+
+    if (unitObject.sessionOnly?.pastBookingsLoaded) {
+      collectionQuery = query(unitsBookingCollectionRef);
+    }
+
+    const unsubscribe = onSnapshot(collectionQuery, (querySnapshot) => {
+      let updatedBookingsArray: Booking[] = [];
+      querySnapshot.forEach((doc) => {
+        updatedBookingsArray.push(doc.data() as Booking);
+      });
+      unitObject.bookings = updatedBookingsArray;
+      getUnitModelInformation();
+    });
+    if (unitObject.sessionOnly) {
+      unitObject.sessionOnly.bookingsListener = unsubscribe;
+    } else {
+      unitObject.sessionOnly = {};
+      unitObject.sessionOnly.bookingsListener = unsubscribe;
+    }
   }
 </script>
 

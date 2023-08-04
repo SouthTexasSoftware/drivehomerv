@@ -7,10 +7,10 @@
   import { page } from "$app/stores";
   import { fade } from "svelte/transition";
   import BookingSettingsDropdown from "./BookingSettingsDropdown.svelte";
-  import BookingsCustomer from "./BookingsCustomer.svelte";
   import PhotosContent from "./PhotosContent.svelte";
   import BookingsPhotos from "./BookingsPhotos.svelte";
   import BookingsAddPhotoDropdown from "./BookingsAddPhotoDropdown.svelte";
+  import BookingsUpdate from "./BookingsUpdate.svelte";
 
   export let unitObject: Unit;
   export let subcategory: string;
@@ -22,6 +22,7 @@
   let settingsDropdownShowing = false;
   let addPhotoShowing = false;
   let updatePhotos = false;
+  let updateBooking = false;
 
   $: bookingObject = unitObject.bookings?.find((booking) => {
     if (booking.id == subcategory) {
@@ -150,19 +151,42 @@
         />
       {/if}
       {#if settingsDropdownShowing}
-        <BookingSettingsDropdown {bookingObject} {unitObject} />
+        <BookingSettingsDropdown
+          {bookingObject}
+          {unitObject}
+          on:update={() => {
+            showWrapper = false;
+            updateBooking = true;
+          }}
+        />
       {/if}
     </div>
     {#if option == "Overview"}
       <BookingsOverview {bookingObject} {unitObject} />
     {/if}
-    {#if option == "Customer"}
-      <BookingsCustomer {bookingObject} />
-    {/if}
     {#if option == "Photos"}
       <BookingsPhotos {bookingObject} {updatePhotos} />
     {/if}
   </div>
+{/if}
+{#if updateBooking}
+  {#if bookingObject}
+    <BookingsUpdate
+      {unitObject}
+      {bookingObject}
+      on:cancel={() => {
+        updateBooking = false;
+        showWrapper = true;
+        settingsDropdownShowing = false;
+      }}
+      on:save={(event) => {
+        bookingObject = event.detail;
+        updateBooking = false;
+        showWrapper = true;
+        settingsDropdownShowing = false;
+      }}
+    />
+  {/if}
 {/if}
 
 <style>
@@ -175,7 +199,9 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    width: 300px;
+    width: 450px;
+    max-height: 90%;
+    margin-bottom: auto;
   }
   .container-header {
     display: flex;
@@ -218,6 +244,7 @@
   @media (max-width: 500px) {
     .bookings-option-container {
       width: 100%;
+      max-height: 90%;
     }
   }
 </style>

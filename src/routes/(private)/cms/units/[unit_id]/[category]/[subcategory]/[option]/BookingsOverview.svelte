@@ -346,19 +346,29 @@
         <p>{formatPhoneNumber(bookingObject.customerObject.phone)}</p>
         <p>{bookingObject.customerObject.email}</p>
       {:else}
-        <p>No Customer Entered</p>
+        <p>No Customer Created</p>
       {/if}
     </div>
 
-    <div class="section">
-      <div class="section-label">Total Price</div>
+    <div class="double-row">
+      <div class="section">
+        <div class="section-label">Total Price</div>
 
-      <input
-        type="number"
-        bind:this={priceInputElement}
-        bind:value={bookingObject.total_price}
-        on:input={triggerPriceInputTimer}
-      />
+        {#if bookingObject.total_price}
+          <p>{bookingObject.total_price}</p>
+        {:else}
+          <p>Not Added</p>
+        {/if}
+      </div>
+      <div class="section">
+        <div class="section-label">Passengers</div>
+
+        {#if bookingObject.passengers}
+          <p>{bookingObject.passengers}</p>
+        {:else}
+          <p>Not Added</p>
+        {/if}
+      </div>
     </div>
     <div class="section">
       <div class="section-label">Booking Status</div>
@@ -464,7 +474,8 @@
     overflow-y: scroll;
   }
   .calendar-square {
-    width: 41%;
+    width: 150px;
+    min-height: 130px;
     border: 1px solid var(--cms-boxShadow);
     border-radius: 4px;
     display: flex;
@@ -485,10 +496,12 @@
   .month {
     font-family: cms-regular;
     text-align: center;
+    margin-top: 5px;
   }
   .time {
     font-family: cms-light;
     font-size: 14px;
+    margin-top: auto;
   }
   .separating-bar,
   .month {
@@ -509,6 +522,13 @@
     font-size: 14px;
     display: flex;
   }
+  .double-row {
+    display: flex;
+    width: 100%;
+  }
+  .double-row .section {
+    width: 50%;
+  }
   .stripe-product {
     font-family: font-bold;
     border-radius: 4px;
@@ -516,7 +536,7 @@
     color: white;
     font-size: 10px;
     padding: 0px 10px;
-    margin-left: 72px;
+    margin-left: 7px;
     height: 15px;
   }
   .stripe-invoice {
@@ -552,23 +572,17 @@
   }
   p {
     font-family: cms-regular;
+    font-size: 18px;
   }
-  input {
-    border: 1px solid var(--cms-boxShadow);
-    font-size: 16px;
-    font-family: cms-regular;
-    padding: 6px 15px;
-    border-radius: 4px;
-    outline: none;
-    width: 100%;
-  }
+
   select {
     font-size: 16px;
     font-family: cms-regular;
     padding: 6px 15px;
     border-radius: 4px;
     outline: none;
-    width: 100%;
+    width: 200px;
+    height: 40px;
   }
   .id-container {
     font-size: 12px;
