@@ -464,7 +464,8 @@
     overflow-y: scroll;
   }
   .calendar-square {
-    width: 41%;
+    width: 150px;
+    height: 130px;
     border: 1px solid var(--cms-boxShadow);
     border-radius: 4px;
     display: flex;
@@ -485,10 +486,12 @@
   .month {
     font-family: cms-regular;
     text-align: center;
+    margin-top: 5px;
   }
   .time {
     font-family: cms-light;
     font-size: 14px;
+    margin-top: auto;
   }
   .separating-bar,
   .month {

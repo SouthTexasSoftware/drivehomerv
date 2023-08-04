@@ -1,11 +1,77 @@
 <script lang="ts">
   import BookingsCategoryCalendar from "./BookingsCategoryCalendar.svelte";
+  import BookingsCategoryNewBooking from "./BookingsCategoryNewBooking.svelte";
+  import { unitStore } from "$lib/stores";
+  import type { Unit } from "$lib/types";
+  import { page } from "$app/stores";
+  import { afterNavigate } from "$app/navigation";
+  import { afterUpdate } from "svelte";
+
+  let creatingNewBooking = false;
+  let unitObject: Unit | undefined;
+
+  checkUnitSelected();
+
+  function checkUnitSelected() {
+    if ($unitStore.isPopulated) {
+      unitObject = $unitStore.getUnit($page.params.unit_id);
+      return;
+    }
+
+    setTimeout(checkUnitSelected, 200);
+  }
+
+  afterUpdate(checkUnitSelected);
 </script>
 
-<section class="bookings-home-container">
-  <p>hello unit bookings main page</p>
-  <BookingsCategoryCalendar />
-</section>
+{#if unitObject}
+  <section class="bookings-home-container">
+    {#if creatingNewBooking}
+      <BookingsCategoryNewBooking
+        {unitObject}
+        on:cancel={() => {
+          creatingNewBooking = false;
+        }}
+      />
+    {:else}
+      <BookingsCategoryCalendar {unitObject} />
+      <div class="button-container">
+        <button on:click={() => (creatingNewBooking = true)}
+          >Create New Booking</button
+        >
+      </div>
+    {/if}
+  </section>
+{/if}
 
 <style>
+  .bookings-home-container {
+    max-height: 100%;
+    margin-bottom: auto;
+    overflow-y: scroll;
+  }
+  .button-container {
+    width: 450px;
+    margin-top: 25px;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  button {
+    width: 180px;
+    border-radius: 4px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: hsl(var(--p));
+    color: white;
+  }
+  @media (max-width: 500px) {
+    .button-container {
+      width: 100%;
+    }
+    .bookings-home-container {
+      max-height: 95%;
+    }
+  }
 </style>

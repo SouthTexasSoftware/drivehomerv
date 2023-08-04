@@ -308,7 +308,9 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    width: 300px;
+    width: 450px;
+    max-height: 100%;
+    margin-bottom: auto;
   }
   .container-header {
     display: flex;
@@ -424,6 +426,7 @@
   @media (max-width: 500px) {
     .photos-option-container {
       width: 100%;
+      max-height: 90%;
     }
   }
 </style>

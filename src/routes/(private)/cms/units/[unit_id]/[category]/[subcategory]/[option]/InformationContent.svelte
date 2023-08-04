@@ -298,6 +298,9 @@
     flex-direction: column;
     padding-top: 20px;
     width: 300px;
+    max-height: 100%;
+    margin-bottom: auto;
+    padding-bottom: 35px;
   }
   .information-option-container.widen {
     width: 100%;
@@ -377,6 +380,7 @@
   @media (max-width: 500px) {
     .information-option-container {
       width: 100%;
+      max-height: 90%;
     }
     .property {
       width: 100%;

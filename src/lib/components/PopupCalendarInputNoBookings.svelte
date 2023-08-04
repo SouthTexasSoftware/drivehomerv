@@ -10,11 +10,9 @@
 
   let dispatch = createEventDispatcher();
 
-  onMount(() => {
-    buildHotelCalendarExample();
-  });
+  onMount(buildCalendar);
 
-  function buildHotelCalendarExample() {
+  function buildCalendar() {
     const picker = new easepick.create({
       element: "#calendar-button",
       inline: false,
@@ -62,9 +60,9 @@
   }
 </script>
 
-<strong class="dates">Dates</strong>
+<div class="section-label">Dates</div>
 
-<label for="calendar-button" class="row date-display">
+<label for="calendar-button" class="fake-input-box">
   <p>{selectedTripStart}</p>
   <div class="arrow-container">
     <svg
@@ -112,30 +110,32 @@
     outline: none;
     position: relative;
   }
-  .row {
+  .section-label {
+    font-family: cms-semibold;
+    align-self: flex-start;
+    font-size: 14px;
+    display: flex;
+  }
+  .fake-input-box {
     display: flex;
     justify-content: space-evenly;
     margin: 5px 0px;
-  }
-  strong.dates {
-    font-size: 14px;
-    margin-bottom: -5px;
-    margin-top: 25px;
-    max-width: 300px;
-  }
-  .date-display {
     border: 1px solid hsl(var(--b3));
-    border-radius: 10px;
+    border-radius: 4px;
     padding: 10px 3px;
-    color: black;
-    /* max-width: 300px; */
+    color: var(--cms-text);
     z-index: 100;
     background-color: hsl(var(--b1));
     font-size: 14px;
+    width: 250px;
+  }
+  .fake-input-box p {
+    font-family: cms-regular;
+    font-size: 16px;
   }
   svg#right-arrow {
     height: 100%;
-    width: 10px;
+    width: 15px;
   }
   :global(.easepick-wrapper) {
     opacity: 1 !important;
@@ -144,18 +144,13 @@
     justify-content: center;
   }
   @media (max-width: 500px) {
-    .row.stack.dates {
-      align-items: center;
-    }
     :global(.easepick-wrapper) {
       position: absolute;
-      bottom: 50px;
+      bottom: 150px;
     }
-  }
-
-  @media (min-width: 500px) and (max-width: 1000px) {
-  }
-
-  @media (min-width: 1000px) {
+    .fake-input-box {
+      height: 40px;
+      line-height: 18px;
+    }
   }
 </style>

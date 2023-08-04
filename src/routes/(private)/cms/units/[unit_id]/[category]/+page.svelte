@@ -15,4 +15,9 @@
     padding: 15px;
     font-family: cms-semibold;
   }
+  @media (max-width: 500px) {
+    .category-overview-container {
+      width: 100%;
+    }
+  }
 </style>

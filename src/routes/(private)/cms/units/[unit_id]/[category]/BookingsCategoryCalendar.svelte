@@ -2,20 +2,9 @@
   import { DateTime } from "@easepick/bundle";
   import type { Unit } from "$lib/types";
   import { onMount } from "svelte";
-  import { unitStore } from "$lib/stores";
-  import { page } from "$app/stores";
   import { afterNavigate } from "$app/navigation";
 
-  let unitObject: Unit | undefined;
-
-  function checkUnitSelected() {
-    if ($unitStore.isPopulated) {
-      unitObject = $unitStore.getUnit($page.params.unit_id);
-      return;
-    }
-
-    setTimeout(checkUnitSelected, 200);
-  }
+  export let unitObject: Unit;
 
   let date = new Date();
   let year = date.getFullYear();
@@ -65,14 +54,8 @@
     "rgb(242, 196, 47, 0.5)",
   ];
 
-  onMount(calendarLoadWrapper);
-  afterNavigate(calendarLoadWrapper);
-
-  function calendarLoadWrapper() {
-    checkUnitSelected();
-
-    generateCalendar();
-  }
+  onMount(generateCalendar);
+  afterNavigate(generateCalendar);
 
   function navigateMonths(previous: boolean) {
     // Check if the icon is "calendar-prev"

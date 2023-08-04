@@ -305,6 +305,7 @@ export interface Booking {
   unit_name?: string;
   start: string; //MMM-DD-YYYY
   end: string; //MMM-DD-YYYY
+  passengers?: string;
   startDate?: DateTime;
   endDate?: DateTime;
   unix_start?: number;
