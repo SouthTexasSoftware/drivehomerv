@@ -3,9 +3,6 @@
   import { page } from "$app/stores";
 
   export let unitObject: Unit;
-
-  // TODO: Incorporate 'DELETE UNIT' into category bar?
-  // or in the maintenance category
 </script>
 
 <div class="bar-container">
@@ -136,8 +133,11 @@
   @media (max-width: 500px) {
     .bar-container {
       margin-right: 199px;
-      width: 100%;
+      width: 50vw;
       min-width: 0px;
+      position: fixed;
+      left: 2px;
+      border-right-color: transparent;
     }
     .icon-bar {
       flex-direction: row-reverse;

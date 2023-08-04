@@ -134,7 +134,7 @@
   function getOptions(key: string) {
     // check if in bookings category.. then just build standard options
     if ($page.params.category == "bookings") {
-      return ["Overview", "Customer", "Photos", "Documents"];
+      return ["Overview", "Photos", "Documents"];
     }
     //@ts-ignore
     return Object.keys(newUnitModel[$page.params.category][key]);

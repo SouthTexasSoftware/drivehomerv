@@ -10,9 +10,16 @@
 
   let dispatch = createEventDispatcher();
 
+  export let initialDateObject: { start: string; end: string } | undefined;
+
   onMount(buildCalendar);
 
   function buildCalendar() {
+    if (initialDateObject) {
+      selectedTripStart = initialDateObject.start;
+      selectedTripEnd = initialDateObject.end;
+    }
+
     const picker = new easepick.create({
       element: "#calendar-button",
       inline: false,
@@ -63,7 +70,9 @@
 <div class="section-label">Dates</div>
 
 <label for="calendar-button" class="fake-input-box">
-  <p>{selectedTripStart}</p>
+  <p>
+    {selectedTripStart}
+  </p>
   <div class="arrow-container">
     <svg
       id="right-arrow"
@@ -127,7 +136,7 @@
     z-index: 100;
     background-color: hsl(var(--b1));
     font-size: 14px;
-    width: 250px;
+    width: 300px;
   }
   .fake-input-box p {
     font-family: cms-regular;

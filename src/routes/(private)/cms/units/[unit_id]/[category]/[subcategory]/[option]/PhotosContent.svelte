@@ -309,7 +309,7 @@
     display: flex;
     flex-direction: column;
     width: 450px;
-    max-height: 100%;
+    max-height: 90%;
     margin-bottom: auto;
   }
   .container-header {

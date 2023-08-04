@@ -26,6 +26,13 @@
   }
 </script>
 
+<svelte:head
+  ><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+  /></svelte:head
+>
+
 {#if userLoggedIn}
   <div class="cms-container">
     <MenuDrawer />

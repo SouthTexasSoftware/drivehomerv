@@ -46,9 +46,7 @@
 
 <style>
   .bookings-home-container {
-    max-height: 100%;
-    margin-bottom: auto;
-    overflow-y: scroll;
+    height: 100%;
   }
   .button-container {
     width: 450px;
@@ -72,6 +70,7 @@
     }
     .bookings-home-container {
       max-height: 95%;
+      height: 100%;
     }
   }
 </style>

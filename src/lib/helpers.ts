@@ -119,7 +119,8 @@ export async function populateUnitStore(
         for (let bookingDoc of unitBookings.docs) {
           let booking = bookingDoc.data() as Booking;
 
-          if (options?.cms) {
+          // this is to preload booking photos and documents. not necessary..
+          if (false) {
             // DO ONLY IF CMS IS PASSED TO THE UNIT STORE LOAD FUNCTION
             // PULL BOOKING PHOTOS & DOCUMENTS
             let bookingPhotosCollection = collection(

@@ -5,8 +5,10 @@
   import { Timestamp, doc, serverTimestamp, setDoc } from "firebase/firestore";
   import { DateTime } from "@easepick/bundle";
   import { firebaseStore } from "$lib/stores";
+  import BookingsPhotos from "./BookingsPhotos.svelte";
 
   export let unitObject: Unit;
+  export let bookingObject: Booking;
 
   let savingBooking = false;
   let firstNameInput: HTMLInputElement;
@@ -15,32 +17,40 @@
   let phoneInput: HTMLInputElement;
   let passengersInput: HTMLInputElement;
   let priceInput: HTMLInputElement;
+  let datesValidationError = false;
+  let newBookingData: Booking | undefined;
+  let initialDateObject = {
+    start: bookingObject.start,
+    end: bookingObject.end,
+  };
+  const pickupOptions = [" 1 pm", " 2 pm", " 3 pm", " 4 pm", " 5 pm", " 6 pm"];
+  const dropoffOptions = ["10 am", "11 am", "12 pm", " 1 pm", " 2 pm", " 3 pm"];
 
   let dispatch = createEventDispatcher();
 
-  let datesValidationError = false;
-
-  let newBookingData: Booking | undefined;
-
   afterUpdate(() => {
     newBookingData = {
-      id: newUUID(),
-      start: "",
-      end: "",
-      status: "manualEntry",
-      created: serverTimestamp() as Timestamp,
-      photos: [],
-      documents: [],
-      unix_start: undefined,
-      unix_end: undefined,
-      passengers: undefined,
-      total_price: undefined,
+      id: bookingObject.id,
+      start: bookingObject.start,
+      end: bookingObject.end,
+      status: bookingObject.status,
+      created: bookingObject.created,
+      photos: bookingObject.photos,
+      documents: bookingObject.documents,
+      unix_start: bookingObject.unix_start,
+      unix_end: bookingObject.unix_end,
+      passengers: bookingObject.passengers,
+      total_price: bookingObject.total_price,
       unit_name: unitObject.name,
       unit_id: unitObject.id,
-      customer: "manualEntry",
-      pickup_time: " 4 pm",
-      dropoff_time: "10 am",
+      customer: bookingObject.customer,
+      pickup_time: bookingObject.pickup_time,
+      dropoff_time: bookingObject.dropoff_time,
     };
+    updateBookingDates({
+      start: newBookingData.start,
+      end: newBookingData.end,
+    });
   });
 
   function updateBookingDates(detail: { start: string; end: string }) {
@@ -72,7 +82,8 @@
         savingBooking = false;
         return;
       }
-      let newCustomer: Customer = {
+
+      let updatedCustomer: Customer = {
         id: newUUID(),
         first_name: firstNameInput.value,
         last_name: lastNameInput.value,
@@ -80,13 +91,16 @@
         phone: phoneInput.value,
         bookings: [newBookingData.id],
       };
+      if (bookingObject.customer) {
+        updatedCustomer.id = bookingObject.customer;
+      }
 
       // add missing data, including the above customer id
       newBookingData.total_price = parseInt(priceInput.value);
       newBookingData.passengers = passengersInput.value;
-      newBookingData.customer = newCustomer.id;
+      newBookingData.customer = updatedCustomer.id;
 
-      let newBookingDocRef = doc(
+      let bookingDocRef = doc(
         $firebaseStore.db,
         "units",
         unitObject.id,
@@ -94,22 +108,22 @@
         newBookingData.id
       );
 
-      await setDoc(newBookingDocRef, newBookingData);
+      await setDoc(bookingDocRef, newBookingData);
 
       let newCustomerDocRef = doc(
         $firebaseStore.db,
         "customers",
-        newCustomer.id
+        updatedCustomer.id
       );
 
-      await setDoc(newCustomerDocRef, newCustomer);
+      await setDoc(newCustomerDocRef, updatedCustomer);
 
-      newBookingData.customerObject = newCustomer;
-      unitObject.bookings?.push(newBookingData);
+      newBookingData.customerObject = updatedCustomer;
+      bookingObject = structuredClone(newBookingData);
     }
 
     savingBooking = false;
-    dispatch("cancel", true);
+    dispatch("save", bookingObject);
   }
 
   function newUUID(): string {
@@ -126,7 +140,7 @@
 
 <div class="new-booking-option-container">
   <div class="container-header">
-    <p class="option-title">Create New Booking</p>
+    <p class="option-title">Update Booking {bookingObject.id}</p>
     <button
       class="cancel-creation"
       on:click={() => {
@@ -163,6 +177,7 @@
     </div>
     <div class="section">
       <PopupCalendarInputNoBookings
+        {initialDateObject}
         on:selection={(event) => {
           updateBookingDates(event.detail);
         }}
@@ -183,12 +198,13 @@
             updateBookingPickupDropoff({ key: key, value: value });
           }}
         >
-          <option value=" 1 pm">1 pm</option>
-          <option value=" 2 pm">2 pm</option>
-          <option value=" 3 pm">3 pm</option>
-          <option value=" 4 pm" selected>4 pm</option>
-          <option value=" 5 pm">5 pm</option>
-          <option value=" 6 pm">6 pm</option>
+          {#each pickupOptions as pickupLabel}
+            {#if bookingObject.pickup_time == pickupLabel}
+              <option selected value={pickupLabel}>{pickupLabel}</option>
+            {:else}
+              <option value={pickupLabel}>{pickupLabel}</option>
+            {/if}
+          {/each}
         </select>
       </div>
       <div class="section">
@@ -202,12 +218,13 @@
             updateBookingPickupDropoff({ key: key, value: value });
           }}
         >
-          <option value="10 am" selected>10 am</option>
-          <option value="11 am">11 am</option>
-          <option value="12 pm">12 pm</option>
-          <option value=" 1 pm">1 pm</option>
-          <option value=" 2 pm">2 pm</option>
-          <option value=" 3 pm">3 pm</option>
+          {#each dropoffOptions as dropoffLabel}
+            {#if bookingObject.dropoff_time == dropoffLabel}
+              <option selected value={dropoffLabel}>{dropoffLabel}</option>
+            {:else}
+              <option value={dropoffLabel}>{dropoffLabel}</option>
+            {/if}
+          {/each}
         </select>
       </div>
     </div>
@@ -218,6 +235,7 @@
           type="number"
           class="price"
           name="price"
+          value={bookingObject.total_price}
           bind:this={priceInput}
         />
       </div>
@@ -227,6 +245,7 @@
           type="number"
           class="price"
           name="passengers"
+          value={bookingObject.passengers}
           bind:this={passengersInput}
         />
       </div>
@@ -237,6 +256,9 @@
         type="text"
         placeholder="First Name"
         name="first-name"
+        value={bookingObject.customerObject?.first_name
+          ? bookingObject.customerObject?.first_name
+          : ""}
         bind:this={firstNameInput}
       />
       <input
@@ -244,6 +266,9 @@
         type="text"
         placeholder="Last Name"
         name="last-name"
+        value={bookingObject.customerObject?.last_name
+          ? bookingObject.customerObject?.last_name
+          : ""}
         bind:this={lastNameInput}
       />
       <input
@@ -251,6 +276,9 @@
         type="email"
         placeholder="Email"
         name="email"
+        value={bookingObject.customerObject?.email
+          ? bookingObject.customerObject?.email
+          : ""}
         bind:this={emailInput}
       />
       <input
@@ -258,6 +286,9 @@
         type="tel"
         placeholder="Phone"
         name="phone"
+        value={bookingObject.customerObject?.phone
+          ? bookingObject.customerObject?.phone
+          : ""}
         bind:this={phoneInput}
       />
     </div>
@@ -280,11 +311,11 @@
     position: relative;
     border-radius: 4px;
     box-shadow: 0 1px 3px var(--cms-boxShadow);
-    width: 100%;
     display: flex;
     flex-direction: column;
     width: 450px;
-    height: 100%;
+    height: 90%;
+    margin: 25px;
     margin-bottom: auto;
   }
   .container-header {
