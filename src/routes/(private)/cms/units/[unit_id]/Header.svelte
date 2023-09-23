@@ -33,6 +33,7 @@
     let tempUnit = unitObject;
     delete tempUnit.bookings;
     delete tempUnit.bookingDates;
+    delete tempUnit.sessionOnly;
 
     await setDoc(doc($firebaseStore.db, "units", tempUnit.id), tempUnit);
 

@@ -298,7 +298,7 @@
     flex-direction: column;
     padding-top: 20px;
     width: 300px;
-    max-height: 100%;
+    max-height: 90%;
     margin-bottom: auto;
     padding-bottom: 35px;
   }
