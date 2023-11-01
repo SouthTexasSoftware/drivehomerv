@@ -1,7 +1,6 @@
 <script lang="ts">
   import UnitsTable from "../units/UnitsTable.svelte";
   import NewBooking from "./NewBooking.svelte";
-  import NewUnit from "./NewUnit.svelte";
   import OverviewCalendar from "./OverviewCalendar.svelte";
 
   let newBookingKey = false;

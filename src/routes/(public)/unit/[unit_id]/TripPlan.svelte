@@ -83,6 +83,7 @@
   function dispatchShowModal() {
     dispatch("showModal", true);
   }
+  
 </script>
 
 <div class="trip-plan-container">
@@ -149,7 +150,7 @@
           <button class="reserve-button"><p>SELECT DATES</p></button>
         {:else}
           <button class="reserve-button" on:click={dispatchShowModal}
-            ><p>REQUEST NOW</p></button
+            ><p>BOOK NOW</p></button
           >
         {/if}
       {/if}

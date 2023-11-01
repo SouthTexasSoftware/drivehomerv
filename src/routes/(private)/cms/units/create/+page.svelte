@@ -17,7 +17,11 @@ list of things required to build new unit object and throw no errors!  all under
     unitObject.information.rates_and_fees.pricing.service_fee
     unitObject.information.bullet_points.summary.pickup_location
     unitObject.information.rates_and_fees.pricing.mileage_overage
-
+    unitObject.information.summary.pickup_location
+    unitObject.information.summary.sleeps
+    unitObject.information.summary.year_built
+    unitObject.information.summary.vehicle_type
+    unitObject.information.summary.length
 */
 </script>
 
@@ -53,6 +57,14 @@ list of things required to build new unit object and throw no errors!  all under
       formObject.pickup_location;
     newUnitObject.information.rates_and_fees.pricing.mileage_overage =
       formObject.mileage_overage;
+    newUnitObject.information.bullet_points.summary.sleeps =
+      formObject.sleeps;
+    newUnitObject.information.bullet_points.summary.year_built =
+      formObject.year_built;
+    newUnitObject.information.bullet_points.summary.vehicle_type =
+      formObject.vehicle_type;
+    newUnitObject.information.bullet_points.summary.length =
+      formObject.length;
 
     let unitsCollection = collection($firebaseStore.db, "units");
     let newUnitDocRef = doc(unitsCollection);
@@ -74,32 +86,11 @@ list of things required to build new unit object and throw no errors!  all under
   <div class="container-header">
     <p class="option-title">Create New Unit</p>
   </div>
+  <p class="note">Please follow the examples provided for formatting. When only a number is present it is used in a mathematical formula. Thank you.</p>
   <div class="properties-list">
     <div class="property">
       <p class="label">Unit Name</p>
       <input class="property-input" type="text" name="name" required />
-    </div>
-    <div class="property">
-      <p class="label">Base Rental Fee</p>
-      <input
-        class="property-input"
-        type="text"
-        name="base_rental_fee"
-        required
-      />
-    </div>
-    <div class="property">
-      <p class="label">Service Fee</p>
-      <input class="property-input" type="text" name="service_fee" required />
-    </div>
-    <div class="property">
-      <p class="label">Taxes and Insurance (per night)</p>
-      <input
-        class="property-input"
-        type="text"
-        name="taxes_and_insurance"
-        required
-      />
     </div>
     <div class="property">
       <p class="label">Pickup Location</p>
@@ -107,18 +98,99 @@ list of things required to build new unit object and throw no errors!  all under
         class="property-input"
         type="text"
         name="pickup_location"
+        placeholder="e.g. Modena"
         required
       />
     </div>
-    <div class="property">
-      <p class="label">Mileage Overage</p>
-      <input
-        class="property-input"
-        type="text"
-        name="mileage_overage"
-        required
-      />
+    <div class="double-row">
+      <div class="property">
+        <p class="label">Base Rental Fee</p>
+        <input
+          class="property-input"
+          type="text"
+          name="base_rental_fee"
+          placeholder="e.g. 137"
+          required
+        />
+      </div>
+      <div class="property">
+        <p class="label">Service Fee</p>
+        <input class="property-input" type="text" name="service_fee" placeholder="e.g. 125" required />
+      </div>
     </div>
+
+    <div class="double-row">
+      <div class="property">
+        <p class="label">Tax & Ins. (per night)</p>
+        <input
+          class="property-input"
+          type="text"
+          name="taxes_and_insurance"
+          placeholder="e.g. 29"
+          required
+        />
+      </div>
+
+      <div class="property">
+        <p class="label">Mileage Overage</p>
+        <input
+          class="property-input"
+          type="text"
+          name="mileage_overage"
+          placeholder="e.g. 0.58"
+          required
+        />
+      </div>
+    </div>
+
+    <div class="double-row">
+      <div class="property">
+        <p class="label">Sleeps</p>
+        <input
+          class="property-input"
+          type="text"
+          name="sleeps"
+          placeholder="e.g. 4"
+          required
+        />
+      </div>
+
+      <div class="property">
+        <p class="label">Year Built</p>
+        <input
+          class="property-input"
+          type="text"
+          name="year_built"
+          placeholder="e.g. 2021"
+          required
+        />
+      </div>
+    </div>
+
+    <div class="double-row">
+      <div class="property">
+        <p class="label">Vehicle Type</p>
+        <input
+          class="property-input"
+          type="text"
+          name="vehicle_type"
+          placeholder="e.g. Travel Trailer"
+          required
+        />
+      </div>
+
+      <div class="property">
+        <p class="label">Length</p>
+        <input
+          class="property-input"
+          type="text"
+          name="length"
+          placeholder="e.g. 21.0 ft"
+          required
+        />
+      </div>
+    </div>
+
     <div class="property textarea">
       <p class="label">Description / More Info</p>
       <textarea class="property-input textarea" name="description" required />
@@ -181,11 +253,23 @@ list of things required to build new unit object and throw no errors!  all under
     height: auto;
     flex-grow: 1;
   }
+  .double-row {
+    display: flex;
+  }
+  .double-row .property {
+    width: 225px;
+  }
   .label {
     font-family: cms-semibold;
     font-size: 13px;
     color: var(--cms-text);
     width: 100%;
+  }
+  .note {
+    padding: 6px 15px;
+    text-align: center;
+    font-family: font-light;
+    font-size: 13px;
   }
   .property-input {
     border: 1px solid var(--cms-boxShadow);
