@@ -35,6 +35,7 @@
       {/each}
     {/if}
   </div>
+  <a href='/cms/units/create' class='create-link'>Create New Unit</a>
 </div>
 
 <style>

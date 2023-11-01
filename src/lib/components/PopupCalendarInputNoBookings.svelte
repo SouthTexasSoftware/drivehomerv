@@ -10,7 +10,7 @@
 
   let dispatch = createEventDispatcher();
 
-  export let initialDateObject: { start: string; end: string } | undefined;
+  export let initialDateObject: { start: string; end: string } | undefined = undefined;
 
   onMount(buildCalendar);
 

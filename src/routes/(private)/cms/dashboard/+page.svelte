@@ -12,18 +12,18 @@
   <div class="utilities-column">
     <!-- <p>Tools and Info</p> -->
     <!-- New Booking -->
-    {#key newBookingKey}
+    <!-- {#key newBookingKey}
       <NewBooking on:refresh={() => (newBookingKey = !newBookingKey)} />
-    {/key}
+    {/key} -->
     <!-- eventually Active Requests, Upcoming Events, etc -->
-    <UnitsTable />
+    <!-- <UnitsTable /> -->
   </div>
 
   <div class="calendar-view">
     <!-- <OverviewCalendar /> -->
-    {#key newUnitKey}
+    <!-- {#key newUnitKey}
       <NewUnit on:refresh={() => (newUnitKey = !newUnitKey)} />
-    {/key}
+    {/key} -->
   </div>
 </div>
 

@@ -262,36 +262,36 @@ interface InformationRatesFees {
 }
 
 interface OptionPricing {
-  base_rental_fee: number;
-  taxes_and_insurance: number;
-  service_fee: number;
-  mileage_overage: number;
-  generator_usage: number;
-  weekly_discount: number;
-  monthly_discount: number;
-  minimum_nights: number;
-  security_deposit: number;
-  cleaning_and_restocking: number;
-  kitchen_utensils: number;
-  late_dropoff_fee: number;
+  base_rental_fee: string;
+  taxes_and_insurance: string;
+  service_fee: string;
+  mileage_overage: string;
+  generator_usage: string;
+  weekly_discount: string;
+  monthly_discount: string;
+  minimum_nights: string;
+  security_deposit: string;
+  cleaning_and_restocking: string;
+  kitchen_utensils: string;
+  late_dropoff_fee: string;
   additional_options: {
-    [option_name: string]: number;
+    [option_name: string]: string;
   };
 }
 
 interface OptionUpgrades {
-  dumping: number;
-  marshmellow_kit: number;
-  folding_chairs_and_table: number;
-  propane_refill: number;
+  dumping: string;
+  marshmellow_kit: string;
+  folding_chairs_and_table: string;
+  propane_refill: string;
   additional_options: {
-    [option_name: string]: number;
+    [option_name: string]: string;
   };
 }
 interface OptionDelivery {
-  price_per_mile: number;
+  price_per_mile: string;
   additional_options: {
-    [option_name: string]: number;
+    [option_name: string]: string;
   };
 }
 

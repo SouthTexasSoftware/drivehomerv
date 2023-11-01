@@ -1,6 +1,6 @@
 <script lang="ts">
   import { customerStore, firebaseStore } from "$lib/stores";
-  import { createEventDispatcher, onMount } from "svelte";
+  import { afterUpdate, createEventDispatcher, onMount } from "svelte";
   import { DateTime } from "@easepick/bundle";
   import { enhance } from "$app/forms";
   import {
@@ -25,7 +25,10 @@
   onMount(() => {
     window.scrollTo(0, 150);
     setInvoicePercentageString();
+    console.log($customerStore);
   });
+
+  
 
   function setInvoicePercentageString() {
     let selectedStartDate = new DateTime($customerStore.start, "MMM-DD-YYYY");

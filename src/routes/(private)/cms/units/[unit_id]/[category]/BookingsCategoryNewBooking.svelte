@@ -19,31 +19,31 @@
   let dispatch = createEventDispatcher();
 
   let datesValidationError = false;
+  let customerValidationError = false;
 
   let newBookingData: Booking | undefined;
 
-  afterUpdate(() => {
-    newBookingData = {
-      id: newUUID(),
-      start: "",
-      end: "",
-      status: "manualEntry",
-      created: serverTimestamp() as Timestamp,
-      photos: [],
-      documents: [],
-      unix_start: undefined,
-      unix_end: undefined,
-      passengers: undefined,
-      total_price: undefined,
-      unit_name: unitObject.name,
-      unit_id: unitObject.id,
-      customer: "manualEntry",
-      pickup_time: " 4 pm",
-      dropoff_time: "10 am",
-    };
-  });
+  newBookingData = {
+    id: newUUID(),
+    start: "",
+    end: "",
+    status: "manualEntry",
+    created: serverTimestamp() as Timestamp,
+    photos: [],
+    documents: [],
+    unix_start: undefined,
+    unix_end: undefined,
+    passengers: undefined,
+    total_price: undefined,
+    unit_name: unitObject.name,
+    unit_id: unitObject.id,
+    customer: "manualEntry",
+    pickup_time: " 4 pm",
+    dropoff_time: "10 am",
+  };
 
   function updateBookingDates(detail: { start: string; end: string }) {
+    console.log(newBookingData);
     if (newBookingData) {
       newBookingData.start = detail.start;
       newBookingData.end = detail.end;
@@ -65,10 +65,16 @@
     if (savingBooking) return;
     savingBooking = true;
     datesValidationError = false;
+    customerValidationError = false;
 
     if (newBookingData) {
       if (!newBookingData.unix_start || !newBookingData.unix_end) {
         datesValidationError = true;
+        savingBooking = false;
+        return;
+      }
+      if (!firstNameInput.value || !lastNameInput.value) {
+        customerValidationError = true;
         savingBooking = false;
         return;
       }
@@ -80,6 +86,7 @@
         phone: phoneInput.value,
         bookings: [newBookingData.id],
       };
+      
 
       // add missing data, including the above customer id
       newBookingData.total_price = parseInt(priceInput.value);
@@ -231,20 +238,26 @@
         />
       </div>
     </div>
+    
     <div class="section">
       <div class="section-label">Customer Info</div>
+      {#if customerValidationError}
+      <p class="validation-error customer">Customer Details Required</p>
+    {/if}
       <input
         type="text"
-        placeholder="First Name"
+        placeholder="First Name*"
         name="first-name"
         bind:this={firstNameInput}
+        required
       />
       <input
         class="margin-top"
         type="text"
-        placeholder="Last Name"
+        placeholder="Last Name*"
         name="last-name"
         bind:this={lastNameInput}
+        required
       />
       <input
         class="margin-top"
@@ -322,6 +335,9 @@
     position: absolute;
     left: 67px;
     top: 16px;
+  }
+  .validation-error.customer {
+    left: 125px;
   }
   .section {
     display: flex;

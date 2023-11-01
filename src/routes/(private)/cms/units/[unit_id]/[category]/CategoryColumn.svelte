@@ -4,8 +4,8 @@
   import { beforeUpdate, onMount } from "svelte";
   import type { Booking, Unit } from "$lib/types";
   import { DateTime } from "@easepick/bundle";
-  import { afterNavigate } from "$app/navigation";
-  import { firebaseStore, unitStore } from "$lib/stores";
+  import { afterNavigate, goto } from "$app/navigation";
+  import { cmsStore, firebaseStore, unitStore } from "$lib/stores";
   import { createEventDispatcher } from "svelte";
   import {
     collection,
@@ -203,6 +203,11 @@
     unitObject.sessionOnly.bookingsListener();
     attachBookingsListener();
 
+    cmsStore.update((storeData) => {
+      storeData.triggerRefresh = !storeData.triggerRefresh;
+      return storeData;
+    });
+
     loadingPastBookings = false;
   }
 
@@ -247,8 +252,23 @@
   {#each subcategoryLabels as subcategory, index}
     <button
       class="subcategory-title"
-      on:click={() =>
-        (showingSubcategory[subcategory] = !showingSubcategory[subcategory])}
+      on:click={() => {
+        showingSubcategory[subcategory] = !showingSubcategory[subcategory];
+        if (showingSubcategory[subcategory]) {
+          let optionsWithin = getOptions(subcategoryList[index]);
+          console.log(optionsWithin[0]);
+          goto(
+            "/cms/units/" +
+              $page.params.unit_id +
+              "/" +
+              $page.params.category +
+              "/" +
+              subcategoryList[index] +
+              "/" +
+              optionsWithin[0]
+          );
+        }
+      }}
     >
       <p class:active={$page.params.subcategory == subcategoryList[index]}>
         {subcategory.toUpperCase()}
