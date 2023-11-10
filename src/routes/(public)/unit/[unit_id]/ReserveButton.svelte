@@ -33,7 +33,7 @@
         />
       </g>
     </svg>
-    <p>REQUEST NOW</p>
+    <p>BOOK NOW</p>
   </button>
 {/if}
 

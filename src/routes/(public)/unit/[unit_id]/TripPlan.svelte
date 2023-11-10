@@ -5,6 +5,8 @@
   import TempFeatureList from "./TempFeatureList.svelte";
   import ReserveButton from "./ReserveButton.svelte";
   import { createEventDispatcher, onMount } from "svelte";
+  import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
 
   export let unitObject: Unit;
   export let showRequest: boolean;
@@ -23,6 +25,13 @@
   $: {
     customerStore.update((storeData) => {
       storeData.total_price = totalBookingPrice;
+      //@ts-ignore
+      storeData.trip_length = selectedTripLength;
+      //@ts-ignore
+      storeData.nightly_rate_sum = nightlyRateSum;
+      //@ts-ignore
+      storeData.additional_fees = additionalFeesTotal;
+      
       return storeData;
     });
   }
@@ -72,18 +81,18 @@
     let differenceInDays = differenceInTime / (1000 * 3600 * 24);
 
     selectedTripLength = differenceInDays;
-    console.log(selectedTripLength);
+   
 
     additionalFeesTotal = sumOfFees(selectedTripLength);
 
     // handle pickup_dropoff modifiers...
-    console.log($customerStore);
+   
   }
 
   function dispatchShowModal() {
-    dispatch("showModal", true);
+    let currentUrl = $page.url.href;
+    goto(currentUrl + "/book_now");
   }
-  
 </script>
 
 <div class="trip-plan-container">

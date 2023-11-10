@@ -423,4 +423,11 @@ export interface Customer {
   bookings?: string[];
   age_over_25?: boolean;
   stripe_id?: string;
+  preferred_contact_method?: {
+    text?: boolean;
+    call?: boolean;
+    email?: boolean;
+  };
+  contact_form_completed?: boolean;
+  paymentIntent?: string;
 }
