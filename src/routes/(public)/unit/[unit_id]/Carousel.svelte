@@ -29,7 +29,7 @@
     carouselPhotoUrls = sortedPhotoList.map((photoObj) => {
       return photoObj.downloadURL;
     });
-    console.log(carouselPhotoUrls);
+    //console.log(carouselPhotoUrls);
     photosLoaded = true;
   }
 
