@@ -72,12 +72,12 @@
     let differenceInDays = differenceInTime / (1000 * 3600 * 24);
 
     selectedTripLength = differenceInDays;
-    console.log(selectedTripLength);
+    //console.log(selectedTripLength);
 
     additionalFeesTotal = sumOfFees(selectedTripLength);
 
     // handle pickup_dropoff modifiers...
-    console.log($customerStore);
+    //console.log($customerStore);
   }
 
   function dispatchShowModal() {
