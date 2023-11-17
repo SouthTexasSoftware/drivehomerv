@@ -1,49 +1,145 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { customerStore, unitStore } from "$lib/stores";
-  import type { Unit } from "lib/types";
-  import UnitCard from "../../../rentals/UnitCard.svelte";
+  import { bookingStore, firebaseStore, unitStore } from "$lib/stores";
+  import type { Booking, Customer, Unit } from "lib/types";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
-  import StripeCheckout from "./StripeCheckout.svelte";
   import ContactIcon from "./zIconContact.svelte";
   import CheckoutIcon from "./zIconCheckout.svelte";
-  import Review from "./Contact.svelte";
   import Contact from "./Contact.svelte";
   import Checkout from "./Checkout.svelte";
   import ThankYou from "./ThankYou.svelte";
   import SectionWrapper from "./SectionWrapper.svelte";
+  import type { PageData } from "./$types";
+  import ReestablishingSession from "./ReestablishingSession.svelte";
+  import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
   let unitObject: Unit | undefined = undefined;
   let unitLoadingCounter = 0;
   let paymentIntentKey: string;
   let currentViewNumber = 0;
+  let paymentIntentFromServer = {};
 
-  let viewArray = ["contact", "checkout", "thankyou"];
+  export let data: PageData;
+
+  console.log("server loaded data = ", data);
+
+  let viewArray = ["contact", "connecting", "checkout", "thankyou"];
 
   let flowStates = {
     onContact: true,
     onCheckout: false,
     onThankyou: false,
-    agreementAccepted: false,
+
+    onConnecting: false,
     transitionDirection: "movingRight",
+
+    agreementAccepted: false,
   };
 
   let tripStartLabel = "Departure";
   let tripEndLabel = "Return";
 
-  onMount(() => {
-    if (!$customerStore) {
-      //redirect back to unit booking page
-      let unitBookingPage = $page.url.pathname;
-      unitBookingPage = unitBookingPage.slice(0, -9);
-      // goto(unitBookingPage);
+  //intercept a redirect and hit pause for now.
+  async function checkForRedirect(): Promise<boolean> {
+    if (data.paymentIntentObject) {
+      setFlowStateView(1);
+      checkUnitSelected();
+      recreateSession(); // this may take some time.. but we cannot await here
+
+      return true;
     }
-    if ($customerStore.total_price == 0) {
+    return false;
+  }
+
+  async function recreateSession() {
+    if (!unitObject) {
+      setTimeout(recreateSession, 200);
+      return;
+    }
+
+    let bookingId = data.paymentIntentObject?.metadata.cms_booking_id;
+    let unitId = $page.params.unit_id;
+    if (bookingId) {
+      let bookingRef = doc(
+        $firebaseStore.db,
+        "units",
+        unitId,
+        "bookings",
+        bookingId
+      );
+      let oldBookingObject = await getDoc(bookingRef);
+      if (oldBookingObject.exists()) {
+        bookingStore.set(oldBookingObject.data() as Booking);
+
+        // retrieve customer information - needed to send out email confirmation if succeeded
+        let customerId = $bookingStore.customer;
+        //@ts-ignore
+        let customerRef = doc($firebaseStore.db, "customers", customerId);
+        let customerObject = await getDoc(customerRef);
+        if (customerObject.exists()) {
+          $bookingStore.customerObject = customerObject.data() as Customer;
+        }
+
+        //@ts-ignore
+        $bookingStore.payment_intent = data.paymentIntentObject;
+        //@ts-ignore
+        if ($bookingStore.payment_intent?.status == "succeeded") {
+          $bookingStore.status = "paid";
+          // send confirmation emails..
+          // check to see if this has already been triggered????
+          if (!$bookingStore.confirmation_email_sent) {
+            let sendConfirmationEmail = await fetch(
+              "/api/email/customerConfirmation",
+              {
+                method: "POST",
+                body: JSON.stringify($bookingStore),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            let serverResponse = await sendConfirmationEmail.json();
+            if (serverResponse.error) {
+              console.error(serverResponse.code);
+              return "error";
+            }
+
+            $bookingStore.confirmation_email_sent = true;
+            $bookingStore.confirmed = true;
+            await setDoc($bookingStore.document_reference, $bookingStore);
+          } else {
+            console.log('records show confirmation email already sent');
+          }
+          // show thank you page, AFTER we receive confirmation of the email...
+          setFlowStateView(3);
+          return;
+        }
+
+        // payment didn't go through? or something got cancelled?
+        // recreate payment intent / checkout.
+
+        setFlowStateView(2);
+        return;
+      }
+    }
+  }
+
+  onMount(async () => {
+    if (await checkForRedirect()) return;
+
+    if (!$bookingStore) {
       //redirect back to unit booking page
       let unitBookingPage = $page.url.pathname;
       unitBookingPage = unitBookingPage.slice(0, -9);
-      // goto(unitBookingPage);
+      goto(unitBookingPage);
+    }
+    if ($bookingStore.total_price == 0) {
+      //redirect back to unit booking page
+      let unitBookingPage = $page.url.pathname;
+      unitBookingPage = unitBookingPage.slice(0, -9);
+      goto(unitBookingPage);
     }
     checkUnitSelected();
   });
@@ -52,8 +148,6 @@
     unitLoadingCounter += 1;
     if ($unitStore.isPopulated) {
       unitObject = $unitStore.getUnit($page.params.unit_id);
-      console.log($customerStore);
-      console.log(unitObject);
       updateTripStartEndLabels();
       return;
     }
@@ -82,8 +176,6 @@
     }
   }
 
-
-
   function setFlowStateView(viewNumber: number) {
     if (currentViewNumber < viewNumber) {
       flowStates.transitionDirection = "movingRight";
@@ -97,18 +189,28 @@
         flowStates.onContact = true;
         flowStates.onCheckout = false;
         flowStates.onThankyou = false;
+        flowStates.onConnecting = false;
 
         break;
       case "checkout":
         flowStates.onContact = false;
         flowStates.onCheckout = true;
         flowStates.onThankyou = false;
+        flowStates.onConnecting = false;
+
+        break;
+      case "connecting":
+        flowStates.onContact = false;
+        flowStates.onCheckout = false;
+        flowStates.onThankyou = false;
+        flowStates.onConnecting = true;
 
         break;
       case "thankyou":
         flowStates.onContact = false;
         flowStates.onCheckout = false;
         flowStates.onThankyou = true;
+        flowStates.onConnecting = false;
 
         break;
     }
@@ -136,7 +238,7 @@
         transitionDirection={flowStates.transitionDirection}
         ><Contact
           {unitObject}
-          on:complete={() => setFlowStateView(1)}
+          on:complete={() => setFlowStateView(2)}
         /></SectionWrapper
       >
     {/if}
@@ -144,14 +246,24 @@
       <SectionWrapper
         title={"Checkout"}
         transitionDirection={flowStates.transitionDirection}
-        ><Checkout {unitObject} on:back={() => setFlowStateView(0)}/></SectionWrapper
+        ><Checkout
+          {unitObject}
+          on:back={() => setFlowStateView(0)}
+        /></SectionWrapper
       >
     {/if}
     {#if flowStates.onThankyou}
       <SectionWrapper
-        title={"ThankYou"}
+        title={"Thank You!"}
         transitionDirection={flowStates.transitionDirection}
         ><ThankYou /></SectionWrapper
+      >
+    {/if}
+    {#if flowStates.onConnecting}
+      <SectionWrapper
+        title={"Spinning Our Wheels"}
+        transitionDirection={flowStates.transitionDirection}
+        ><ReestablishingSession /></SectionWrapper
       >
     {/if}
   {:else}
@@ -162,7 +274,8 @@
 <div class="temp-button">
   <button on:click={() => setFlowStateView(0)}>Review</button>
   <button on:click={() => setFlowStateView(1)}>Checkout</button>
-  <button on:click={() => setFlowStateView(2)}>Thank You</button>
+  <button on:click={() => setFlowStateView(3)}>Thank You</button>
+  <button on:click={() => setFlowStateView(2)}>Connecting</button>
 </div>
 
 <style>

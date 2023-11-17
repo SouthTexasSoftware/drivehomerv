@@ -4,7 +4,7 @@
   import { LockPlugin } from "@easepick/lock-plugin";
   import { onMount, createEventDispatcher } from "svelte";
   import rentalsAvailableCalendar from "$lib/styles/rentalsAvailableCalendar.css?inline";
-  import { customerStore } from "$lib/stores";
+  import { bookingStore } from "$lib/stores";
   import { DateTime } from "@easepick/datetime";
 
   let dispatch = createEventDispatcher();
@@ -14,10 +14,10 @@
   let selectedTripEnd = "End Date";
 
   onMount(() => {
-    if ($customerStore) {
-      if ($customerStore.start && $customerStore.end) {
-        selectedTripStart = $customerStore.start;
-        selectedTripEnd = $customerStore.end;
+    if ($bookingStore) {
+      if ($bookingStore.start && $bookingStore.end) {
+        selectedTripStart = $bookingStore.start;
+        selectedTripEnd = $bookingStore.end;
 
         dispatch("selection", {
           start: new DateTime(selectedTripStart, "MMM-DD-YYYY"),
@@ -69,9 +69,10 @@
 
     dispatch("selection", selection);
 
-    customerStore.set({
-      start: selectedTripStart,
-      end: selectedTripEnd,
+    bookingStore.update((store)=>{
+      store.start = selectedTripStart,
+      store.end = selectedTripEnd
+      return store;
     });
   }
 

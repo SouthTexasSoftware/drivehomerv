@@ -6,7 +6,7 @@
   import { onMount, createEventDispatcher } from "svelte";
   import publicPickerCalendar from "$lib/styles/publicPickerCalendar.css?inline";
   import type { Unit } from "$lib/types";
-  import { customerStore, unitStore } from "$lib/stores";
+  import { bookingStore, unitStore } from "$lib/stores";
 
   export let unitObject: Unit;
 
@@ -43,9 +43,9 @@
   let tripEndLabel = "Return";
 
   onMount(() => {
-    if ($customerStore.start && $customerStore.end) {
-      selectedTripStart = $customerStore.start;
-      selectedTripEnd = $customerStore.end;
+    if ($bookingStore.start && $bookingStore.end) {
+      selectedTripStart = $bookingStore.start;
+      selectedTripEnd = $bookingStore.end;
 
       dispatch("selection", {
         start: new DateTime(selectedTripStart, "MMM-DD-YYYY"),
@@ -276,7 +276,9 @@
         selection.pickup.time = time;
         selection.pickup.price =
           options.priceMod *
-          unitObject.information.rates_and_fees.pricing.base_rental_fee;
+          parseInt(
+            unitObject.information.rates_and_fees.pricing.base_rental_fee
+          );
       } else {
         options.selected = false;
       }
@@ -290,7 +292,9 @@
         selection.dropoff.time = time;
         selection.dropoff.price =
           options.priceMod *
-          unitObject.information.rates_and_fees.pricing.base_rental_fee;
+          parseInt(
+            unitObject.information.rates_and_fees.pricing.base_rental_fee
+          );
       } else {
         options.selected = false;
       }
@@ -299,13 +303,18 @@
     selection.start = new DateTime(selectedTripStart, "MMM-DD-YYYY");
     selection.end = new DateTime(selectedTripEnd, "MMM-DD-YYYY");
 
-    customerStore.update((storeData) => {
-      storeData.start = selectedTripStart;
-      storeData.end = selectedTripEnd;
-      storeData.pickup_time = selection.pickup.time;
-      storeData.dropoff_time = selection.dropoff.time;
+    let unixStart = Math.ceil(selection.start.getTime() / 1000);
+    let unixEnd = Math.ceil(selection.end.getTime() / 1000);
 
-      return storeData;
+    bookingStore.update((store) => {
+      store.start = selectedTripStart;
+      store.end = selectedTripEnd;
+      store.pickup_time = selection.pickup.time;
+      store.dropoff_time = selection.dropoff.time;
+      store.unix_start = unixStart;
+      store.unix_end = unixEnd;
+
+      return store;
     });
 
     dispatch("selection", selection);
@@ -385,8 +394,10 @@
               >{time}
               <span>
                 &nbsp; +${options.priceMod *
-                  unitObject.information.rates_and_fees.pricing
-                    .base_rental_fee}</span
+                  parseInt(
+                    unitObject.information.rates_and_fees.pricing
+                      .base_rental_fee
+                  )}</span
               ></option
             >
           {/if}
@@ -417,8 +428,10 @@
               >{time}
               <span>
                 &nbsp; +${options.priceMod *
-                  unitObject.information.rates_and_fees.pricing
-                    .base_rental_fee}</span
+                  parseInt(
+                    unitObject.information.rates_and_fees.pricing
+                      .base_rental_fee
+                  )}</span
               ></option
             >
           {/if}

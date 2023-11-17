@@ -17,7 +17,7 @@ export const unitStore = writable<UnitStore>({
   },
 });
 
-export const customerStore = writable<Booking>(undefined);
+export const bookingStore = writable<Booking>(undefined);
 
 export const cmsStore = writable<{ triggerRefresh: boolean }>({
   triggerRefresh: false,

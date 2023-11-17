@@ -160,8 +160,12 @@ export async function populateUnitStore(
             end: new DateTime(booking.end, "MMM-DD-YYYY"),
           };
 
+        
           if (unit.bookingDates && unit.bookings) {
-            unit.bookingDates.push(bookingDates);
+             //PERFORM A CHECK HERE TO ONLY INCLUDE CONFIRMED BOOKINGS INTO THE 'bookingDates' array
+            if (booking.confirmed) {
+              unit.bookingDates.push(bookingDates);
+            }
             unit.bookings.push(booking);
           }
 
@@ -377,3 +381,80 @@ export const newUnitModel: Unit = {
     },
   },
 };
+
+/**
+ *  Receives a formatted datestring and return the month & day in string format
+ *  @param dateString MMM-DD-YYYY
+ *  @returns Month & Day with ordinal suffix e.g. November 20th
+ */
+export function getMonthString(dateString: string | undefined) {
+  if (!dateString || dateString == "undefined") {
+    return "None";
+  }
+  let dateTimeObject = new DateTime(dateString, "MMM-DD-YYYY");
+
+  let dayString = dateTimeObject.toLocaleString("en-us", {
+    weekday: "long",
+  });
+  let monthString = dateTimeObject.toLocaleString("en-us", {
+    month: "long",
+  });
+
+  let dayNumber = dateTimeObject.getDate();
+  let dayNumberFormatted = ordinal_suffix_of(dayNumber);
+
+  return monthString + " " + dayNumberFormatted;
+}
+
+/**
+ *  Receives a formatted datestring and returns the day of the week
+ *  @param dateString MMM-DD-YYYY
+ *  @returns Day of Week e.g. Sunday
+ */
+export function getDayString(dateString: string | undefined) {
+  if (!dateString || dateString == "undefined") {
+    return "None";
+  }
+  let dateTimeObject = new DateTime(dateString, "MMM-DD-YYYY");
+
+  let dayString = dateTimeObject.toLocaleString("en-us", {
+    weekday: "long",
+  });
+
+  return dayString;
+}
+
+/**
+ * Adds the appropriate ending to a dates number '22nd or 28th' etc
+ * @param i Number to format
+ * @returns Formatted string e.g. 20th
+ */
+function ordinal_suffix_of(i: number) {
+  var j = i % 10,
+    k = i % 100;
+  if (j == 1 && k != 11) {
+    return i + "st";
+  }
+  if (j == 2 && k != 12) {
+    return i + "nd";
+  }
+  if (j == 3 && k != 13) {
+    return i + "rd";
+  }
+  return i + "th";
+}
+
+/**
+ * Generates a UUID for
+ * @returns formatted uuid string
+ */
+export function newUUID(): string {
+  // Alphanumeric characters
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let autoId = "";
+  for (let i = 0; i < 20; i++) {
+    autoId += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return autoId;
+}

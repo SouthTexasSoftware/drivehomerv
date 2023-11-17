@@ -57,20 +57,35 @@ list of things required to build new unit object and throw no errors!  all under
       formObject.pickup_location;
     newUnitObject.information.rates_and_fees.pricing.mileage_overage =
       formObject.mileage_overage;
-    newUnitObject.information.bullet_points.summary.sleeps =
-      formObject.sleeps;
+    newUnitObject.information.bullet_points.summary.sleeps = formObject.sleeps;
     newUnitObject.information.bullet_points.summary.year_built =
       formObject.year_built;
     newUnitObject.information.bullet_points.summary.vehicle_type =
       formObject.vehicle_type;
-    newUnitObject.information.bullet_points.summary.length =
-      formObject.length;
+    newUnitObject.information.bullet_points.summary.length = formObject.length;
 
     let unitsCollection = collection($firebaseStore.db, "units");
     let newUnitDocRef = doc(unitsCollection);
     let newUnitId = newUnitDocRef.id;
 
     newUnitObject.id = newUnitId;
+
+    //***  CREATE PRODUCT IN STRIPE  ***
+    let createStripeProduct = await fetch("/api/stripe/createProduct", {
+      method: "POST",
+      body: JSON.stringify(newUnitObject),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    let stripeResponse = await createStripeProduct.json();
+
+    if (stripeResponse.error) {
+      console.error(stripeResponse.code);
+    } else {
+      //@ts-ignore
+      newUnitObject.stripe_product_id = stripeResponse.stripe_product_id;
+    }
 
     let createNewUnit = await setDoc(newUnitDocRef, newUnitObject);
 
@@ -86,7 +101,10 @@ list of things required to build new unit object and throw no errors!  all under
   <div class="container-header">
     <p class="option-title">Create New Unit</p>
   </div>
-  <p class="note">Please follow the examples provided for formatting. When only a number is present it is used in a mathematical formula. Thank you.</p>
+  <p class="note">
+    Please follow the examples provided for formatting. When only a number is
+    present it is used in a mathematical formula. Thank you.
+  </p>
   <div class="properties-list">
     <div class="property">
       <p class="label">Unit Name</p>
@@ -115,7 +133,13 @@ list of things required to build new unit object and throw no errors!  all under
       </div>
       <div class="property">
         <p class="label">Service Fee</p>
-        <input class="property-input" type="text" name="service_fee" placeholder="e.g. 125" required />
+        <input
+          class="property-input"
+          type="text"
+          name="service_fee"
+          placeholder="e.g. 125"
+          required
+        />
       </div>
     </div>
 

@@ -4,6 +4,7 @@ import type {
   Firestore,
   Timestamp,
   CollectionReference,
+  DocumentReference,
 } from "firebase/firestore";
 import type { FirebaseStorage } from "firebase/storage";
 import type { DateTime } from "@easepick/datetime";
@@ -295,13 +296,13 @@ interface OptionDelivery {
   };
 }
 
-// TODO: add pickup, dropoff time and location
-// TODO: add booking referrer
 export interface Booking {
   id: string;
+  document_reference: DocumentReference;
   customer?: string;
   customerObject?: Customer;
   unit_id?: string;
+  stripe_product_id?: string;
   unit_name?: string;
   start: string; //MMM-DD-YYYY
   end: string; //MMM-DD-YYYY
@@ -311,6 +312,12 @@ export interface Booking {
   unix_start?: number;
   unix_end?: number; // for ease of comparison
   total_price?: number;
+  price_per_night?: number;
+  trip_length?: number;
+  nightly_rate_sum?: number;
+  service_fee?: number;
+  taxes_and_fees_per_night?: number;
+  taxes_and_fees?: number;
   created?: Timestamp;
   updated?: Timestamp;
   status: string;
@@ -319,11 +326,18 @@ export interface Booking {
   dropoff_time?: string;
   dropoff_location?: string;
   pickup_dropoff_price_addition?: number;
-  payment_status?: PaymentStatus;
+
   agreement_status?: AgreementStatus;
   event_list?: BookingEvent[];
   photos: PhotoDocument[];
   documents: FileDocument[];
+  unit_img_link: string;
+
+  confirmed: boolean;
+  confirmation_email_sent: boolean;
+  receipt_date_string: string; //MMM-DD-YYYY
+  payment_intent?: string;
+  payment_status?: PaymentStatus;
 
   stripe_price_id_list?: [string];
   stripe_invoiceItem_id_list?: [string];

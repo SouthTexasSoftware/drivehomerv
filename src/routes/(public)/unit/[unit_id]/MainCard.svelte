@@ -2,10 +2,8 @@
   import Carousel from "./Carousel.svelte";
   import TripPlan from "./TripPlan.svelte";
   import type { Unit } from "$lib/types";
-  import FeatureList from "./FeatureList.svelte";
-  import RequestModal from "./RequestModal.svelte";
-  import { customerStore } from "$lib/stores";
-  import SuccessModal from "./SuccessModal.svelte";
+  import { bookingStore } from "$lib/stores";
+
 
   let screenWidth: number;
   let showRequest = false;
@@ -14,43 +12,27 @@
   export let unitObject: Unit;
 
   if (unitObject) {
-    if ($customerStore) {
-      customerStore.update((storeData) => {
-        storeData.unit_id = unitObject.id;
-        storeData.unit_name = unitObject.name;
-        return storeData;
+    if ($bookingStore) {
+      bookingStore.update((store) => {
+        store.unit_id = unitObject.id;
+        store.unit_name = unitObject.name;
+        store.stripe_product_id = unitObject.stripe_product_id;
+        return store;
       });
     } else {
       //@ts-ignore
-      customerStore.set({
+      bookingStore.set({
         unit_id: unitObject.id,
         unit_name: unitObject.name,
-        status: "requested",
+        stripe_product_id: unitObject.stripe_product_id,
+        status: "in checkout",
       });
     }
   }
 </script>
 
 <svelte:window bind:innerWidth={screenWidth} />
-{#if showRequest}
-  <RequestModal
-    {unitObject}
-    on:close={() => {
-      showRequest = false;
-    }}
-    on:requestSuccess={() => {
-      showSuccess = true;
-    }}
-  />
-  <div class="blur-background" />
-{/if}
-{#if showSuccess}
-  <SuccessModal
-    on:close={() => {
-      showSuccess = false;
-    }}
-  />
-{/if}
+
 <div id="card-wrapper">
   {#if screenWidth > 500}
     <Carousel {unitObject} />

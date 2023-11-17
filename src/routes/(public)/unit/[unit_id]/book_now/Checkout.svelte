@@ -1,18 +1,22 @@
 <script lang="ts">
   import type { Unit } from "$lib/types";
-  import { customerStore, firebaseStore } from "$lib/stores";
+  import { bookingStore, firebaseStore } from "$lib/stores";
   import ArrowIcon from "./zIconArrow.svelte";
   import { enhance } from "$app/forms";
   import { createEventDispatcher, onMount } from "svelte";
   import { page } from "$app/stores";
-  import { doc, updateDoc } from "firebase/firestore";
+  import { doc, setDoc, updateDoc } from "firebase/firestore";
   import { get } from "svelte/store";
+  import { fly } from "svelte/transition";
+  import { DateTime } from "@easepick/bundle";
 
   export let unitObject: Unit;
   let paymentIntentLoading = true;
   let stripe: any;
   let elements: any;
   let submittingPayment = false;
+  let paymentError = false;
+  let errorText = "Payment Error Placeholder";
 
   let dispatch = createEventDispatcher();
 
@@ -21,16 +25,13 @@
   async function initializeStripe() {
     let client_secret = "error";
 
-    let currentCustomer = $customerStore.customerObject;
-
-    //@ts-ignore
-    if (currentCustomer.paymentIntent != undefined) {
+    if ($bookingStore.payment_intent) {
       //@ts-ignore
-      client_secret = currentCustomer.paymentIntent;
-      console.log("previous intent found");
+      client_secret = $bookingStore.payment_intent.client_secret;
     } else {
-      //@ts-ignore
-      client_secret = await generatePaymentIntent(currentCustomer.id);
+      if ($bookingStore.customer) {
+        client_secret = await generatePaymentIntent($bookingStore.customer);
+      }
     }
 
     if (client_secret == "error") {
@@ -68,7 +69,7 @@
 
     let requestIntentKey = await fetch("/api/stripe/createPaymentIntent", {
       method: "POST",
-      body: JSON.stringify($customerStore),
+      body: JSON.stringify($bookingStore),
       headers: {
         "Content-Type": "application/json",
       },
@@ -80,12 +81,18 @@
       return "error";
     }
 
-    customerStore.update((storeData) => {
+    bookingStore.update((storeData) => {
       //@ts-ignore
-      storeData.customerObject.paymentIntent = serverResponse.client_secret;
+      storeData.payment_intent = serverResponse.payment_intent;
+
+      storeData.receipt_date_string = new DateTime().format("MMM-DD-YYYY");
+
+      delete storeData.customerObject;
 
       return storeData;
     });
+
+    await setDoc($bookingStore.document_reference, $bookingStore);
 
     return serverResponse.client_secret;
   }
@@ -115,9 +122,11 @@
         },
       });
 
-      if (paymentResponse.error.type === "card_error" || paymentResponse.error.type === "validation_error") {
-        console.log(paymentResponse.error.message);
-      } 
+      if (paymentResponse.error) {
+        console.log(paymentResponse.error);
+        errorText = "Payment Unsuccessful: " + paymentResponse.error.message;
+        paymentError = true;
+      }
 
       cancel();
       submittingPayment = false;
@@ -130,10 +139,16 @@
       {#if submittingPayment}
         <div class="spinner small" id="spinner" />
       {:else}
-        <span id="button-text">PAY NOW</span>
+        <span id="button-text"
+          >${$bookingStore.total_price} &#8226; PAY NOW</span
+        >
       {/if}
     </button>
-    <div id="payment-message" class="hidden" />
+    <div class="payment-message">
+      {#if paymentError}
+        <p class="error-text" in:fly={{ y: 30 }}>{errorText}</p>
+      {/if}
+    </div>
   </form>
 
   <button
@@ -170,6 +185,15 @@
   }
   #button-text {
     font-family: font-medium;
+  }
+  .payment-message {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  .error-text {
+    font-family: font-bold;
+    color: hsl(var(--er));
   }
   .left-arrow {
     position: absolute;

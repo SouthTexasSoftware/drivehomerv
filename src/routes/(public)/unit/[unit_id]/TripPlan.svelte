@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { customerStore } from "$lib/stores";
+  import { bookingStore, firebaseStore } from "$lib/stores";
   import type { Unit, Booking } from "$lib/types";
   import Calendar from "./Calendar.svelte";
   import TempFeatureList from "./TempFeatureList.svelte";
@@ -7,6 +7,8 @@
   import { createEventDispatcher, onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
+  import { newUUID } from "$lib/helpers";
+  import { doc, setDoc } from "firebase/firestore";
 
   export let unitObject: Unit;
   export let showRequest: boolean;
@@ -16,23 +18,35 @@
   let selectedTripLength: number = 0;
   let pickup_dropoff_price_addition = 0;
 
+  let loadingBookingRecap = false;
+
   $: nightlyRateSum =
-    unitObject.information.rates_and_fees.pricing.base_rental_fee *
+    parseInt(unitObject.information.rates_and_fees.pricing.base_rental_fee) *
     selectedTripLength;
   $: additionalFeesTotal = sumOfFees(selectedTripLength); // must pass in the dynamic value to rerun
   $: totalBookingPrice = nightlyRateSum + additionalFeesTotal;
 
+  // update bookingStore on different calendar selections
   $: {
-    customerStore.update((storeData) => {
-      storeData.total_price = totalBookingPrice;
-      //@ts-ignore
-      storeData.trip_length = selectedTripLength;
-      //@ts-ignore
-      storeData.nightly_rate_sum = nightlyRateSum;
-      //@ts-ignore
-      storeData.additional_fees = additionalFeesTotal;
-      
-      return storeData;
+    bookingStore.update((store) => {
+      store.total_price = totalBookingPrice;
+      (store.price_per_night = parseInt(
+        unitObject.information.rates_and_fees.pricing.base_rental_fee
+      )),
+        (store.trip_length = selectedTripLength);
+      store.nightly_rate_sum = nightlyRateSum;
+      store.service_fee = parseInt(
+        unitObject.information.rates_and_fees.pricing.service_fee
+      );
+      store.taxes_and_fees_per_night = parseInt(
+        unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+      );
+      store.taxes_and_fees =
+        parseInt(
+          unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+        ) * selectedTripLength;
+
+      return store;
     });
   }
 
@@ -41,20 +55,17 @@
     let service_fee = 0;
 
     let taxes_and_insurance =
-      unitObject.information.rates_and_fees.pricing.taxes_and_insurance *
-      tripLength;
+      parseInt(
+        unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+      ) * tripLength;
 
     if (tripLength != 0) {
-      service_fee = unitObject.information.rates_and_fees.pricing.service_fee;
+      service_fee = parseInt(
+        unitObject.information.rates_and_fees.pricing.service_fee
+      );
     }
 
-    sum =
-      //@ts-ignore
-      parseInt(taxes_and_insurance) +
-      //@ts-ignore
-      parseInt(service_fee) +
-      //@ts-ignore
-      parseInt(pickup_dropoff_price_addition);
+    sum = taxes_and_insurance + service_fee + pickup_dropoff_price_addition;
 
     return sum;
   }
@@ -70,7 +81,7 @@
       }
     }
 
-    customerStore.update((storeData) => {
+    bookingStore.update((storeData) => {
       storeData.pickup_dropoff_price_addition = pickup_dropoff_price_addition;
 
       return storeData;
@@ -81,15 +92,43 @@
     let differenceInDays = differenceInTime / (1000 * 3600 * 24);
 
     selectedTripLength = differenceInDays;
-   
 
     additionalFeesTotal = sumOfFees(selectedTripLength);
 
     // handle pickup_dropoff modifiers...
-   
   }
 
-  function dispatchShowModal() {
+  async function bookNowRequested() {
+    if (loadingBookingRecap) return;
+    loadingBookingRecap = true;
+
+    // CREATE CUSTOMER ID if not already available
+    if (!$bookingStore.customer) {
+      let newCustomerId = newUUID();
+      $bookingStore.customer = newCustomerId;
+    } else {
+      console.log("previous customer ID found");
+    }
+
+    // CREATE BOOKING ID and SUBMIT TO FIREBASE
+    let newBookingID = newUUID();
+    $bookingStore.id = newBookingID;
+    $bookingStore.confirmed = false;
+
+    //@ts-ignore
+    let docRef = doc(
+      $firebaseStore.db,
+      "units",
+      $bookingStore.unit_id,
+      "bookings",
+      $bookingStore.id
+    );
+
+    $bookingStore.document_reference = docRef;
+
+    await setDoc(docRef, $bookingStore);
+
+    loadingBookingRecap = false;
     let currentUrl = $page.url.href;
     goto(currentUrl + "/book_now");
   }
@@ -126,8 +165,9 @@
       <div class="row fee">
         <p>Taxes & Insurance</p>
         <p>
-          ${unitObject.information.rates_and_fees.pricing.taxes_and_insurance *
-            selectedTripLength}
+          ${parseInt(
+            unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+          ) * selectedTripLength}
         </p>
       </div>
 
@@ -158,8 +198,14 @@
         {#if !selectedTripLength}
           <button class="reserve-button"><p>SELECT DATES</p></button>
         {:else}
-          <button class="reserve-button" on:click={dispatchShowModal}
-            ><p>BOOK NOW</p></button
+          <button class="reserve-button" on:click={bookNowRequested}
+            ><p>
+              {#if loadingBookingRecap}
+                <div class="spinner" />
+              {:else}
+                BOOK NOW
+              {/if}
+            </p></button
           >
         {/if}
       {/if}
@@ -179,7 +225,7 @@
     <ReserveButton
       {showRequest}
       {selectedTripLength}
-      on:showModal={dispatchShowModal}
+      on:showModal={bookNowRequested}
     />
   {/if}
 </div>
@@ -280,9 +326,34 @@
     width: 100%;
     padding: 8px 0;
     margin-top: 25px;
+    height: 40px;
   }
   .reserve-button p {
     font-family: font-light;
+  }
+
+  .spinner {
+    content: "";
+    border-radius: 50%;
+    border-top: 2px solid hsl(var(--b1));
+    border-right: 2px solid transparent;
+    animation-name: spinning;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    opacity: 1;
+    transition: all 0.2s;
+    width: 20px;
+    height: 20px;
+    margin: auto;
+  }
+  @keyframes spinning {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 
   @media (max-width: 500px) {

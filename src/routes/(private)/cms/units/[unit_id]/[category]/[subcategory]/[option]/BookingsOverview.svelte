@@ -3,7 +3,7 @@
   import { page, updated } from "$app/stores";
   import { firebaseStore } from "$lib/stores";
   import type { Booking, Customer, Unit } from "$lib/types";
-  import { DateTime } from "@easepick/bundle";
+  import { getMonthString, getDayString } from "$lib/helpers";
   import { arrayUnion, collection, doc, updateDoc } from "firebase/firestore";
   import { beforeUpdate } from "svelte";
   import { fade } from "svelte/transition";
@@ -52,38 +52,6 @@
     }
   }
 
-  // format the date string stored in booking to a nice string
-  function getMonthString(dateString: string | undefined) {
-    if (!dateString || dateString == "undefined") {
-      return "None";
-    }
-    let dateTimeObject = new DateTime(dateString, "MMM-DD-YYYY");
-
-    let dayString = dateTimeObject.toLocaleString("en-us", {
-      weekday: "long",
-    });
-    let monthString = dateTimeObject.toLocaleString("en-us", {
-      month: "long",
-    });
-
-    let dayNumber = dateTimeObject.getDate();
-    let dayNumberFormatted = ordinal_suffix_of(dayNumber);
-
-    return monthString + " " + dayNumberFormatted;
-  }
-
-  function getDayString(dateString: string | undefined) {
-    if (!dateString || dateString == "undefined") {
-      return "None";
-    }
-    let dateTimeObject = new DateTime(dateString, "MMM-DD-YYYY");
-
-    let dayString = dateTimeObject.toLocaleString("en-us", {
-      weekday: "long",
-    });
-
-    return dayString;
-  }
 
   function getTimeString(time: string | undefined) {
     if (!time) {
@@ -289,24 +257,6 @@
     // check that the booking is not in the past?
   }
 
-  /**
-   * Adds the appropriate ending to a dates number '22nd or 28th' etc
-   * @param i Number to format
-   */
-  function ordinal_suffix_of(i: number) {
-    var j = i % 10,
-      k = i % 100;
-    if (j == 1 && k != 11) {
-      return i + "st";
-    }
-    if (j == 2 && k != 12) {
-      return i + "nd";
-    }
-    if (j == 3 && k != 13) {
-      return i + "rd";
-    }
-    return i + "th";
-  }
 
   function formatPhoneNumber(phoneNumberString: string) {
     var cleaned = ("" + phoneNumberString).replace(/\D/g, "");
