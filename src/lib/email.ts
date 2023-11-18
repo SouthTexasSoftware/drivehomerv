@@ -54,7 +54,7 @@ export async function emailHandler( to: string,
   }
 
   // d: change to dev if testing other features
-  if (false) {
+  if (dev) {
     console.log(
       "****************** SIMULATING EMAIL PAYLOAD *********************"
     );

@@ -1,5 +1,5 @@
 import { firebaseClientConfig } from "../config";
-import type { QuerySnapshot } from "firebase/firestore";
+import { QuerySnapshot } from "firebase/firestore";
 import {
   collection,
   getDocs,
@@ -9,6 +9,7 @@ import {
   doc,
   query,
   where,
+  onSnapshot,
 } from "@firebase/firestore";
 import { get } from "svelte/store";
 import type {
@@ -18,7 +19,7 @@ import type {
   Booking,
   FileDocument,
 } from "./types";
-import { firebaseStore, unitStore } from "./stores";
+import { bookingUpdateStore, firebaseStore, unitStore } from "./stores";
 import { DateTime } from "@easepick/bundle";
 import { getAnalytics } from "firebase/analytics";
 
@@ -97,6 +98,8 @@ export async function populateUnitStore(
           unit.id,
           "bookings"
         );
+
+        // only pull Bookings that are ongoing or in the future
         let publicBookingsQuery = query(
           bookingsCollection,
           where("unix_end", ">=", todaysUnixTimestamp)
@@ -108,84 +111,16 @@ export async function populateUnitStore(
           "bookings"
         );
 
-        let unitBookings: QuerySnapshot;
-
-        unitBookings = await getDocs(publicBookingsQuery);
-
         // initialize the empty arrays...
         unit.bookings = [];
         unit.bookingDates = [];
 
-        for (let bookingDoc of unitBookings.docs) {
-          let booking = bookingDoc.data() as Booking;
-
-          // this is to preload booking photos and documents. not necessary..
-          if (false) {
-            // DO ONLY IF CMS IS PASSED TO THE UNIT STORE LOAD FUNCTION
-            // PULL BOOKING PHOTOS & DOCUMENTS
-            let bookingPhotosCollection = collection(
-              fbStore.db,
-              "units",
-              unit.id,
-              "bookings",
-              booking.id,
-              "photos"
-            );
-            let bookingDocumentsCollection = collection(
-              fbStore.db,
-              "units",
-              unit.id,
-              "bookings",
-              booking.id,
-              "documents"
-            );
-
-            let bookingPhotos = await getDocs(bookingPhotosCollection);
-            let bookingDocuments = await getDocs(bookingDocumentsCollection);
-
-            booking.photos = [];
-            booking.documents = [];
-            bookingPhotos.forEach((photoDoc) => {
-              //@ts-ignore
-              booking.photos.push(photoDoc.data() as PhotoDocument);
-            });
-            bookingDocuments.forEach((fileDoc) => {
-              //@ts-ignore
-              booking.documents.push(fileDoc.data() as FileDocument);
-            });
+        unit.bookingsListener = onSnapshot(
+          publicBookingsQuery,
+          (querySnapshot) => {
+            populateUnitBookings(querySnapshot, unit);
           }
-
-          let bookingDates = {
-            start: new DateTime(booking.start, "MMM-DD-YYYY"),
-            end: new DateTime(booking.end, "MMM-DD-YYYY"),
-          };
-
-        
-          if (unit.bookingDates && unit.bookings) {
-             //PERFORM A CHECK HERE TO ONLY INCLUDE CONFIRMED BOOKINGS INTO THE 'bookingDates' array
-            if (booking.confirmed) {
-              unit.bookingDates.push(bookingDates);
-            }
-            unit.bookings.push(booking);
-          }
-
-          // HOW-TO update every booking in the DB...
-          if (!booking.unix_start) {
-            let docRef = doc(
-              fbStore.db,
-              "units",
-              unit.id,
-              "bookings",
-              booking.id
-            );
-            console.log("updating booking ", booking.id);
-            await updateDoc(docRef, {
-              unix_start: Math.ceil(bookingDates.start.getTime() / 1000),
-              unix_end: Math.ceil(bookingDates.end.getTime() / 1000),
-            });
-            console.log("finished updating");
-          }
-        }
+        );
 
         // *** PHOTOS SUBCOLLECTION DATA PULL
         let unitPhotos = await getDocs(
@@ -216,6 +151,50 @@ export async function populateUnitStore(
       console.warn(error);
     }
   }
+}
+
+/**
+ * Helper function to process the data returned from a QuerySnapshot and modify the passing in Unit
+ * @param snapshot - QuerySnapshot of a Booking collection of documents
+ * @param unit - Unit associated with snapshot
+ *
+ */
+function populateUnitBookings(snapshot: QuerySnapshot, unit: Unit) {
+  console.log("re-populating unit bookings for ", unit.name);
+  let bookings = [];
+  let bookingDates = [];
+
+  for (let bookingDoc of snapshot.docs) {
+    let booking = bookingDoc.data() as Booking;
+
+    let bookingDateObjects = {
+      start: new DateTime(booking.start, "MMM-DD-YYYY"),
+      end: new DateTime(booking.end, "MMM-DD-YYYY"),
+    };
+
+    bookings.push(booking);
+    if (booking.confirmed || booking.in_checkout) {
+      bookingDates.push(bookingDateObjects);
+    }
+  }
+
+  unit.bookings = bookings;
+  unit.bookingDates = bookingDates;
+
+  unitStore.update((storeData) => {
+    for (let storeUnit of storeData.units) {
+      if (storeUnit.id == unit.id) {
+        storeUnit.bookings = unit.bookings;
+        storeUnit.bookingDates = unit.bookingDates;
+        bookingUpdateStore.update((storeData) => {
+          storeData.triggerRefresh = true;
+          storeData.unit_id = unit.id;
+          return storeData;
+        });
+      }
+    }
+    return storeData;
+  });
 }
 
 /**

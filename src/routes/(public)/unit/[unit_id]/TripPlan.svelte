@@ -71,6 +71,11 @@
   }
 
   function handleNewCalendarSelection(event: CustomEvent) {
+    if (event.detail.reset) {
+      selectedTripLength = 0;
+      return;
+    }
+
     pickup_dropoff_price_addition = 0;
     if (event.detail.pickup) {
       if (event.detail.pickup.price > 0) {
@@ -102,6 +107,8 @@
     if (loadingBookingRecap) return;
     loadingBookingRecap = true;
 
+    let currentUrl = $page.url.href;
+    goto(currentUrl + "/book_now");
     // CREATE CUSTOMER ID if not already available
     if (!$bookingStore.customer) {
       let newCustomerId = newUUID();
@@ -114,6 +121,7 @@
     let newBookingID = newUUID();
     $bookingStore.id = newBookingID;
     $bookingStore.confirmed = false;
+    $bookingStore.in_checkout = true;
 
     //@ts-ignore
     let docRef = doc(
@@ -129,8 +137,6 @@
     await setDoc(docRef, $bookingStore);
 
     loadingBookingRecap = false;
-    let currentUrl = $page.url.href;
-    goto(currentUrl + "/book_now");
   }
 </script>
 
@@ -215,6 +221,7 @@
       {#if unitObject.bookings != undefined}
         <Calendar
           {unitObject}
+          {loadingBookingRecap}
           on:selection={(e) => handleNewCalendarSelection(e)}
         />
       {/if}

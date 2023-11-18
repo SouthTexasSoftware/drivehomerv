@@ -87,14 +87,58 @@
 
       storeData.receipt_date_string = new DateTime().format("MMM-DD-YYYY");
 
-      delete storeData.customerObject;
-
       return storeData;
     });
 
     await setDoc($bookingStore.document_reference, $bookingStore);
 
     return serverResponse.client_secret;
+  }
+
+  function doubleBookingFound() {
+    if (unitObject.bookings) {
+      let currentBookingStartDate = new DateTime(
+        $bookingStore.start,
+        "MMM-DD-YYYY"
+      );
+      let currentBookingEndDate = new DateTime(
+        $bookingStore.end,
+        "MMM-DD-YYYY"
+      );
+
+      for (let booking of unitObject.bookings) {
+        if (booking.confirmed) {
+          let prevBookingStartDate = new DateTime(booking.start, "MMM-DD-YYYY");
+          let prevBookingEndDate = new DateTime(booking.end, "MMM-DD-YYYY");
+
+          if (
+            currentBookingStartDate.isAfter(prevBookingStartDate) &&
+            currentBookingStartDate.isBefore(prevBookingEndDate)
+          ) {
+            // current booking starts in the middle of another
+            console.log("current booking starts in the middle of another");
+            return true;
+          }
+          if (
+            currentBookingEndDate.isAfter(prevBookingStartDate) &&
+            currentBookingEndDate.isBefore(prevBookingEndDate)
+          ) {
+            // current booking ends in the middle of another
+            console.log("current booking ends in the middle of another");
+            return true;
+          }
+          if (
+            currentBookingStartDate.isAfter(prevBookingStartDate) &&
+            currentBookingEndDate.isBefore(prevBookingEndDate)
+          ) {
+            // current booking lies in the middle of another
+            console.log("current booking lies in the middle of another");
+            return true;
+          }
+        }
+      }
+      return false;
+    }
   }
 </script>
 
@@ -114,6 +158,8 @@
     use:enhance={async ({ form, data, cancel }) => {
       if (submittingPayment) return;
       submittingPayment = true;
+
+      dispatch('paymentStart', true);
 
       const paymentResponse = await stripe.confirmPayment({
         elements,

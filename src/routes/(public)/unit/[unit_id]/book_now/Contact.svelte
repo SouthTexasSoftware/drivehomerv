@@ -4,7 +4,7 @@
   import { getMonthString, getDayString } from "$lib/helpers";
   import ArrowIcon from "./zIconArrow.svelte";
   import { enhance } from "$app/forms";
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
   import {
     DocumentReference,
     Timestamp,
@@ -14,6 +14,7 @@
     setDoc,
   } from "firebase/firestore";
   import { DateTime } from "@easepick/bundle";
+  import { navigating, page } from "$app/stores";
 
   export let unitObject: Unit;
   let submittingForm = false;
@@ -38,6 +39,10 @@
 
       return;
     }
+  });
+ 
+  onMount(()=>{
+    console.log($bookingStore.customerObject);
   });
 
   function inputFilled(name: string) {

@@ -6,9 +6,10 @@
   import { onMount, createEventDispatcher } from "svelte";
   import publicPickerCalendar from "$lib/styles/publicPickerCalendar.css?inline";
   import type { Unit } from "$lib/types";
-  import { bookingStore, unitStore } from "$lib/stores";
+  import { bookingStore, bookingUpdateStore, unitStore } from "$lib/stores";
 
   export let unitObject: Unit;
+  export let loadingBookingRecap: boolean;
 
   let updatingPickupDropoff = true;
   let pickupElement: HTMLSelectElement;
@@ -42,7 +43,17 @@
   let tripStartLabel = "Departure";
   let tripEndLabel = "Return";
 
-  onMount(() => {
+  let pickerGlobal: easepick.Core;
+  let calendarBookedDates: Date[][] = [];
+
+  onMount(awaitUnitStorePopulation);
+
+  function awaitUnitStorePopulation() {
+    if (!$unitStore.isPopulated) {
+      setTimeout(awaitUnitStorePopulation, 200);
+      return;
+    }
+
     if ($bookingStore.start && $bookingStore.end) {
       selectedTripStart = $bookingStore.start;
       selectedTripEnd = $bookingStore.end;
@@ -56,14 +67,12 @@
     buildUnitCalendar();
     updatePickupDropoff();
     updateTripStartEndLabels();
-  });
+  }
 
   function buildUnitCalendar() {
-    const bookedDates: Date[][] = [];
-
     unitObject.bookingDates?.forEach((datesObject) => {
       let tempArray = [datesObject.start, datesObject.end];
-      bookedDates.push(tempArray);
+      calendarBookedDates.push(tempArray);
     });
 
     let inlineCalendar = false;
@@ -71,7 +80,7 @@
       inlineCalendar = true;
     }
 
-    const picker = new easepick.create({
+    pickerGlobal = new easepick.create({
       element: "#calendar-button",
       inline: inlineCalendar, // always visible - TODO: change this in mobile only
       css: publicPickerCalendar,
@@ -96,22 +105,58 @@
       },
       LockPlugin: {
         minDate: new Date(),
-        minDays: unitObject.min_booking_days,
+        minDays:
+          parseInt(
+            unitObject.information.rates_and_fees.pricing.minimum_nights
+          ) || 1,
         inseparable: true,
         filter(date, picked) {
           if (picked.length === 1) {
-            //TODO: why is TS not picking these methods up?
             //@ts-ignore
             const incl = date.isBefore(picked[0]) ? "[)" : "(]";
             return (
               //@ts-ignore
-              !picked[0].isSame(date, "day") && date.inArray(bookedDates, incl)
+              !picked[0].isSame(date, "day") &&
+              //@ts-ignore
+              date.inArray(calendarBookedDates, incl)
             );
           }
           //@ts-ignore
-          return date.inArray(bookedDates, "[)");
+          return date.inArray(calendarBookedDates, "[)");
         },
       },
+    });
+
+    createUpdateListener();
+  }
+
+  function createUpdateListener() {
+    // updates calendar if bookings get refreshed externally.
+    let unsub = bookingUpdateStore.subscribe((storeData) => {
+      console.log("Calendar rebuild triggered");
+      if (loadingBookingRecap) {
+        console.log("booking processed through, unsubbing");
+        unsub();
+        return;
+      }
+      let unitAffected = $unitStore.getUnit(storeData.unit_id);
+      //@ts-ignore
+      if (unitAffected?.bookingDates) {
+        let tempArray = [];
+        for (let bookedDate of unitAffected.bookingDates) {
+          let newEntry = [
+            new DateTime(bookedDate.start, "MMM-DD-YYYY"),
+            new DateTime(bookedDate.end, "MMM-DD-YYYY"),
+          ];
+          tempArray.push(newEntry);
+        }
+
+        calendarBookedDates = tempArray;
+
+        pickerGlobal.renderAll();
+
+        dispatch("selection", { reset: true });
+      }
     });
   }
 
@@ -239,16 +284,18 @@
       //@ts-ignore
       if (!selectedPickupDropoff.pickup[pickupSelected].available) {
         let optionSelectedAlready = false;
-        Object.entries(selectedPickupDropoff.pickup).forEach((timeOption) => {
-          if (optionSelectedAlready) return;
+        Object.entries(selectedPickupDropoff.pickup)
+          .reverse()
+          .forEach((timeOption) => {
+            if (optionSelectedAlready) return;
 
-          if (timeOption[1].available) {
-            timeOption[1].selected = true;
-            pickupSelected = timeOption[0];
-            console.log("new pickup autoselected = ", pickupSelected);
-            optionSelectedAlready = true;
-          }
-        });
+            if (timeOption[1].available) {
+              timeOption[1].selected = true;
+              pickupSelected = timeOption[0];
+              console.log("new pickup autoselected = ", pickupSelected);
+              optionSelectedAlready = true;
+            }
+          });
       }
       // Dropoff section
       //@ts-ignore

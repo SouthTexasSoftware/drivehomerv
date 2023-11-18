@@ -45,6 +45,7 @@ export interface Unit {
   updated_by?: string;
   bookings?: Booking[];
   bookingDates?: { start: Date; end: Date }[];
+  bookingsListener: 
   prices?: CollectionReference;
   min_booking_days: number; //TODO: should be NIGHTS
   feature_sleeps?: string;
@@ -334,6 +335,7 @@ export interface Booking {
   unit_img_link: string;
 
   confirmed: boolean;
+  in_checkout: boolean;
   confirmation_email_sent: boolean;
   receipt_date_string: string; //MMM-DD-YYYY
   payment_intent?: string;

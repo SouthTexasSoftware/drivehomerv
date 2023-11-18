@@ -1,4 +1,9 @@
 <script lang="ts">
+  import { page } from "$app/stores";
+
+
+let unitId = $page.params.unit_id;
+
 </script>
 
 <div class="thankyou-container">
@@ -107,7 +112,7 @@
     Your rental will be prepped and waiting for your next Drive Home!
   </p>
 
-  <a href="/rentals">Back to Rentals</a>
+  <a href="/unit/{unitId}">See your trip on the calendar here</a>
 </div>
 
 <style>

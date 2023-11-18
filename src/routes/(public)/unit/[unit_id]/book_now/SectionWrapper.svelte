@@ -3,6 +3,7 @@
   import { quintOut } from "svelte/easing";
 
   export let title: string;
+  export let timerValue: string | undefined = undefined;
 
   export let transitionDirection: string = "movingRight";
   let transitionValue = -300;
@@ -14,7 +15,12 @@
   }
 </script>
 
-<section in:fly={{ x: transitionValue, delay: 0, duration: 500, easing: quintOut }}>
+<section
+  in:fly={{ x: transitionValue, delay: 0, duration: 500, easing: quintOut }}
+>
+  {#if timerValue}
+    <div class="countdown-timer">Holding your spot: {timerValue}</div>
+  {/if}
   <div class="section-title">{title}</div>
   <div class="title-divider" />
 
@@ -35,6 +41,14 @@
     align-items: center;
     width: 800px;
     min-height: 300px;
+    position: relative;
+  }
+  .countdown-timer {
+    position: absolute;
+    top: 5px;
+    left: 15px;
+    font-family: cms-light;
+    font-size: 12px;
   }
   .section-title {
     font-family: font-bold;

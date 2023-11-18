@@ -22,3 +22,8 @@ export const bookingStore = writable<Booking>(undefined);
 export const cmsStore = writable<{ triggerRefresh: boolean }>({
   triggerRefresh: false,
 });
+
+export const bookingUpdateStore = writable<{ triggerRefresh: boolean, unit_id: string }>({
+  triggerRefresh: false,
+  unit_id: ''
+});
