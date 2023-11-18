@@ -40,6 +40,7 @@
     }
   });
 
+  //TODO: fix this , make it use the same 'save cancel' type feature as the information content
   function updateAndSortShowingArray() {
     photosToShowArray = [];
     for (let photoObject of unitObject.photos) {

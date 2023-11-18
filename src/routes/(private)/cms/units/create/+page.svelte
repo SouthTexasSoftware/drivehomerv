@@ -22,6 +22,7 @@ list of things required to build new unit object and throw no errors!  all under
     unitObject.information.summary.year_built
     unitObject.information.summary.vehicle_type
     unitObject.information.summary.length
+    unitObject.information.rates_and_fees.pricing.minimum_nights
 */
 </script>
 
@@ -63,6 +64,7 @@ list of things required to build new unit object and throw no errors!  all under
     newUnitObject.information.bullet_points.summary.vehicle_type =
       formObject.vehicle_type;
     newUnitObject.information.bullet_points.summary.length = formObject.length;
+    newUnitObject.information.rates_and_fees.pricing.minimum_nights = formObject.min_nights;
 
     let unitsCollection = collection($firebaseStore.db, "units");
     let newUnitDocRef = doc(unitsCollection);
@@ -213,6 +215,21 @@ list of things required to build new unit object and throw no errors!  all under
           required
         />
       </div>
+    </div>
+
+    <div class="double-row">
+      <div class="property">
+        <p class="label">Min. Booking Nights</p>
+        <input
+          class="property-input"
+          type="text"
+          name="min_nights"
+          placeholder="e.g. 3"
+          required
+        />
+      </div>
+
+     
     </div>
 
     <div class="property textarea">

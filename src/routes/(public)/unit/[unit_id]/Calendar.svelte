@@ -108,7 +108,7 @@
         minDays:
           parseInt(
             unitObject.information.rates_and_fees.pricing.minimum_nights
-          ) || 1,
+          ) + 1 || 1,
         inseparable: true,
         filter(date, picked) {
           if (picked.length === 1) {

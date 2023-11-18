@@ -66,65 +66,65 @@
     return string;
   }
 
-  async function updateBookingStatus(evt: Event) {
-    saving = true;
+  // async function updateBookingStatus(evt: Event) {
+  //   saving = true;
 
-    if (evt) {
-      //@ts-ignore
-      let newStatus = evt.target.value;
+  //   if (evt) {
+  //     //@ts-ignore
+  //     let newStatus = evt.target.value;
 
-      //@ts-ignore
-      bookingObject.status = newStatus;
+  //     //@ts-ignore
+  //     bookingObject.status = newStatus;
 
-      let updateFirebaseInvoices = false;
-      if (newStatus == "approved") {
-        // check that bookingObject has been setup in Stripe
-        if (bookingObject?.stripe_invoices) {
-          // TODO: check that invoice hasn't already been sent?
+  //     let updateFirebaseInvoices = false;
+  //     if (newStatus == "approved") {
+  //       // check that bookingObject has been setup in Stripe
+  //       if (bookingObject?.stripe_invoices) {
+  //         // TODO: check that invoice hasn't already been sent?
 
-          //***  SEND INVOICE FOR MANUAL PAYMENT...  ***
-          let approveInvoice = await fetch("/api/stripe/approveInvoice", {
-            method: "POST",
-            body: JSON.stringify({
-              // TODO: this kind of sucks
-              invoiceID: bookingObject?.stripe_invoices[0].id,
-            }),
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
+  //         //***  SEND INVOICE FOR MANUAL PAYMENT...  ***
+  //         let approveInvoice = await fetch("/api/stripe/approveInvoice", {
+  //           method: "POST",
+  //           body: JSON.stringify({
+  //             // TODO: this kind of sucks
+  //             invoiceID: bookingObject?.stripe_invoices[0].id,
+  //           }),
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //         });
 
-          let invoiceResponse = await approveInvoice.json();
-          if (invoiceResponse.error) {
-            throw new Error(invoiceResponse.error);
-          } else {
-            // read the returned invoice object and update our database?
+  //         let invoiceResponse = await approveInvoice.json();
+  //         if (invoiceResponse.error) {
+  //           throw new Error(invoiceResponse.error);
+  //         } else {
+  //           // read the returned invoice object and update our database?
 
-            bookingObject.stripe_invoices[0].status =
-              invoiceResponse.invoiceObject.status;
+  //           bookingObject.stripe_invoices[0].status =
+  //             invoiceResponse.invoiceObject.status;
 
-            updateFirebaseInvoices = true;
-          }
-        }
-      }
+  //           updateFirebaseInvoices = true;
+  //         }
+  //       }
+  //     }
 
-      if (updateFirebaseInvoices) {
-        await updateDoc(doc(bookingsSubcollectionRef, bookingObject?.id), {
-          status: newStatus,
-          stripe_invoices: bookingObject?.stripe_invoices,
-        });
-      } else {
-        await updateDoc(doc(bookingsSubcollectionRef, bookingObject?.id), {
-          status: newStatus,
-        });
-      }
-      saving = false;
-      saved = true;
-      setTimeout(() => {
-        saved = false;
-      }, 2000);
-    }
-  }
+  //     if (updateFirebaseInvoices) {
+  //       await updateDoc(doc(bookingsSubcollectionRef, bookingObject?.id), {
+  //         status: newStatus,
+  //         stripe_invoices: bookingObject?.stripe_invoices,
+  //       });
+  //     } else {
+  //       await updateDoc(doc(bookingsSubcollectionRef, bookingObject?.id), {
+  //         status: newStatus,
+  //       });
+  //     }
+  //     saving = false;
+  //     saved = true;
+  //     setTimeout(() => {
+  //       saved = false;
+  //     }, 2000);
+  //   }
+  // }
 
   function triggerPriceInputTimer() {
     if (timerOn) {
@@ -257,7 +257,6 @@
     // check that the booking is not in the past?
   }
 
-
   function formatPhoneNumber(phoneNumberString: string) {
     var cleaned = ("" + phoneNumberString).replace(/\D/g, "");
     var match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
@@ -266,6 +265,7 @@
     }
     return "";
   }
+
 </script>
 
 <div class="overview-container">
@@ -325,7 +325,7 @@
       <select
         name="booking-status"
         id="booking-status"
-        on:change={(e) => updateBookingStatus(e)}
+       
       >
         <option
           value="requested"
@@ -361,28 +361,6 @@
           >
         {/if}
       </div>
-      {#if bookingObject.stripe_invoices}
-        {#each bookingObject.stripe_invoices as invoiceObj}
-          <a
-            target="_blank"
-            class="stripe-invoice"
-            href="https://dashboard.stripe.com/invoices/{invoiceObj.id}"
-          >
-            ${invoiceObj.amount} invoice
-          </a>
-        {/each}
-      {:else}
-        <button class="stripe" on:click={generateStripeInvoice}>
-          {#if generatingInvoice}
-            <div class="spinner white" />
-          {:else}
-            Generate Invoice
-          {/if}
-          {#if generateInvoiceError}
-            <span class="generate-error">{generateInvoiceErrorMessage}</span>
-          {/if}
-        </button>
-      {/if}
     </div>
     <div class="id-container">
       Booking ID: <span class="booking-id">{bookingObject.id}</span>
