@@ -159,7 +159,7 @@ export async function populateUnitStore(
  * @param unit - Unit associated with snapshot
  *
  */
-function populateUnitBookings(snapshot: QuerySnapshot, unit: Unit) {
+export function populateUnitBookings(snapshot: QuerySnapshot, unit: Unit) {
   console.log("re-populating unit bookings for ", unit.name);
   let bookings = [];
   let bookingDates = [];

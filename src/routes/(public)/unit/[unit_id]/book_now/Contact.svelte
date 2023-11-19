@@ -98,6 +98,7 @@
       bookings: [$bookingStore.id],
       contact_form_completed: true,
       stripe_id: "",
+      created: Timestamp.now()
     } as Customer;
 
     let createStripeCustomer = await fetch("/api/stripe/createCustomer", {
@@ -140,6 +141,7 @@
       contact_form_completed: true,
       stripe_id: $bookingStore.customerObject?.stripe_id,
       bookings: [$bookingStore.id],
+      updated: Timestamp.now()
     };
 
     let updateStripeCustomer = await fetch("/api/stripe/updateCustomer", {

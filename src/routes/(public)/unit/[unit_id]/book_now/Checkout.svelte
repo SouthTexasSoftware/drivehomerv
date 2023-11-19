@@ -5,7 +5,7 @@
   import { enhance } from "$app/forms";
   import { createEventDispatcher, onMount } from "svelte";
   import { page } from "$app/stores";
-  import { doc, setDoc, updateDoc } from "firebase/firestore";
+  import { Timestamp, doc, setDoc, updateDoc } from "firebase/firestore";
   import { get } from "svelte/store";
   import { fly } from "svelte/transition";
   import { DateTime } from "@easepick/bundle";
@@ -89,6 +89,8 @@
 
       return storeData;
     });
+
+    $bookingStore.updated = Timestamp.now();
 
     await setDoc($bookingStore.document_reference, $bookingStore);
 

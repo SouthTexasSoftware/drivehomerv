@@ -13,6 +13,7 @@
   import type { PageData } from "./$types";
   import ReestablishingSession from "./ReestablishingSession.svelte";
   import {
+    Timestamp,
     deleteDoc,
     doc,
     getDoc,
@@ -22,9 +23,8 @@
 
   let unitObject: Unit | undefined = undefined;
   let unitLoadingCounter = 0;
-  let paymentIntentKey: string;
   let currentViewNumber = 0;
-  let paymentIntentFromServer = {};
+  let timerStatement = "Holding Dates:";
   let timerValue = "5:00";
   let timer = 1000 * 60 * 5;
   let cancellingBooking = false;
@@ -53,7 +53,7 @@
   //intercept a redirect and hit pause for now.
   async function checkForRedirect(): Promise<boolean> {
     if (data.paymentIntentObject) {
-      console.log('redirect detected', data);
+      console.log("redirect detected", data);
       confirmingPaymentNavigation = true;
       setFlowStateView(1);
       checkUnitSelected();
@@ -69,7 +69,7 @@
       setTimeout(recreateSession, 200);
       return;
     }
-    console.log('recreating session');
+    console.log("recreating session");
     let bookingId = data.paymentIntentObject?.metadata.cms_booking_id;
     let unitId = $page.params.unit_id;
     if (bookingId) {
@@ -120,6 +120,8 @@
 
             $bookingStore.confirmation_email_sent = true;
             $bookingStore.confirmed = true;
+            $bookingStore.updated = Timestamp.now();
+
             await setDoc($bookingStore.document_reference, $bookingStore);
           } else {
             console.log("records show confirmation email already sent");
@@ -129,8 +131,14 @@
           return;
         }
 
-        // payment didn't go through? or something got cancelled?
-        // recreate payment intent / checkout.
+        // this hits on redirects and internally generated payment links
+        // if this payment link exists, the booking was made internally
+        if ($bookingStore.payment_link) {
+          timerStatement = "Timer Disabled: ";
+          timerValue = "Internal Booking";
+        } else {
+          timerIntervalHandler();
+        }
 
         setFlowStateView(2);
         return;
@@ -270,9 +278,9 @@
     if (confirmingPaymentNavigation) {
       return;
     }
-    if(navigation.type == 'link') {
-     console.log('going to another link');
-     await cancelBooking(); 
+    if (navigation.type == "link") {
+      console.log("going to another link");
+      await cancelBooking();
     }
     if (navigation.type == "popstate") {
       console.log("trying to return a page");
@@ -303,6 +311,7 @@
       <SectionWrapper
         title={"Booking Recap"}
         transitionDirection={flowStates.transitionDirection}
+        {timerStatement}
         {timerValue}
         ><Contact
           {unitObject}
@@ -314,6 +323,7 @@
       <SectionWrapper
         title={"Checkout"}
         transitionDirection={flowStates.transitionDirection}
+        {timerStatement}
         {timerValue}
         ><Checkout
           {unitObject}

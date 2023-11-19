@@ -5,8 +5,8 @@
   import { onMount, createEventDispatcher } from "svelte";
   import cmsPickerCalendar from "$lib/styles/cmsPickerCalendar.css?inline";
 
-  let selectedTripStart: string = "StartDate";
-  let selectedTripEnd: string = "EndDate";
+  export let selectedTripStart: string = "StartDate";
+  export let selectedTripEnd: string = "EndDate";
 
   let dispatch = createEventDispatcher();
 

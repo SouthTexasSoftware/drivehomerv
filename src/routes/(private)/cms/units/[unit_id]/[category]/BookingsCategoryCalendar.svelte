@@ -3,7 +3,7 @@
   import type { Unit } from "$lib/types";
   import { onMount } from "svelte";
   import { afterNavigate } from "$app/navigation";
-  import { cmsStore, unitStore } from "$lib/stores";
+  import { bookingUpdateStore, cmsStore, unitStore } from "$lib/stores";
 
   export let unitObject: Unit;
 
@@ -56,12 +56,7 @@
   ];
 
   onMount(() => {
-    generateCalendar();
-    cmsStore.subscribe(() => {
-      if (loadedDays) {
-        generateCalendar();
-      }
-    });
+    bookingUpdateStore.subscribe(generateCalendar);
   });
 
   afterNavigate(generateCalendar);

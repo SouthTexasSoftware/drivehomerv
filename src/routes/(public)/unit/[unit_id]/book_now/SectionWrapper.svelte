@@ -4,6 +4,7 @@
 
   export let title: string;
   export let timerValue: string | undefined = undefined;
+  export let timerStatement: string | undefined = "Holding Dates:;
 
   export let transitionDirection: string = "movingRight";
   let transitionValue = -300;
@@ -19,7 +20,7 @@
   in:fly={{ x: transitionValue, delay: 0, duration: 500, easing: quintOut }}
 >
   {#if timerValue}
-    <div class="countdown-timer">Holding your spot: {timerValue}</div>
+    <div class="countdown-timer">{timerStatement} {timerValue}</div>
   {/if}
   <div class="section-title">{title}</div>
   <div class="title-divider" />

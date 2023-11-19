@@ -8,7 +8,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import { newUUID } from "$lib/helpers";
-  import { doc, setDoc } from "firebase/firestore";
+  import { Timestamp, doc, setDoc } from "firebase/firestore";
 
   export let unitObject: Unit;
   export let showRequest: boolean;
@@ -122,6 +122,8 @@
     $bookingStore.id = newBookingID;
     $bookingStore.confirmed = false;
     $bookingStore.in_checkout = true;
+    $bookingStore.created = Timestamp.now();
+    $bookingStore.created_by = 'Customer';
 
     //@ts-ignore
     let docRef = doc(

@@ -299,7 +299,7 @@ interface OptionDelivery {
 
 export interface Booking {
   id: string;
-  document_reference: DocumentReference;
+  document_reference?: DocumentReference;
   customer?: string;
   customerObject?: Customer;
   unit_id?: string;
@@ -320,6 +320,7 @@ export interface Booking {
   taxes_and_fees_per_night?: number;
   taxes_and_fees?: number;
   created?: Timestamp;
+  created_by?: string;
   updated?: Timestamp;
   status: string;
   pickup_time?: string;
@@ -328,18 +329,21 @@ export interface Booking {
   dropoff_location?: string;
   pickup_dropoff_price_addition?: number;
 
-  agreement_status?: AgreementStatus;
+  agreement_status?: string;
+  agreement_link?: string;
+
   event_list?: BookingEvent[];
   photos: PhotoDocument[];
   documents: FileDocument[];
-  unit_img_link: string;
+  unit_img_link?: string;
 
   confirmed: boolean;
   in_checkout: boolean;
-  confirmation_email_sent: boolean;
-  receipt_date_string: string; //MMM-DD-YYYY
-  payment_intent?: string;
+  confirmation_email_sent?: boolean;
+  receipt_date_string?: string; //MMM-DD-YYYY
+  payment_intent?: {[key:any]:string};
   payment_status?: PaymentStatus;
+  payment_link?: string;
 
   stripe_price_id_list?: [string];
   stripe_invoiceItem_id_list?: [string];
@@ -371,16 +375,14 @@ enum BookingStatus {
 }
 
 enum PaymentStatus {
-  quoted,
-  invoiced,
-  paid_deposit,
-  paid_in_full,
+  generate_payment_link,
+  link_to_pay,
+  paid
 }
 enum AgreementStatus {
-  drafted,
+  queued,
   sent,
-  accepted,
-  denied,
+  accepted
 }
 
 export interface Fee {
