@@ -45,7 +45,6 @@ export interface Unit {
   updated_by?: string;
   bookings?: Booking[];
   bookingDates?: { start: Date; end: Date }[];
-  bookingsListener: 
   prices?: CollectionReference;
   min_booking_days: number; //TODO: should be NIGHTS
   feature_sleeps?: string;
@@ -61,7 +60,7 @@ export interface Unit {
     rules_and_policies: InformationRulesPolicies;
     rates_and_fees: InformationRatesFees;
   };
-  photos: PhotoDocument[];
+  photos?: PhotoDocument[];
   documents?: FileDocument[];
   stripe_product_id?: string;
 
@@ -75,6 +74,7 @@ export interface PhotoDocument {
   file_size: number; // in KiloBytes
   resolution?: string;
   index: number;
+  index_string?: string;
   date_added: Timestamp;
   file_path: string;
   downloadURL: string;
@@ -333,7 +333,7 @@ export interface Booking {
   agreement_link?: string;
 
   event_list?: BookingEvent[];
-  photos: PhotoDocument[];
+  photos?: PhotoDocument[];
   documents: FileDocument[];
   unit_img_link?: string;
 

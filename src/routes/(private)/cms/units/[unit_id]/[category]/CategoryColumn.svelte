@@ -5,7 +5,7 @@
   import type { Unit } from "$lib/types";
   import { DateTime } from "@easepick/bundle";
   import { afterNavigate, goto } from "$app/navigation";
-  import { firebaseStore, unitStore } from "$lib/stores";
+  import { cmsStore, firebaseStore, unitStore } from "$lib/stores";
   import { createEventDispatcher } from "svelte";
   import { collection, onSnapshot } from "firebase/firestore";
 
@@ -170,16 +170,23 @@
       "bookings"
     );
 
-    // cancel current bookingsListener
-    unitObject.bookingsListener();
+    // find bookingListener within cmsStore, and update to be all bookings.
+    cmsStore.update((store) => {
+      store.bookingListeners.forEach((listenerObj) => {
+        if (listenerObj.unit_id == unitObject.id) {
+          listenerObj.listener();
 
-    //createNewListener for ALL bookings, and rerun
-    unitObject.bookingsListener = onSnapshot(
-      totalBookingsCollectionForUnit,
-      (querySnapshot) => {
-        populateUnitBookings(querySnapshot, unitObject);
-      }
-    );
+          listenerObj.listener = onSnapshot(
+            totalBookingsCollectionForUnit,
+            (querySnapshot) => {
+              populateUnitBookings(querySnapshot, unitObject);
+            }
+          );
+        }
+      });
+
+      return store;
+    });
 
     if (!unitObject.sessionOnly) {
       unitObject.sessionOnly = {};

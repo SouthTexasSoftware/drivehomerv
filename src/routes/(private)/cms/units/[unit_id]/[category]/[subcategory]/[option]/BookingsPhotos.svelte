@@ -142,6 +142,8 @@
 
     loading = false;
   }
+
+  
 </script>
 
 <div class="sortable-photo-container" bind:this={sortableContainer}>

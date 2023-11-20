@@ -19,7 +19,12 @@ import type {
   Booking,
   FileDocument,
 } from "./types";
-import { bookingUpdateStore, firebaseStore, unitStore } from "./stores";
+import {
+  bookingUpdateStore,
+  cmsStore,
+  firebaseStore,
+  unitStore,
+} from "./stores";
 import { DateTime } from "@easepick/bundle";
 import { getAnalytics } from "firebase/analytics";
 
@@ -115,12 +120,20 @@ export async function populateUnitStore(
         unit.bookings = [];
         unit.bookingDates = [];
 
-        unit.bookingsListener = onSnapshot(
-          publicBookingsQuery,
-          (querySnapshot) => {
-            populateUnitBookings(querySnapshot, unit);
-          }
-        );
+        cmsStore.update((store) => {
+          let snapshotListener = onSnapshot(
+            publicBookingsQuery,
+            (querySnapshot) => {
+              populateUnitBookings(querySnapshot, unit);
+            }
+          );
+          store.bookingListeners.push({
+            unit_id: unit.id,
+            listener: snapshotListener,
+          });
+
+          return store;
+        });
 
         // *** PHOTOS SUBCOLLECTION DATA PULL
         let unitPhotos = await getDocs(
@@ -128,9 +141,10 @@ export async function populateUnitStore(
         );
 
         unit.photos = [];
+        let sortPhotos: PhotoDocument[] = [];
 
         unitPhotos.forEach((doc) => {
-          let photoDoc = doc.data() as PhotoDocument;
+          let photoDoc = doc.data() as PhotoDocument;          
 
           if (unit.photos) {
             unit.photos.push(photoDoc);
