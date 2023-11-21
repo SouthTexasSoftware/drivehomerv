@@ -4,7 +4,7 @@
 
   export let title: string;
   export let timerValue: string | undefined = undefined;
-  export let timerStatement: string | undefined = "Holding Dates:;
+  export let timerStatement: string | undefined = "Holding Dates:";
 
   export let transitionDirection: string = "movingRight";
   let transitionValue = -300;

@@ -79,7 +79,7 @@
     pickup_time: " 4 pm",
     dropoff_time: "10 am",
     in_checkout: false,
-    confirmed: false,
+    confirmed: true,
     stripe_product_id: unitObject.stripe_product_id,
     created_by: "CMS",
   });

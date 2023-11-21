@@ -368,10 +368,10 @@ export const newUnitModel: Unit = {
       carousel: [],
       album: [],
     },
-    records: {
-      bookings: [],
-      maintenance: [],
-    },
+    // records: {
+    //   bookings: [],
+    //   maintenance: [],
+    // },
   },
 };
 

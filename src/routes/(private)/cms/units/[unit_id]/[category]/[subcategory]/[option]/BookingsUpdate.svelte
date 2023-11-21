@@ -32,13 +32,16 @@
   // load booking data from unitObject?
   let filteredBookings = unitObject.bookings?.filter((booking) => {
     if (booking.id == $page.params.subcategory) {
-      console.log(booking);
+      
       return booking;
     }
   });
 
+  delete filteredBookings[0].document_reference;
+  let bookingCopy = structuredClone(filteredBookings[0]);
+
   //@ts-ignore
-  bookingStore.set(filteredBookings[0]);
+  bookingStore.set(bookingCopy);
   updateBookingDates({ start: $bookingStore.start, end: $bookingStore.end });
 
   onMount(() => {
@@ -198,11 +201,12 @@
     );
 
     $bookingStore.updated = serverTimestamp() as Timestamp;
+    $bookingStore.document_reference = bookingDocRef;
 
     await setDoc(bookingDocRef, $bookingStore);
 
     savingBooking = false;
-    dispatch("cancel", true);
+    dispatch("save", { $bookingStore });
   }
 
   function newUUID(): string {

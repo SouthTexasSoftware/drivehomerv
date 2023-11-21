@@ -20,6 +20,7 @@
     setDoc,
     updateDoc,
   } from "firebase/firestore";
+  import { DateTime } from "@easepick/bundle";
 
   let unitObject: Unit | undefined = undefined;
   let unitLoadingCounter = 0;
@@ -83,7 +84,7 @@
       let oldBookingObject = await getDoc(bookingRef);
       if (oldBookingObject.exists()) {
         bookingStore.set(oldBookingObject.data() as Booking);
-
+        
         // retrieve customer information - needed to send out email confirmation if succeeded
         let customerId = $bookingStore.customer;
         //@ts-ignore
@@ -98,6 +99,7 @@
         //@ts-ignore
         if ($bookingStore.payment_intent?.status == "succeeded") {
           $bookingStore.status = "paid";
+          $bookingStore.receipt_date_string = new DateTime().format("MMM-DD-YYYY");
           // send confirmation emails..
           // check to see if this has already been triggered????
           if (!$bookingStore.confirmation_email_sent) {
@@ -112,8 +114,20 @@
               }
             );
 
+            let sendOwnerNewBooking = await fetch(
+              "/api/email/ownerNewBooking",
+              {
+                method: "POST",
+                body: JSON.stringify($bookingStore),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
             let serverResponse = await sendConfirmationEmail.json();
             if (serverResponse.error) {
+              console.log(serverResponse);
               console.error(serverResponse.code);
               return "error";
             }

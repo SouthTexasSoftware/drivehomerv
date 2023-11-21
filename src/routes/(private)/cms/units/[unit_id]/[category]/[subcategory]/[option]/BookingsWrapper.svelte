@@ -3,7 +3,7 @@
   import { beforeUpdate, onMount } from "svelte";
   import BookingsOverview from "./BookingsOverview.svelte";
   import { collection, getDocs } from "firebase/firestore";
-  import { firebaseStore } from "$lib/stores";
+  import { bookingStore, firebaseStore } from "$lib/stores";
   import { page } from "$app/stores";
   import { fade } from "svelte/transition";
   import BookingSettingsDropdown from "./BookingSettingsDropdown.svelte";
@@ -37,6 +37,7 @@
       return booking;
     }
   });
+
 
   beforeUpdate(() => {
     if (!option) {
@@ -173,7 +174,6 @@
   {#if bookingObject}
     <BookingsUpdate
       {unitObject}
-      {bookingObject}
       on:cancel={() => {
         updateBooking = false;
         showWrapper = true;

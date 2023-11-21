@@ -4,6 +4,7 @@ import { sendgridConfig } from "../config";
 
 
 const confirmationTemplateId = "d-24b1dabe9daa4e8c8191d5957ca5e90a";
+const ownerNotificationTemplateId = "d-4d6e684b748e479e9c5132abf0929f11";
 
 let msg: MessageObject = {
   from: {
@@ -18,15 +19,27 @@ let msg: MessageObject = {
  * @param type template/name of email.
  * @param payload object who's keys match what is expected by it's template.
  */
-export async function emailHandler( to: string,
+export async function emailHandler( to: string | string[],
   type: string,
-  payload: { [key: string]: string | null }
+  payload: { [key: string]: string | undefined }
 ) {
 
   msg.to = to;
 
   //build 'msg' object based on the type and payload details
   switch (type) {
+    case "owner_notification":
+      msg.templateId = ownerNotificationTemplateId;
+      msg.dynamicTemplateData = payload;
+      /**
+       * payload = {
+       * subject:
+       * body:
+       * link:
+       * }
+       */
+    break;
+
     case "confirmation":
       msg.templateId = confirmationTemplateId;
       msg.dynamicTemplateData = payload;
