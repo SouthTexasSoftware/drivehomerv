@@ -366,12 +366,19 @@
 
     dispatch("selection", selection);
   }
+
+  function clearCalendarSelection() {
+    if(!pickerGlobal) return;
+
+    pickerGlobal.clear();
+  }
 </script>
 
 <svelte:window bind:innerWidth={screenWidth} />
 
 <div class="row stack dates">
-  <strong class="dates">Dates</strong>
+  <strong class="dates">Select Your Dates</strong>
+  <button class="clear-selection" on:click={clearCalendarSelection}>Reset</button>
 
   <label for="calendar-button" class="row date-display">
     <p>{selectedTripStart}</p>
@@ -509,12 +516,28 @@
     align-items: center;
     justify-content: center;
     margin: auto 0;
+    position: relative;
   }
   strong.dates {
-    font-size: 16px;
+    font-size: 18px;
     margin-bottom: -5px;
     margin-top: 10px;
     max-width: 300px;
+    z-index: 1;
+  }
+  .clear-selection {
+    position: absolute;
+    font-size: 12px;
+    width: 50px;
+    border-radius: 5px;
+    top: 10px;
+    right: 10%;
+    font-family: cms-semibold;
+    cursor: pointer;
+    border: 1px solid #ae25238d;
+    background-color: #ae262336;
+    color: #ae25238d;
+    z-index: 2;
   }
   .date-display {
     border: 1px solid hsl(var(--b3));
