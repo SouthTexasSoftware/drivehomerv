@@ -3,7 +3,6 @@
   import type { Unit } from "$lib/types";
   import DateSelector from "./DateSelector.svelte";
   import UnitCard from "./UnitCard.svelte";
-  import PageDataLoading from "$lib/components/PageDataLoading.svelte";
   import UnitCardLoader from "./UnitCardLoader.svelte";
 
   let loadingUnitStore = true;
@@ -13,7 +12,11 @@
 
   unitStore.subscribe((storeData) => {
     if (storeData.isPopulated) {
-      availableUnits = storeData.units;
+      availableUnits = storeData.units.filter((unit) => {
+        if (unit.publicly_visible) {
+          return unit;
+        }
+      });
       loadingUnitStore = false;
     }
   });
@@ -32,7 +35,10 @@
     let tempNewArray: Unit[] = [];
 
     //@ts-ignore
-    $unitStore.units.forEach((unit: Unit, index: number): Unit => {
+    $unitStore.units.forEach((unit: Unit, index: number): Unit | undefined => {
+      // if unit is not publicly available, don't add it to the available array or do any math on it
+      if(!unit.publicly_visible) return;
+
       // compare selection to bookings
       // auto set unit to available by default
       let unitIsAvailable = true;
@@ -76,6 +82,8 @@
           return;
         }
       });
+
+      
 
       // if unit is still available after comparing all bookings, push to temp array
       if (unitIsAvailable) {

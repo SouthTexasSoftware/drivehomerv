@@ -101,6 +101,7 @@
     additionalFeesTotal = sumOfFees(selectedTripLength);
 
     // handle pickup_dropoff modifiers...
+
   }
 
   async function bookNowRequested() {

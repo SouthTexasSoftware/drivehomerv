@@ -270,9 +270,9 @@
     };
 
     let pickupSelected = pickupElement.value;
-    console.log(pickupSelected);
+    //console.log(pickupSelected);
     let dropoffSelected = dropoffElement.value;
-    console.log(dropoffSelected);
+    //console.log(dropoffSelected);
     if (pickupSelected == "disabled") {
       pickupSelected = " 4 pm";
       dropoffSelected = "10 am";
@@ -307,7 +307,7 @@
           if (timeOption[1].available) {
             timeOption[1].selected = true;
             dropoffSelected = timeOption[0];
-            console.log("new dropoff autoselected = ", dropoffSelected);
+            //console.log("new dropoff autoselected = ", dropoffSelected);
             optionSelectedAlready = true;
           }
         });
