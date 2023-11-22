@@ -4,6 +4,7 @@
   import { afterUpdate, beforeUpdate, onMount } from "svelte";
   import { fade } from "svelte/transition";
   import { unitStore } from "$lib/stores";
+  import { page } from "$app/stores";
 
   export let unitObject: Unit;
   export let subcategory: any;
@@ -16,25 +17,30 @@
   let propertyList: string[] = [];
 
   beforeUpdate(() => {
-    if (option) {
-      //@ts-ignore
-      propertyList = Object.keys(newUnitModel.information[subcategory][option]);
+    if ($page.params.option) {
+      if ($page.params.category == "information") {
+        propertyList = Object.keys(
+          //@ts-ignore
+          newUnitModel.information[subcategory][option]
+        );
+      }
+    } else {
     }
   });
 
-  afterUpdate(() => {
-    if (propertiesScrollContainer) {
-      if (option == "description" || option == "notes") {
-        showNavContainer = false;
-        return;
-      }
-      if (propertiesScrollContainer.scrollWidth > 300) {
-        showNavContainer = true;
-      } else {
-        showNavContainer = false;
-      }
-    }
-  });
+  // afterUpdate(() => {
+  //   if (propertiesScrollContainer) {
+  //     if (option == "description" || option == "notes") {
+  //       showNavContainer = false;
+  //       return;
+  //     }
+  //     if (propertiesScrollContainer.scrollWidth > 300) {
+  //       showNavContainer = true;
+  //     } else {
+  //       showNavContainer = false;
+  //     }
+  //   }
+  // });
 
   function convertToInputType(dataType: string) {
     switch (dataType) {
@@ -127,7 +133,7 @@
   }
 </script>
 
-{#if option}
+{#if $page.params.category == "information"}
   <div
     class="information-option-container"
     class:widen={option == "description" || option == "notes"}
@@ -292,6 +298,9 @@
     flex-direction: column;
     padding-top: 20px;
     width: 300px;
+    max-height: 90%;
+    margin-bottom: auto;
+    padding-bottom: 35px;
   }
   .information-option-container.widen {
     width: 100%;
@@ -367,5 +376,14 @@
   button.right {
     margin-left: auto;
     margin-right: 10px;
+  }
+  @media (max-width: 500px) {
+    .information-option-container {
+      width: 100%;
+      max-height: 90%;
+    }
+    .property {
+      width: 100%;
+    }
   }
 </style>

@@ -1,16 +1,44 @@
 <script lang="ts">
   import type { Unit } from "$lib/types";
   import { page } from "$app/stores";
+  import { unitStore } from "$lib/stores";
 
   export let unitObject: Unit;
-  console.log($page.params);
+  let unitVisibilityToggle: HTMLInputElement;
 
-  // TODO: Incorporate 'DELETE UNIT' into category bar?
-  // or in the maintenance category
+  function changeUnitVisibility(evt: Event) {
+    //@ts-ignore
+    let updatedStatus = evt.target?.checked;
+    unitObject.publicly_visible = updatedStatus;
+
+    unitObject.cms_edited = true;
+
+    unitStore.update((data) => {
+      data.units.forEach((unit) => {
+        if (unit.id == unitObject.id) {
+          unit = unitObject;
+        }
+      });
+      return data;
+    });
+  }
 </script>
 
 <div class="bar-container">
   {#if unitObject}
+    <div class="unit-visibility-container">
+      <div class="unit-visibility-labels">
+        <p>Private</p>
+        <p>Public</p>
+      </div>
+      <input
+        type="checkbox"
+        class="toggle toggle-primary"
+        bind:this={unitVisibilityToggle}
+        on:change={changeUnitVisibility}
+        checked={unitObject.publicly_visible}
+      />
+    </div>
     <div class="icon-bar">
       <a
         href="/cms/units/{unitObject.id}/information"
@@ -115,6 +143,23 @@
     border-right: 1px solid var(--cms-boxShadow);
     min-width: 300px;
   }
+  .unit-visibility-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  .unit-visibility-labels {
+    width: 40%;
+    display: flex;
+    justify-content: space-between;
+  }
+  .unit-visibility-labels * {
+    font-family: cms-semibold;
+    font-size: 12px;
+  }
   .icon-bar {
     display: flex;
     width: 100%;
@@ -132,5 +177,19 @@
     align-items: center;
     height: 50px;
     transition: all 0.3s;
+  }
+
+  @media (max-width: 500px) {
+    .bar-container {
+      margin-right: 199px;
+      width: 50vw;
+      min-width: 0px;
+      position: fixed;
+      left: 2px;
+      border-right-color: transparent;
+    }
+    .icon-bar {
+      flex-direction: row-reverse;
+    }
   }
 </style>

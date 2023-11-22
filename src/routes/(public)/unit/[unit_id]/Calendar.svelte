@@ -6,9 +6,10 @@
   import { onMount, createEventDispatcher } from "svelte";
   import publicPickerCalendar from "$lib/styles/publicPickerCalendar.css?inline";
   import type { Unit } from "$lib/types";
-  import { customerStore, unitStore } from "$lib/stores";
+  import { bookingStore, bookingUpdateStore, unitStore } from "$lib/stores";
 
   export let unitObject: Unit;
+  export let loadingBookingRecap: boolean;
 
   let updatingPickupDropoff = true;
   let pickupElement: HTMLSelectElement;
@@ -42,10 +43,20 @@
   let tripStartLabel = "Departure";
   let tripEndLabel = "Return";
 
-  onMount(() => {
-    if ($customerStore.start && $customerStore.end) {
-      selectedTripStart = $customerStore.start;
-      selectedTripEnd = $customerStore.end;
+  let pickerGlobal: easepick.Core;
+  let calendarBookedDates: Date[][] = [];
+
+  onMount(awaitUnitStorePopulation);
+
+  function awaitUnitStorePopulation() {
+    if (!$unitStore.isPopulated) {
+      setTimeout(awaitUnitStorePopulation, 200);
+      return;
+    }
+
+    if ($bookingStore.start && $bookingStore.end) {
+      selectedTripStart = $bookingStore.start;
+      selectedTripEnd = $bookingStore.end;
 
       dispatch("selection", {
         start: new DateTime(selectedTripStart, "MMM-DD-YYYY"),
@@ -56,14 +67,12 @@
     buildUnitCalendar();
     updatePickupDropoff();
     updateTripStartEndLabels();
-  });
+  }
 
   function buildUnitCalendar() {
-    const bookedDates: Date[][] = [];
-
     unitObject.bookingDates?.forEach((datesObject) => {
       let tempArray = [datesObject.start, datesObject.end];
-      bookedDates.push(tempArray);
+      calendarBookedDates.push(tempArray);
     });
 
     let inlineCalendar = false;
@@ -71,7 +80,7 @@
       inlineCalendar = true;
     }
 
-    const picker = new easepick.create({
+    pickerGlobal = new easepick.create({
       element: "#calendar-button",
       inline: inlineCalendar, // always visible - TODO: change this in mobile only
       css: publicPickerCalendar,
@@ -96,22 +105,58 @@
       },
       LockPlugin: {
         minDate: new Date(),
-        minDays: unitObject.min_booking_days,
+        minDays:
+          parseInt(
+            unitObject.information.rates_and_fees.pricing.minimum_nights
+          ) + 1 || 1,
         inseparable: true,
         filter(date, picked) {
           if (picked.length === 1) {
-            //TODO: why is TS not picking these methods up?
             //@ts-ignore
             const incl = date.isBefore(picked[0]) ? "[)" : "(]";
             return (
               //@ts-ignore
-              !picked[0].isSame(date, "day") && date.inArray(bookedDates, incl)
+              !picked[0].isSame(date, "day") &&
+              //@ts-ignore
+              date.inArray(calendarBookedDates, incl)
             );
           }
           //@ts-ignore
-          return date.inArray(bookedDates, "[)");
+          return date.inArray(calendarBookedDates, "[)");
         },
       },
+    });
+
+    createUpdateListener();
+  }
+
+  function createUpdateListener() {
+    // updates calendar if bookings get refreshed externally.
+    let unsub = bookingUpdateStore.subscribe((storeData) => {
+      console.log("Calendar rebuild triggered");
+      if (loadingBookingRecap) {
+        console.log("booking processed through, unsubbing");
+        unsub();
+        return;
+      }
+      let unitAffected = $unitStore.getUnit(storeData.unit_id);
+      //@ts-ignore
+      if (unitAffected?.bookingDates) {
+        let tempArray = [];
+        for (let bookedDate of unitAffected.bookingDates) {
+          let newEntry = [
+            new DateTime(bookedDate.start, "MMM-DD-YYYY"),
+            new DateTime(bookedDate.end, "MMM-DD-YYYY"),
+          ];
+          tempArray.push(newEntry);
+        }
+
+        calendarBookedDates = tempArray;
+
+        pickerGlobal.renderAll();
+
+        dispatch("selection", { reset: true });
+      }
     });
   }
 
@@ -225,9 +270,9 @@
     };
 
     let pickupSelected = pickupElement.value;
-    console.log(pickupSelected);
+    //console.log(pickupSelected);
     let dropoffSelected = dropoffElement.value;
-    console.log(dropoffSelected);
+    //console.log(dropoffSelected);
     if (pickupSelected == "disabled") {
       pickupSelected = " 4 pm";
       dropoffSelected = "10 am";
@@ -239,16 +284,18 @@
       //@ts-ignore
       if (!selectedPickupDropoff.pickup[pickupSelected].available) {
         let optionSelectedAlready = false;
-        Object.entries(selectedPickupDropoff.pickup).forEach((timeOption) => {
-          if (optionSelectedAlready) return;
+        Object.entries(selectedPickupDropoff.pickup)
+          .reverse()
+          .forEach((timeOption) => {
+            if (optionSelectedAlready) return;
 
-          if (timeOption[1].available) {
-            timeOption[1].selected = true;
-            pickupSelected = timeOption[0];
-            console.log("new pickup autoselected = ", pickupSelected);
-            optionSelectedAlready = true;
-          }
-        });
+            if (timeOption[1].available) {
+              timeOption[1].selected = true;
+              pickupSelected = timeOption[0];
+              console.log("new pickup autoselected = ", pickupSelected);
+              optionSelectedAlready = true;
+            }
+          });
       }
       // Dropoff section
       //@ts-ignore
@@ -260,7 +307,7 @@
           if (timeOption[1].available) {
             timeOption[1].selected = true;
             dropoffSelected = timeOption[0];
-            console.log("new dropoff autoselected = ", dropoffSelected);
+            //console.log("new dropoff autoselected = ", dropoffSelected);
             optionSelectedAlready = true;
           }
         });
@@ -276,7 +323,9 @@
         selection.pickup.time = time;
         selection.pickup.price =
           options.priceMod *
-          unitObject.information.rates_and_fees.pricing.base_rental_fee;
+          parseInt(
+            unitObject.information.rates_and_fees.pricing.base_rental_fee
+          );
       } else {
         options.selected = false;
       }
@@ -290,7 +339,9 @@
         selection.dropoff.time = time;
         selection.dropoff.price =
           options.priceMod *
-          unitObject.information.rates_and_fees.pricing.base_rental_fee;
+          parseInt(
+            unitObject.information.rates_and_fees.pricing.base_rental_fee
+          );
       } else {
         options.selected = false;
       }
@@ -299,23 +350,35 @@
     selection.start = new DateTime(selectedTripStart, "MMM-DD-YYYY");
     selection.end = new DateTime(selectedTripEnd, "MMM-DD-YYYY");
 
-    customerStore.update((storeData) => {
-      storeData.start = selectedTripStart;
-      storeData.end = selectedTripEnd;
-      storeData.pickup_time = selection.pickup.time;
-      storeData.dropoff_time = selection.dropoff.time;
+    let unixStart = Math.ceil(selection.start.getTime() / 1000);
+    let unixEnd = Math.ceil(selection.end.getTime() / 1000);
 
-      return storeData;
+    bookingStore.update((store) => {
+      store.start = selectedTripStart;
+      store.end = selectedTripEnd;
+      store.pickup_time = selection.pickup.time;
+      store.dropoff_time = selection.dropoff.time;
+      store.unix_start = unixStart;
+      store.unix_end = unixEnd;
+
+      return store;
     });
 
     dispatch("selection", selection);
+  }
+
+  function clearCalendarSelection() {
+    if(!pickerGlobal) return;
+
+    pickerGlobal.clear();
   }
 </script>
 
 <svelte:window bind:innerWidth={screenWidth} />
 
 <div class="row stack dates">
-  <strong class="dates">Dates</strong>
+  <strong class="dates">Select Your Dates</strong>
+  <button class="clear-selection" on:click={clearCalendarSelection}>Reset</button>
 
   <label for="calendar-button" class="row date-display">
     <p>{selectedTripStart}</p>
@@ -385,8 +448,10 @@
               >{time}
               <span>
                 &nbsp; +${options.priceMod *
-                  unitObject.information.rates_and_fees.pricing
-                    .base_rental_fee}</span
+                  parseInt(
+                    unitObject.information.rates_and_fees.pricing
+                      .base_rental_fee
+                  )}</span
               ></option
             >
           {/if}
@@ -417,8 +482,10 @@
               >{time}
               <span>
                 &nbsp; +${options.priceMod *
-                  unitObject.information.rates_and_fees.pricing
-                    .base_rental_fee}</span
+                  parseInt(
+                    unitObject.information.rates_and_fees.pricing
+                      .base_rental_fee
+                  )}</span
               ></option
             >
           {/if}
@@ -449,12 +516,28 @@
     align-items: center;
     justify-content: center;
     margin: auto 0;
+    position: relative;
   }
   strong.dates {
-    font-size: 16px;
+    font-size: 18px;
     margin-bottom: -5px;
     margin-top: 10px;
     max-width: 300px;
+    z-index: 1;
+  }
+  .clear-selection {
+    position: absolute;
+    font-size: 12px;
+    width: 50px;
+    border-radius: 5px;
+    top: 10px;
+    right: 10%;
+    font-family: cms-semibold;
+    cursor: pointer;
+    border: 1px solid #ae25238d;
+    background-color: #ae262336;
+    color: #ae25238d;
+    z-index: 2;
   }
   .date-display {
     border: 1px solid hsl(var(--b3));
@@ -475,6 +558,8 @@
     display: flex;
     justify-content: center;
     transform: translateY(0px) scale(0.9);
+    left: 0;
+    top: 0;
   }
   .pickup-dropoff {
     width: 300px;

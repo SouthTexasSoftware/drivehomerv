@@ -1,107 +1,13 @@
 <script lang="ts">
-  import { enhance } from "$app/forms";
-  import { firebaseStore } from "$lib/stores";
-  import { createEventDispatcher } from "svelte";
-  import type { SubmitFunction } from "@sveltejs/kit";
-  import { collection, doc, setDoc } from "firebase/firestore";
-
-  let dispatch = createEventDispatcher();
-  let creatingNewUnit = false;
-
-  async function formSubmitHandler<SubmitFunction>(input: {
-    action: URL;
-    data: FormData;
-    form: HTMLFormElement;
-    controller: AbortController;
-    submitter: HTMLElement | null;
-    cancel(): void;
-  }) {
-    if (creatingNewUnit) {
-      return;
-    }
-    creatingNewUnit = true;
-
-    let newUnitObject: { [key: string]: any } = {
-      additional_fees: [],
-    };
-
-    input.data.forEach((value, key: string) => {
-      if (key == "default_price") {
-        value = parseInt(value);
-      }
-      if (key == "min_booking_days") {
-        value = parseInt(value);
-      }
-      if (key == "service_fee") {
-        newUnitObject.additional_fees.push({
-          name: "Service Fee",
-          per_day: false,
-          amount: parseInt(value),
-        });
-        return;
-      }
-      if (key == "taxes_fee") {
-        newUnitObject.additional_fees.push({
-          name: "Taxes and Insurance",
-          per_day: true,
-          amount: parseInt(value),
-        });
-        return;
-      }
-
-      newUnitObject[key] = value;
-    });
-
-    let unitsCollection = collection($firebaseStore.db, "units");
-    let newUnitDocRef = doc(unitsCollection);
-    let newUnitId = newUnitDocRef.id;
-
-    newUnitObject.id = newUnitId;
-
-    let createNewUnit = await setDoc(newUnitDocRef, newUnitObject);
-
-    creatingNewUnit = false;
-    dispatch("refresh", true);
-    input.cancel();
-  }
 </script>
 
-<div class="new-unit-container">
-  <h4>New Unit</h4>
-  <form
-    id="new-unit-form"
-    name="new-unit-form"
-    method="POST"
-    use:enhance={formSubmitHandler}
-  >
-    <label for="name">Name*</label>
-    <input
-      type="text"
-      required
-      name="name"
-      class="input input-bordered w-full max-w-xs"
-    />
-    <label for="long_name">Long Name</label>
-    <input
-      type="text"
-      name="long_name"
-      class="input input-bordered w-full max-w-xs"
-    />
-    <label for="short_name">Short Name</label>
-    <input
-      type="text"
-      name="short_name"
-      class="input input-bordered w-full max-w-xs"
-    />
-    <label for="description">Description*</label>
-    <textarea
-      required
-      name="description"
-      class="textarea textarea-bordered w-full max-w-xs"
-    />
+<div class="card-container">
+  <div class="first-image shine" />
 
-    <div class="flex-row">
-      <svg
+  <p class="unit-name shine" />
+  <div class="features-row">
+    <div class="feature-item">
+      <!-- <svg
         width="18px"
         height="16px"
         viewBox="0 0 18 16"
@@ -112,18 +18,11 @@
           d="M1.21545 10.4296H17.3351V9.77107C17.3351 9.61172 17.304 9.46365 17.249 9.3311C17.1898 9.19008 17.1024 9.06458 16.9938 8.95599C16.9275 8.88972 16.8528 8.82908 16.7724 8.77549C16.6906 8.7205 16.6032 8.67255 16.5115 8.63166C16.2647 8.57807 16.0194 8.5273 15.7754 8.47936C15.53 8.43141 15.2833 8.38629 15.0351 8.34398C15.0238 8.34257 15.0153 8.34116 15.0041 8.33834C14.8785 8.31719 14.7587 8.29745 14.6445 8.27911C14.5302 8.26078 14.409 8.24245 14.282 8.22271H14.2792C13.4162 8.11272 12.556 8.02811 11.6972 7.9717C10.837 7.91529 9.98104 7.88709 9.13071 7.88568C8.62587 7.88568 8.12244 7.89414 7.61901 7.91388C7.1184 7.93362 6.61497 7.96183 6.11155 8.00131H6.10873C5.63773 8.04503 5.16815 8.10002 4.69715 8.16348C4.22756 8.22694 3.75657 8.30168 3.28275 8.38488L3.23058 8.39757C3.22071 8.40039 3.21084 8.4018 3.20237 8.4018C3.19391 8.40321 3.18545 8.40321 3.17699 8.40321C2.9556 8.44269 2.72856 8.48641 2.49447 8.53294C2.26743 8.57807 2.0404 8.62602 1.81477 8.67537C1.75837 8.70639 1.70478 8.74165 1.65401 8.77831C1.60325 8.81639 1.55389 8.85728 1.51018 8.901C1.41569 8.99548 1.34096 9.10406 1.29019 9.22534C1.24224 9.33956 1.21545 9.46647 1.21545 9.60467V10.4296ZM2.6228 0.93074H15.7359C15.9066 0.93074 16.0701 0.964584 16.2196 1.02663C16.3747 1.0915 16.5143 1.18598 16.6314 1.30161C16.7484 1.41866 16.8429 1.55826 16.9064 1.71338C16.9684 1.86286 17.0023 2.02644 17.0023 2.19707V8.21707C17.0742 8.25937 17.1447 8.30591 17.2095 8.35667C17.2829 8.41308 17.352 8.47231 17.4154 8.53577C17.579 8.69934 17.7116 8.88972 17.8004 9.10406C17.885 9.30572 17.9316 9.52993 17.9316 9.77248V10.6313C17.9358 10.6454 17.94 10.6595 17.9428 10.6736V10.6764C17.9457 10.6947 17.9471 10.7117 17.9471 10.7286C17.9471 10.7469 17.9457 10.7652 17.9414 10.7836C17.9386 10.7977 17.9344 10.8118 17.9301 10.8259V14.7264C17.9301 14.8082 17.8963 14.8829 17.8427 14.9365C17.7891 14.9901 17.7144 15.0239 17.6326 15.0239H17.0192C16.9501 15.0239 16.8866 15 16.8359 14.9605C16.7851 14.921 16.747 14.8646 16.7315 14.7997C16.6187 14.4754 16.5045 14.2187 16.3818 14.0185C16.2605 13.8211 16.1308 13.68 15.9813 13.5799C15.8304 13.4798 15.6499 13.4163 15.4313 13.3783C15.2085 13.3388 14.9491 13.3261 14.6402 13.3275L3.39275 13.3416H3.38711C3.16571 13.3374 2.9838 13.3656 2.8315 13.4248C2.68061 13.484 2.55793 13.5729 2.4564 13.6871C2.34217 13.814 2.24628 13.9762 2.15885 14.1651C2.07001 14.3583 1.98963 14.5783 1.90925 14.8195C1.88951 14.8815 1.85003 14.9309 1.80067 14.9661C1.75413 15 1.69773 15.0197 1.63991 15.0225C1.63568 15.0239 1.63145 15.0239 1.62722 15.0239H0.917906C0.836117 15.0239 0.761378 14.9901 0.707792 14.9365C0.654205 14.8829 0.620361 14.8082 0.620361 14.7264V9.60608C0.620361 9.38468 0.662666 9.18162 0.738815 8.9983C0.820605 8.8037 0.940469 8.63025 1.08995 8.48077C1.13225 8.43846 1.17879 8.39616 1.22814 8.35667C1.27045 8.32283 1.31275 8.2904 1.35788 8.26078V2.18438C1.35788 2.01375 1.39172 1.85158 1.45377 1.70492C1.51864 1.55121 1.61312 1.41302 1.73016 1.29738C1.84721 1.18175 1.98681 1.09009 2.14052 1.02663C2.29 0.964584 2.45217 0.93074 2.6228 0.93074ZM15.7359 1.52583H2.6228C2.53114 1.52583 2.44371 1.54416 2.36333 1.5766C2.28013 1.61044 2.2068 1.6598 2.14475 1.72043C2.08411 1.77966 2.03476 1.85299 2.00091 1.93196C1.96989 2.00952 1.95297 2.09413 1.95297 2.18438V7.97452C1.99527 7.96042 2.03758 7.94914 2.08129 7.93785C2.15039 7.91952 2.21949 7.90401 2.28859 7.89273C2.38448 7.87581 2.48883 7.85748 2.60164 7.83773C2.68625 7.82363 2.7765 7.80812 2.86958 7.79402V6.31616C2.86958 6.09336 2.9147 5.88042 2.99508 5.68582C3.07969 5.48276 3.20237 5.30084 3.35467 5.14855C3.50697 4.99625 3.68888 4.87356 3.89195 4.78895C4.08655 4.70857 4.29948 4.66345 4.52229 4.66345H7.31724C7.54004 4.66345 7.75298 4.70857 7.94758 4.78895C8.15065 4.87356 8.33256 4.99625 8.48485 5.14855C8.63715 5.30084 8.75984 5.48276 8.84445 5.68582C8.92483 5.88042 8.96995 6.09336 8.96995 6.31616V7.25956C9.06866 7.25815 9.16737 7.25815 9.2675 7.25815V6.31616C9.2675 6.09336 9.31262 5.88042 9.393 5.68582C9.47761 5.48276 9.6003 5.30084 9.75259 5.14855C9.90489 4.99625 10.0868 4.87356 10.2899 4.78895C10.4845 4.70857 10.6974 4.66345 10.9202 4.66345H13.7152C13.938 4.66345 14.1509 4.70857 14.3455 4.78895C14.5486 4.87356 14.7305 4.99625 14.8828 5.14855C15.0351 5.30084 15.1578 5.48276 15.2424 5.68582C15.3227 5.88042 15.3679 6.09336 15.3679 6.31616V7.77428C15.4736 7.78979 15.5864 7.80812 15.7077 7.82786C15.8417 7.84901 15.97 7.87017 16.0941 7.89132C16.1576 7.9026 16.2224 7.91529 16.2873 7.9308C16.3282 7.94067 16.3677 7.95055 16.4058 7.96183V2.19707C16.4058 2.10682 16.3874 2.0208 16.355 1.94183C16.3211 1.86004 16.2704 1.78671 16.2083 1.72325C16.1463 1.66121 16.0715 1.61044 15.9912 1.5766C15.9122 1.54416 15.8262 1.52583 15.7359 1.52583ZM6.71369 7.35546C6.99713 7.3343 7.28198 7.31597 7.57107 7.30187C7.83759 7.28777 8.10693 7.2779 8.37627 7.27085V6.31616C8.37627 6.17374 8.34807 6.03695 8.29589 5.91286C8.24231 5.78312 8.16334 5.66749 8.06463 5.56878C7.96732 5.47147 7.85028 5.39251 7.72054 5.33751C7.59645 5.28533 7.45966 5.25713 7.31724 5.25713H4.52229C4.37986 5.25713 4.24308 5.28533 4.11898 5.33751C3.98925 5.3911 3.87361 5.47006 3.7749 5.56878C3.6776 5.66608 3.59863 5.78312 3.54363 5.91286C3.49146 6.03695 3.46326 6.17374 3.46326 6.31616V7.69954C3.6917 7.66569 3.92297 7.63467 4.15988 7.60365C4.41512 7.57121 4.66895 7.5416 4.91996 7.51339C5.01726 7.50211 5.12161 7.48942 5.23019 7.47814C5.33172 7.46686 5.43749 7.45699 5.5503 7.44571C5.74208 7.42737 5.93246 7.41045 6.12001 7.39494C6.3132 7.38225 6.51062 7.36815 6.71369 7.35546ZM9.86259 7.26239C10.0332 7.26521 10.2038 7.26944 10.3745 7.27508C10.5634 7.28072 10.7524 7.28918 10.94 7.29764H10.9414C11.2502 7.30892 11.552 7.32302 11.8453 7.33994C12.1386 7.35687 12.4249 7.37802 12.6984 7.40199C13.0961 7.43725 13.4811 7.47955 13.8463 7.52891C14.1735 7.57403 14.4837 7.6248 14.7742 7.6812V6.31616C14.7742 6.17374 14.746 6.03695 14.6938 5.91286C14.6402 5.78312 14.5613 5.66749 14.4625 5.56878C14.3652 5.47147 14.2482 5.39251 14.1185 5.33751C13.9944 5.28533 13.8576 5.25713 13.7152 5.25713H10.9216C10.7792 5.25713 10.6424 5.28533 10.5183 5.33751C10.3886 5.3911 10.2729 5.47006 10.1742 5.56878C10.0769 5.66608 9.99796 5.78312 9.94297 5.91286C9.89079 6.03695 9.86259 6.17374 9.86259 6.31616V7.26239ZM17.3365 11.0261H1.21545V14.4288H1.4171C1.49607 14.206 1.57786 13.9987 1.66952 13.814C1.76824 13.6166 1.87964 13.4417 2.01502 13.2908C2.17577 13.1103 2.36474 12.9707 2.59177 12.8777C2.81881 12.786 3.08392 12.7395 3.40262 12.7465L14.6402 12.7324C15.0026 12.7324 15.3129 12.7493 15.5836 12.8015C15.8586 12.8537 16.0955 12.9425 16.3085 13.0835C16.5059 13.2147 16.6751 13.3881 16.8274 13.6152C16.9726 13.8323 17.1024 14.0989 17.2265 14.4274H17.3336V11.0261H17.3365Z"
           fill="black"
         />
-      </svg>
-      <label for="feature_sleeps">Sleeps*</label>
+      </svg> -->
+      <p class="feature-label shine" />
     </div>
-    <input
-      required
-      type="number"
-      name="feature_sleeps"
-      class="input input-bordered small"
-    />
-
-    <div class="flex-row">
-      <svg
+    <div class="feature-item">
+      <!-- <svg
         width="26"
         height="14"
         viewBox="0 0 26 14"
@@ -146,151 +45,123 @@
           d="M21.7123 2.53349C21.7123 2.43239 21.6721 2.33543 21.6006 2.26394C21.5291 2.19246 21.4322 2.1523 21.3311 2.1523H17.9029C17.8018 2.1523 17.7049 2.19246 17.6334 2.26394C17.5619 2.33543 17.5217 2.43239 17.5217 2.53349C17.5217 2.63458 17.5619 2.73154 17.6334 2.80303C17.7049 2.87451 17.8018 2.91467 17.9029 2.91467H21.3311C21.4322 2.91467 21.5291 2.87451 21.6006 2.80303C21.6721 2.73154 21.7123 2.63458 21.7123 2.53349Z"
           fill="black"
         />
-      </svg>
-      <label for="feature_vehicle_class">Vehicle Class*</label>
+      </svg> -->
+      <p class="feature-label shine" />
     </div>
-    <input
-      required
-      type="text"
-      name="feature_vehicle_class"
-      class="input input-bordered w-full max-w-xs"
-    />
-
-    <div class="flex-row">
-      <svg
-        width="17"
-        height="17"
-        viewBox="0 0 17 17"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g clip-path="url(#clip0_70_110)">
-          <path
-            d="M14.2517 3.00318H15.5994V5.00711H2.12304V3.00318H3.47067V2.32937H1.44922V14.4405H16.2732V2.32937H14.2517V3.00318ZM15.5994 13.7667H2.12304V5.69845H15.5994V13.7667ZM5.49212 3.00318V2.32937H12.2303V3.00318H5.49212ZM4.14448 1.63803H4.8183V3.65948H4.14448V1.63803ZM12.9041 1.63803H13.5779V3.65948H12.9041V1.63803Z"
-            fill="black"
-          />
-        </g>
-        <clipPath id="clip0_70_110">
-          <rect
-            width="16.1716"
-            height="16.1716"
-            fill="white"
-            transform="translate(0.775635 0.29039)"
-          />
-        </clipPath>
-      </svg>
-      <label for="feature_year_built">Year Built*</label>
-    </div>
-    <input
-      required
-      type="text"
-      name="feature_year_built"
-      class="input input-bordered w-full max-w-xs"
-    />
-
-    <div class="flex-row">
-      <svg
-        width="23"
-        height="23"
-        viewBox="0 0 23 23"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M1.06958 19.1143H21.1878V11.7986H1.06958V19.1143ZM1.98405 12.713H20.2733V18.1998H19.3589V15.4564H18.4444V18.1998H17.5299V16.3709H16.6155V18.1998H15.701V13.6275H14.7866V18.1998H13.8721V16.3709H12.9576V18.1998H12.0432V15.4564H11.1287V18.1998H10.2142V16.3709H9.29976V18.1998H8.3853V13.6275H7.47083V18.1998H6.55637V16.3709H5.6419V18.1998H4.72744V15.4564H3.81297V18.1998H1.98405V12.713ZM18.4444 4.48286V5.39733H3.81297V4.48286H1.06958V7.22626H3.81297V6.31179H18.4444V7.22626H21.1878V4.48286H18.4444ZM2.89851 6.31179H1.98405V5.39733H2.89851V6.31179ZM20.2733 6.31179H19.3589V5.39733H20.2733V6.31179Z"
-          fill="black"
-        />
-      </svg>
-      <label for="feature_length">Length*</label>
-    </div>
-    <input
-      required
-      type="text"
-      name="feature_length"
-      class="input input-bordered w-full max-w-xs"
-    />
-
-    <label for="default_price">Default Price*</label>
-    <input
-      type="number"
-      required
-      name="default_price"
-      class="input input-bordered small"
-    />
-
-    <label for="min_booking_days">Min Booking Days*</label>
-    <input
-      required
-      type="number"
-      name="min_booking_days"
-      class="input input-bordered small"
-    />
-
-    <label for="service_fee">Service Fee*</label>
-    <input
-      required
-      type="number"
-      name="service_fee"
-      class="input input-bordered small"
-    />
-
-    <label for="taxes_fee">Taxes & Insurance / Per Day*</label>
-    <input
-      required
-      type="number"
-      name="taxes_fee"
-      class="input input-bordered small"
-    />
-
-    <button
-      type="submit"
-      class="btn btn-primary w-full"
-      class:loading={creatingNewUnit}>CREATE</button
-    >
-  </form>
+  </div>
+  <div class="unit-price-row">
+    <p class="feature-label shine" />
+  </div>
 </div>
 
 <style>
-  .new-unit-container {
+  .card-container {
     background-color: hsl(var(--b1));
+    border-radius: 4px;
+    box-shadow: 0 3px 5px #80808087;
     padding: 25px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    border-radius: 4px;
-    border: 1px solid hsl(var(--b3));
-    width: 400px;
+    margin: 25px;
+    width: 350px;
+    height: 320px;
   }
-  h4 {
-    font-size: 20px;
-  }
-  form {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+
+  .first-image {
     width: 100%;
+    border-radius: 4px;
+    height: 175px;
   }
-  .textarea {
-    min-height: 200px;
+  .no-photos-tag {
+    font-family: "font-medium";
+    color: hsl(var(--b3));
   }
-  label {
-    font-size: 14px;
-    margin-top: 10px;
+  .unit-name {
+    font-family: "font-medium";
+    color: hsl(var(--p));
+    font-size: 18px;
+    width: 150px;
+    height: 20px;
+    margin-top: 7px;
+    border-radius: 4px;
   }
-  .flex-row {
+
+  .features-row {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    margin: 10px 0;
+  }
+  .feature-item {
     display: flex;
     align-items: center;
+    width: 50%;
+    justify-content: flex-start;
+  }
+  .feature-label {
+    margin-left: 0px;
+    height: 20px;
+    width: 90px;
+    border-radius: 4px;
+  }
+  .unit-price-row {
+    display: flex;
+  }
+  .price {
+    font-family: "font-medium";
+  }
+  .shine {
+    background: #f6f7f8;
+    background-image: linear-gradient(
+      to right,
+      #f6f7f8 0%,
+      #edeef1 20%,
+      #f6f7f8 40%,
+      #f6f7f8 100%
+    );
+    background-repeat: no-repeat;
+    background-size: 800px 200px;
+    display: inline-block;
     position: relative;
+    animation-duration: 1.5s;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-name: placeholderShimmer;
+    animation-timing-function: linear;
+
+    -webkit-animation-duration: 1s;
+    -webkit-animation-fill-mode: forwards;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-name: placeholderShimmer;
+    -webkit-animation-timing-function: linear;
   }
-  svg {
-    bottom: 2px;
-    position: absolute;
-    right: -30px;
+
+  @keyframes placeholderShimmer {
+    0% {
+      background-position: -468px 0;
+    }
+
+    100% {
+      background-position: 468px 0;
+    }
   }
-  input.small {
-    width: 100px;
+
+  @-webkit-keyframes placeholderShimmer {
+    0% {
+      background-position: -468px 0;
+    }
+
+    100% {
+      background-position: 468px 0;
+    }
   }
-  button {
-    margin-top: 15px;
+
+  @media (max-width: 70px) {
+    .card-container {
+      width: 90vw;
+    }
+    .first-image {
+      height: 55vw;
+    }
   }
 </style>

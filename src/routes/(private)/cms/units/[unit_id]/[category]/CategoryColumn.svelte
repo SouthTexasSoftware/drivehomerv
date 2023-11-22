@@ -1,9 +1,13 @@
 <script lang="ts">
-  import { newUnitModel } from "$lib/helpers";
+  import { newUnitModel, populateUnitBookings } from "$lib/helpers";
   import { page } from "$app/stores";
-  import { beforeUpdate } from "svelte";
+  import { onMount } from "svelte";
   import type { Unit } from "$lib/types";
   import { DateTime } from "@easepick/bundle";
+  import { afterNavigate, goto } from "$app/navigation";
+  import { cmsStore, firebaseStore, unitStore } from "$lib/stores";
+  import { createEventDispatcher } from "svelte";
+  import { collection, onSnapshot } from "firebase/firestore";
 
   export let unitObject: Unit;
 
@@ -11,11 +15,37 @@
   let subcategoryLabels: string[] = [];
   let showingSubcategory: { [key: string]: boolean } = {};
 
-  beforeUpdate(() => {
+  let loadingPastBookings = false;
+
+  let dispatch = createEventDispatcher();
+
+  afterNavigate(() => {
     getUnitModelInformation();
+    dispatch("closeMobileColumn", true);
+    if (!unitObject.sessionOnly) {
+      unitObject.sessionOnly = {};
+      unitObject.sessionOnly.pastBookingsLoaded = false;
+    }
+  });
+
+  onMount(() => {
+    if (subcategoryList.length == 0) {
+      getUnitModelInformation();
+    }
+    if (!unitObject.sessionOnly) {
+      unitObject.sessionOnly = {};
+      unitObject.sessionOnly.pastBookingsLoaded = false;
+    }
+    unitStore.subscribe(getUnitModelInformation);
   });
 
   function getUnitModelInformation() {
+    if ($unitStore.isPopulated == false) {
+      console.log("unit store not populated, rerun in .2 seconds");
+      setTimeout(getUnitModelInformation, 200);
+      return;
+    }
+
     try {
       //@ts-ignore
       if (!newUnitModel[$page.params.category]) {
@@ -23,7 +53,7 @@
         if (unitObject.bookings) {
           unitObject.bookings.sort((bookingA, bookingB) => {
             if (bookingA.start == "undefined") {
-              return 0;
+              return -1;
             }
             if (bookingB.start == "undefined") {
               return 1;
@@ -34,7 +64,7 @@
             if (bookingAstart.isBefore(bookingBstart)) {
               return 1;
             }
-            return 0;
+            return -1;
           });
 
           subcategoryList = unitObject.bookings.map((booking) => {
@@ -88,14 +118,14 @@
         showingSubcategory[key] = false;
       });
     } catch (e) {
-      console.warn(e);
+      console.error(e);
     }
   }
 
   function getOptions(key: string) {
     // check if in bookings category.. then just build standard options
     if ($page.params.category == "bookings") {
-      return ["Overview", "Customer", "Photos", "Documents"];
+      return ["Overview", "Photos", "Documents"];
     }
     //@ts-ignore
     return Object.keys(newUnitModel[$page.params.category][key]);
@@ -128,14 +158,68 @@
       return t.toUpperCase();
     });
   }
+
+  async function loadPastBookings() {
+    if (loadingPastBookings) return;
+    loadingPastBookings = true;
+
+    let totalBookingsCollectionForUnit = collection(
+      $firebaseStore.db,
+      "units",
+      unitObject.id,
+      "bookings"
+    );
+
+    // find bookingListener within cmsStore, and update to be all bookings.
+    cmsStore.update((store) => {
+      store.bookingListeners.forEach((listenerObj) => {
+        if (listenerObj.unit_id == unitObject.id) {
+          listenerObj.listener();
+
+          listenerObj.listener = onSnapshot(
+            totalBookingsCollectionForUnit,
+            (querySnapshot) => {
+              populateUnitBookings(querySnapshot, unitObject);
+            }
+          );
+        }
+      });
+
+      return store;
+    });
+
+    if (!unitObject.sessionOnly) {
+      unitObject.sessionOnly = {};
+      unitObject.sessionOnly.pastBookingsLoaded = true;
+    } else {
+      unitObject.sessionOnly.pastBookingsLoaded = true;
+    }
+
+    loadingPastBookings = false;
+  }
 </script>
 
 <div class="column-container">
   {#each subcategoryLabels as subcategory, index}
     <button
       class="subcategory-title"
-      on:click={() =>
-        (showingSubcategory[subcategory] = !showingSubcategory[subcategory])}
+      on:click={() => {
+        showingSubcategory[subcategory] = !showingSubcategory[subcategory];
+        if (showingSubcategory[subcategory]) {
+          let optionsWithin = getOptions(subcategoryList[index]);
+          console.log(optionsWithin[0]);
+          goto(
+            "/cms/units/" +
+              $page.params.unit_id +
+              "/" +
+              $page.params.category +
+              "/" +
+              subcategoryList[index] +
+              "/" +
+              optionsWithin[0]
+          );
+        }
+      }}
     >
       <p class:active={$page.params.subcategory == subcategoryList[index]}>
         {subcategory.toUpperCase()}
@@ -184,12 +268,27 @@
       </div>
     {/if}
   {/each}
+  {#if $page.params.category == "bookings"}
+    {#if unitObject.sessionOnly}
+      {#if unitObject.sessionOnly.pastBookingsLoaded == false}
+        <button class="load-past-bookings" on:click={loadPastBookings}>
+          {#if loadingPastBookings}
+            <div class="spinner" />
+          {:else}
+            Load Past Bookings
+          {/if}
+        </button>
+      {/if}
+    {/if}
+  {/if}
 </div>
 
 <style>
   .column-container {
     overflow-y: scroll;
     padding-bottom: 100px;
+    display: flex;
+    flex-direction: column;
   }
   .subcategory-title {
     display: flex;
@@ -225,5 +324,52 @@
   .option-link.active {
     background-color: var(--cms-highlightPrimary);
     border-right: 3px solid hsl(var(--p));
+  }
+
+  .load-past-bookings {
+    background-color: hsl(var(--p));
+    font-family: font-bold;
+    color: hsl(var(--b1));
+    text-align: center;
+    align-self: flex-start;
+    height: 24px;
+    width: 156px;
+    border-radius: 4px;
+    margin-top: 14px;
+    margin-left: 19px;
+    font-size: 14px;
+  }
+
+  @media (max-width: 500px) {
+    .column-container {
+      width: 100%;
+      background-color: #fafafa;
+      border: 1px solid hsl(var(--b2));
+    }
+  }
+
+  .spinner {
+    content: "";
+    border-radius: 50%;
+    border-top: 1px solid hsl(var(--b1));
+    border-right: 1px solid transparent;
+    animation-name: spinning;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    opacity: 1;
+    transition: all 0.2s;
+    width: 15px;
+    height: 15px;
+    margin: 0 auto;
+  }
+
+  @keyframes spinning {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 </style>

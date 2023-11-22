@@ -1,9 +1,15 @@
 <script lang="ts">
   import type { Unit } from "$lib/types";
   import { fade } from "svelte/transition";
-  import { setDoc, doc, getDoc } from "firebase/firestore";
-  import { firebaseStore, unitStore } from "$lib/stores";
-  import { populateUnitStore } from "$lib/helpers";
+  import {
+    setDoc,
+    doc,
+    getDoc,
+    deleteDoc,
+    updateDoc,
+  } from "firebase/firestore";
+  import { cmsStore, firebaseStore, unitStore } from "$lib/stores";
+  import { populateUnitBookings, populateUnitStore } from "$lib/helpers";
 
   export let unitObject: Unit;
 
@@ -27,15 +33,68 @@
     }
 
     savingChanges = true;
-    unitObject.cms_edited = false;
+
+    // because photos are in subcollection, we need to check a seperate identifier to see if that is waht was modified
+    if ($cmsStore.photosUpdated.deleted) {
+      // delete doc using string? and then delete from object..
+      let deletedPhoto = doc(
+        $firebaseStore.db,
+        "units",
+        unitObject.id,
+        "photos",
+        $cmsStore.photosUpdated.deleted
+      );
+      await deleteDoc(deletedPhoto);
+    }
+
+    if ($cmsStore.photosUpdated.unit_id) {
+      for (let photoDoc of $cmsStore.photosUpdated.new_array) {
+        let updatedPhotoRef = doc(
+          $firebaseStore.db,
+          "units",
+          unitObject.id,
+          "photos",
+          photoDoc.id
+        );
+        await updateDoc(updatedPhotoRef, {
+          index: photoDoc.index,
+        });
+      }
+    }
+
+    $cmsStore.photosUpdated = Object.assign({});
+
+    //@ts-ignore
+    for (let booking of unitObject.bookings) {
+      if (booking.document_reference) {
+        delete booking.document_reference;
+      }
+    }
 
     // remove the booking lines that are added at page load?
-    let tempUnit = unitObject;
+    let tempUnit = structuredClone(unitObject);
+    tempUnit.cms_edited = false;
+    delete tempUnit.photos;
     delete tempUnit.bookings;
     delete tempUnit.bookingDates;
+    delete tempUnit.sessionOnly;
 
     await setDoc(doc($firebaseStore.db, "units", tempUnit.id), tempUnit);
 
+    // repopulate the deleted items?
+    //@ts-ignore
+    for (let booking of unitObject.bookings) {
+      booking.document_reference = doc(
+        $firebaseStore.db,
+        "units",
+        unitObject.id,
+        "bookings",
+        booking.id
+      );
+    }
+    // delay the fade until after DB operations.
+
+    unitObject.cms_edited = false;
     savingChanges = false;
   }
 </script>
@@ -161,6 +220,11 @@
     }
     100% {
       transform: rotate(360deg);
+    }
+  }
+  @media (max-width: 500px) {
+    .header-container {
+      display: none;
     }
   }
 </style>

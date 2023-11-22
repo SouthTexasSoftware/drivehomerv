@@ -40,7 +40,7 @@
 <svelte:window bind:innerWidth={screenWidth} />
 
 <header>
-  <a id="logo-link" href="/"><img src={companyLogo} alt="Company Logo" /></a>
+  <a id="logo-link" href="/rentals"><img src={companyLogo} alt="Company Logo" /></a>
 
   <nav>
     {#if screenWidth}

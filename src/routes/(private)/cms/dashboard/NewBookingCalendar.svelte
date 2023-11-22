@@ -1,6 +1,5 @@
 <script lang="ts">
   import { easepick } from "@easepick/bundle";
-  import { DateTime } from "@easepick/datetime";
   import { RangePlugin } from "@easepick/range-plugin";
   import { LockPlugin } from "@easepick/lock-plugin";
   import { onMount, createEventDispatcher } from "svelte";

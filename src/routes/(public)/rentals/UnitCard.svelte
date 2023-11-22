@@ -97,18 +97,19 @@
     flex-direction: column;
     margin: 25px;
     width: 350px;
+    min-height: 320px;
   }
 
   .first-image {
     width: 100%;
     border-radius: 4px;
-    height: 175px;
+    min-height: 175px;
     background-size: contain;
     background-repeat: no-repeat;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: hsl(var(--b2));
+    /* background-color: hsl(var(--b2)); */
     background-position: center;
   }
   .no-photos-tag {
@@ -174,4 +175,14 @@
       transform: rotate(360deg);
     }
   }
+  @media (max-width: 700px) {
+    .card-container {
+      width: 90vw;
+    }
+    .first-image {
+      
+      height: 55vw;
+     
+    }
+   }
 </style>
