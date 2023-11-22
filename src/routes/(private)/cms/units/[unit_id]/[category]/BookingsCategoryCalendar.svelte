@@ -3,6 +3,7 @@
   import type { Unit } from "$lib/types";
   import { onMount } from "svelte";
   import { afterNavigate } from "$app/navigation";
+  import { bookingUpdateStore, cmsStore, unitStore } from "$lib/stores";
 
   export let unitObject: Unit;
 
@@ -54,7 +55,10 @@
     "rgb(242, 196, 47, 0.5)",
   ];
 
-  onMount(generateCalendar);
+  onMount(() => {
+    bookingUpdateStore.subscribe(generateCalendar);
+  });
+
   afterNavigate(generateCalendar);
 
   function navigateMonths(previous: boolean) {
@@ -95,6 +99,7 @@
     loadedDays = false;
 
     if (!unitObject) return;
+    if (!monthYearElement) return;
 
     // adding 'Date' object to each booking
     let bookingsArray = unitObject.bookings?.map((booking) => {

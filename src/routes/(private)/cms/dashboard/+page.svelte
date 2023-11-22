@@ -1,7 +1,6 @@
 <script lang="ts">
   import UnitsTable from "../units/UnitsTable.svelte";
   import NewBooking from "./NewBooking.svelte";
-  import NewUnit from "./NewUnit.svelte";
   import OverviewCalendar from "./OverviewCalendar.svelte";
 
   let newBookingKey = false;
@@ -12,18 +11,18 @@
   <div class="utilities-column">
     <!-- <p>Tools and Info</p> -->
     <!-- New Booking -->
-    {#key newBookingKey}
+    <!-- {#key newBookingKey}
       <NewBooking on:refresh={() => (newBookingKey = !newBookingKey)} />
-    {/key}
+    {/key} -->
     <!-- eventually Active Requests, Upcoming Events, etc -->
-    <UnitsTable />
+    <!-- <UnitsTable /> -->
   </div>
 
   <div class="calendar-view">
     <!-- <OverviewCalendar /> -->
-    {#key newUnitKey}
+    <!-- {#key newUnitKey}
       <NewUnit on:refresh={() => (newUnitKey = !newUnitKey)} />
-    {/key}
+    {/key} -->
   </div>
 </div>
 

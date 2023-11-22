@@ -156,9 +156,12 @@
     }
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: 70px) {
     .card-container {
-      margin: 15px 0;
+      width: 90vw;
+    }
+    .first-image {
+      height: 55vw;
     }
   }
 </style>

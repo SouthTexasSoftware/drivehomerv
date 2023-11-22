@@ -1,5 +1,5 @@
 import { firebaseClientConfig } from "../config";
-import type { QuerySnapshot } from "firebase/firestore";
+import { QuerySnapshot } from "firebase/firestore";
 import {
   collection,
   getDocs,
@@ -9,6 +9,7 @@ import {
   doc,
   query,
   where,
+  onSnapshot,
 } from "@firebase/firestore";
 import { get } from "svelte/store";
 import type {
@@ -18,7 +19,12 @@ import type {
   Booking,
   FileDocument,
 } from "./types";
-import { firebaseStore, unitStore } from "./stores";
+import {
+  bookingUpdateStore,
+  cmsStore,
+  firebaseStore,
+  unitStore,
+} from "./stores";
 import { DateTime } from "@easepick/bundle";
 import { getAnalytics } from "firebase/analytics";
 
@@ -97,6 +103,8 @@ export async function populateUnitStore(
           unit.id,
           "bookings"
         );
+
+        // only pull Bookings that are ongoing or in the future
         let publicBookingsQuery = query(
           bookingsCollection,
           where("unix_end", ">=", todaysUnixTimestamp)
@@ -108,80 +116,24 @@ export async function populateUnitStore(
           "bookings"
         );
 
-        let unitBookings: QuerySnapshot;
-
-        unitBookings = await getDocs(publicBookingsQuery);
-
         // initialize the empty arrays...
         unit.bookings = [];
         unit.bookingDates = [];
 
-        for (let bookingDoc of unitBookings.docs) {
-          let booking = bookingDoc.data() as Booking;
+        cmsStore.update((store) => {
+          let snapshotListener = onSnapshot(
+            publicBookingsQuery,
+            (querySnapshot) => {
+              populateUnitBookings(querySnapshot, unit);
+            }
+          );
+          store.bookingListeners.push({
+            unit_id: unit.id,
+            listener: snapshotListener,
+          });
 
-          // this is to preload booking photos and documents. not necessary..
-          if (false) {
-            // DO ONLY IF CMS IS PASSED TO THE UNIT STORE LOAD FUNCTION
-            // PULL BOOKING PHOTOS & DOCUMENTS
-            let bookingPhotosCollection = collection(
-              fbStore.db,
-              "units",
-              unit.id,
-              "bookings",
-              booking.id,
-              "photos"
-            );
-            let bookingDocumentsCollection = collection(
-              fbStore.db,
-              "units",
-              unit.id,
-              "bookings",
-              booking.id,
-              "documents"
-            );
-
-            let bookingPhotos = await getDocs(bookingPhotosCollection);
-            let bookingDocuments = await getDocs(bookingDocumentsCollection);
-
-            booking.photos = [];
-            booking.documents = [];
-            bookingPhotos.forEach((photoDoc) => {
-              //@ts-ignore
-              booking.photos.push(photoDoc.data() as PhotoDocument);
-            });
-            bookingDocuments.forEach((fileDoc) => {
-              //@ts-ignore
-              booking.documents.push(fileDoc.data() as FileDocument);
-            });
-          }
-
-          let bookingDates = {
-            start: new DateTime(booking.start, "MMM-DD-YYYY"),
-            end: new DateTime(booking.end, "MMM-DD-YYYY"),
-          };
-
-          if (unit.bookingDates && unit.bookings) {
-            unit.bookingDates.push(bookingDates);
-            unit.bookings.push(booking);
-          }
-
-          // HOW-TO update every booking in the DB...
-          if (!booking.unix_start) {
-            let docRef = doc(
-              fbStore.db,
-              "units",
-              unit.id,
-              "bookings",
-              booking.id
-            );
-            console.log("updating booking ", booking.id);
-            await updateDoc(docRef, {
-              unix_start: Math.ceil(bookingDates.start.getTime() / 1000),
-              unix_end: Math.ceil(bookingDates.end.getTime() / 1000),
-            });
-            console.log("finished updating");
-          }
-        }
+          return store;
+        });
 
         // *** PHOTOS SUBCOLLECTION DATA PULL
         let unitPhotos = await getDocs(
@@ -189,9 +141,10 @@ export async function populateUnitStore(
         );
 
         unit.photos = [];
+        let sortPhotos: PhotoDocument[] = [];
 
         unitPhotos.forEach((doc) => {
-          let photoDoc = doc.data() as PhotoDocument;
+          let photoDoc = doc.data() as PhotoDocument;          
 
           if (unit.photos) {
             unit.photos.push(photoDoc);
@@ -212,6 +165,50 @@ export async function populateUnitStore(
       console.warn(error);
     }
   }
+}
+
+/**
+ * Helper function to process the data returned from a QuerySnapshot and modify the passing in Unit
+ * @param snapshot - QuerySnapshot of a Booking collection of documents
+ * @param unit - Unit associated with snapshot
+ *
+ */
+export function populateUnitBookings(snapshot: QuerySnapshot, unit: Unit) {
+  console.log("re-populating unit bookings for ", unit.name);
+  let bookings = [];
+  let bookingDates = [];
+
+  for (let bookingDoc of snapshot.docs) {
+    let booking = bookingDoc.data() as Booking;
+
+    let bookingDateObjects = {
+      start: new DateTime(booking.start, "MMM-DD-YYYY"),
+      end: new DateTime(booking.end, "MMM-DD-YYYY"),
+    };
+
+    bookings.push(booking);
+    if (booking.confirmed || booking.in_checkout) {
+      bookingDates.push(bookingDateObjects);
+    }
+  }
+
+  unit.bookings = bookings;
+  unit.bookingDates = bookingDates;
+
+  unitStore.update((storeData) => {
+    for (let storeUnit of storeData.units) {
+      if (storeUnit.id == unit.id) {
+        storeUnit.bookings = unit.bookings;
+        storeUnit.bookingDates = unit.bookingDates;
+        bookingUpdateStore.update((storeData) => {
+          storeData.triggerRefresh = true;
+          storeData.unit_id = unit.id;
+          return storeData;
+        });
+      }
+    }
+    return storeData;
+  });
 }
 
 /**
@@ -338,29 +335,29 @@ export const newUnitModel: Unit = {
     },
     rates_and_fees: {
       pricing: {
-        base_rental_fee: 0,
-        taxes_and_insurance: 0,
-        service_fee: 0,
-        mileage_overage: 0,
-        generator_usage: 0,
-        weekly_discount: 0,
-        monthly_discount: 0,
-        minimum_nights: 0,
-        security_deposit: 0,
-        cleaning_and_restocking: 0,
-        kitchen_utensils: 0,
-        late_dropoff_fee: 0,
+        base_rental_fee: "",
+        taxes_and_insurance: "",
+        service_fee: "",
+        mileage_overage: "",
+        generator_usage: "",
+        weekly_discount: "",
+        monthly_discount: "",
+        minimum_nights: "",
+        security_deposit: "",
+        cleaning_and_restocking: "",
+        kitchen_utensils: "",
+        late_dropoff_fee: "",
         additional_options: {},
       },
       delivery: {
-        price_per_mile: 0,
+        price_per_mile: "",
         additional_options: {},
       },
       upgrades: {
-        dumping: 0,
-        marshmellow_kit: 0,
-        folding_chairs_and_table: 0,
-        propane_refill: 0,
+        dumping: "",
+        marshmellow_kit: "",
+        folding_chairs_and_table: "",
+        propane_refill: "",
         additional_options: {},
       },
     },
@@ -371,9 +368,86 @@ export const newUnitModel: Unit = {
       carousel: [],
       album: [],
     },
-    records: {
-      bookings: [],
-      maintenance: [],
-    },
+    // records: {
+    //   bookings: [],
+    //   maintenance: [],
+    // },
   },
 };
+
+/**
+ *  Receives a formatted datestring and return the month & day in string format
+ *  @param dateString MMM-DD-YYYY
+ *  @returns Month & Day with ordinal suffix e.g. November 20th
+ */
+export function getMonthString(dateString: string | undefined) {
+  if (!dateString || dateString == "undefined") {
+    return "None";
+  }
+  let dateTimeObject = new DateTime(dateString, "MMM-DD-YYYY");
+
+  let dayString = dateTimeObject.toLocaleString("en-us", {
+    weekday: "long",
+  });
+  let monthString = dateTimeObject.toLocaleString("en-us", {
+    month: "long",
+  });
+
+  let dayNumber = dateTimeObject.getDate();
+  let dayNumberFormatted = ordinal_suffix_of(dayNumber);
+
+  return monthString + " " + dayNumberFormatted;
+}
+
+/**
+ *  Receives a formatted datestring and returns the day of the week
+ *  @param dateString MMM-DD-YYYY
+ *  @returns Day of Week e.g. Sunday
+ */
+export function getDayString(dateString: string | undefined) {
+  if (!dateString || dateString == "undefined") {
+    return "None";
+  }
+  let dateTimeObject = new DateTime(dateString, "MMM-DD-YYYY");
+
+  let dayString = dateTimeObject.toLocaleString("en-us", {
+    weekday: "long",
+  });
+
+  return dayString;
+}
+
+/**
+ * Adds the appropriate ending to a dates number '22nd or 28th' etc
+ * @param i Number to format
+ * @returns Formatted string e.g. 20th
+ */
+function ordinal_suffix_of(i: number) {
+  var j = i % 10,
+    k = i % 100;
+  if (j == 1 && k != 11) {
+    return i + "st";
+  }
+  if (j == 2 && k != 12) {
+    return i + "nd";
+  }
+  if (j == 3 && k != 13) {
+    return i + "rd";
+  }
+  return i + "th";
+}
+
+/**
+ * Generates a UUID for
+ * @returns formatted uuid string
+ */
+export function newUUID(): string {
+  // Alphanumeric characters
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let autoId = "";
+  for (let i = 0; i < 20; i++) {
+    autoId += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return autoId;
+}

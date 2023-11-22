@@ -10,6 +10,8 @@
 
   beforeUpdate(checkUnitSelected);
 
+  console.log($page.url);
+
   function checkUnitSelected() {
     if ($unitStore.isPopulated) {
       unitObject = $unitStore.getUnit($page.params.unit_id);

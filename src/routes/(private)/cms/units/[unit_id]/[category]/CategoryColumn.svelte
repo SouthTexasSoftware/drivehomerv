@@ -1,19 +1,13 @@
 <script lang="ts">
-  import { newUnitModel } from "$lib/helpers";
+  import { newUnitModel, populateUnitBookings } from "$lib/helpers";
   import { page } from "$app/stores";
-  import { beforeUpdate, onMount } from "svelte";
-  import type { Booking, Unit } from "$lib/types";
+  import { onMount } from "svelte";
+  import type { Unit } from "$lib/types";
   import { DateTime } from "@easepick/bundle";
-  import { afterNavigate } from "$app/navigation";
-  import { firebaseStore, unitStore } from "$lib/stores";
+  import { afterNavigate, goto } from "$app/navigation";
+  import { cmsStore, firebaseStore, unitStore } from "$lib/stores";
   import { createEventDispatcher } from "svelte";
-  import {
-    collection,
-    getDocs,
-    onSnapshot,
-    query,
-    where,
-  } from "firebase/firestore";
+  import { collection, onSnapshot } from "firebase/firestore";
 
   export let unitObject: Unit;
 
@@ -31,9 +25,6 @@
     if (!unitObject.sessionOnly) {
       unitObject.sessionOnly = {};
       unitObject.sessionOnly.pastBookingsLoaded = false;
-      attachBookingsListener();
-    } else if (!unitObject.sessionOnly.bookingsListener) {
-      attachBookingsListener();
     }
   });
 
@@ -44,8 +35,8 @@
     if (!unitObject.sessionOnly) {
       unitObject.sessionOnly = {};
       unitObject.sessionOnly.pastBookingsLoaded = false;
-      attachBookingsListener();
     }
+    unitStore.subscribe(getUnitModelInformation);
   });
 
   function getUnitModelInformation() {
@@ -172,26 +163,30 @@
     if (loadingPastBookings) return;
     loadingPastBookings = true;
 
-    let bookingsCollection = collection(
+    let totalBookingsCollectionForUnit = collection(
       $firebaseStore.db,
       "units",
       unitObject.id,
       "bookings"
     );
-    let todaysDate = new DateTime();
-    let todaysUnixTimestamp = Math.ceil(todaysDate.getTime() / 1000);
-    let pastBookingsQuery = query(
-      bookingsCollection,
-      where("unix_end", "<=", todaysUnixTimestamp)
-    );
 
-    let pastBookings = await getDocs(pastBookingsQuery);
+    // find bookingListener within cmsStore, and update to be all bookings.
+    cmsStore.update((store) => {
+      store.bookingListeners.forEach((listenerObj) => {
+        if (listenerObj.unit_id == unitObject.id) {
+          listenerObj.listener();
 
-    for (let booking of pastBookings.docs) {
-      unitObject.bookings?.push(booking.data() as Booking);
-    }
+          listenerObj.listener = onSnapshot(
+            totalBookingsCollectionForUnit,
+            (querySnapshot) => {
+              populateUnitBookings(querySnapshot, unitObject);
+            }
+          );
+        }
+      });
 
-    getUnitModelInformation();
+      return store;
+    });
 
     if (!unitObject.sessionOnly) {
       unitObject.sessionOnly = {};
@@ -200,46 +195,7 @@
       unitObject.sessionOnly.pastBookingsLoaded = true;
     }
 
-    unitObject.sessionOnly.bookingsListener();
-    attachBookingsListener();
-
     loadingPastBookings = false;
-  }
-
-  async function attachBookingsListener() {
-    let unitsBookingCollectionRef = collection(
-      $firebaseStore.db,
-      "units",
-      unitObject.id,
-      "bookings"
-    );
-
-    let todaysDate = new DateTime();
-    let todaysUnixTimestamp = Math.ceil(todaysDate.getTime() / 1000);
-
-    let collectionQuery = query(
-      unitsBookingCollectionRef,
-      where("unix_end", ">=", todaysUnixTimestamp)
-    );
-
-    if (unitObject.sessionOnly?.pastBookingsLoaded) {
-      collectionQuery = query(unitsBookingCollectionRef);
-    }
-
-    const unsubscribe = onSnapshot(collectionQuery, (querySnapshot) => {
-      let updatedBookingsArray: Booking[] = [];
-      querySnapshot.forEach((doc) => {
-        updatedBookingsArray.push(doc.data() as Booking);
-      });
-      unitObject.bookings = updatedBookingsArray;
-      getUnitModelInformation();
-    });
-    if (unitObject.sessionOnly) {
-      unitObject.sessionOnly.bookingsListener = unsubscribe;
-    } else {
-      unitObject.sessionOnly = {};
-      unitObject.sessionOnly.bookingsListener = unsubscribe;
-    }
   }
 </script>
 
@@ -247,8 +203,23 @@
   {#each subcategoryLabels as subcategory, index}
     <button
       class="subcategory-title"
-      on:click={() =>
-        (showingSubcategory[subcategory] = !showingSubcategory[subcategory])}
+      on:click={() => {
+        showingSubcategory[subcategory] = !showingSubcategory[subcategory];
+        if (showingSubcategory[subcategory]) {
+          let optionsWithin = getOptions(subcategoryList[index]);
+          console.log(optionsWithin[0]);
+          goto(
+            "/cms/units/" +
+              $page.params.unit_id +
+              "/" +
+              $page.params.category +
+              "/" +
+              subcategoryList[index] +
+              "/" +
+              optionsWithin[0]
+          );
+        }
+      }}
     >
       <p class:active={$page.params.subcategory == subcategoryList[index]}>
         {subcategory.toUpperCase()}

@@ -33,7 +33,7 @@
         />
       </g>
     </svg>
-    <p>REQUEST NOW</p>
+    <p>BOOK NOW</p>
   </button>
 {/if}
 
@@ -42,16 +42,17 @@
     background-color: hsl(var(--p));
     /* border-radius: 3px; */
     color: hsl(var(--b1));
-    width: 100%;
+    width: 90%;
     padding: 8px 0;
     margin-top: 25px;
     position: fixed;
-    bottom: 0;
+    bottom: 20px;
     z-index: 100;
     height: 50px;
     display: flex;
     justify-content: center;
     align-items: center;
+   border-radius: 15px;
   }
   button p {
     font-family: font-light;

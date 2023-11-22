@@ -4,7 +4,7 @@
   import { afterUpdate, createEventDispatcher } from "svelte";
   import { Timestamp, doc, serverTimestamp, setDoc } from "firebase/firestore";
   import { DateTime } from "@easepick/bundle";
-  import { firebaseStore } from "$lib/stores";
+  import { bookingStore, firebaseStore } from "$lib/stores";
 
   export let unitObject: Unit;
 
@@ -13,100 +13,216 @@
   let lastNameInput: HTMLInputElement;
   let emailInput: HTMLInputElement;
   let phoneInput: HTMLInputElement;
-  let passengersInput: HTMLInputElement;
-  let priceInput: HTMLInputElement;
 
   let dispatch = createEventDispatcher();
 
   let datesValidationError = false;
+  let customerValidationError = false;
 
-  let newBookingData: Booking | undefined;
+  let pickup_dropoff_price_addition = 0;
+  let selectedTripLength: number = 0;
 
-  afterUpdate(() => {
-    newBookingData = {
-      id: newUUID(),
-      start: "",
-      end: "",
-      status: "manualEntry",
-      created: serverTimestamp() as Timestamp,
-      photos: [],
-      documents: [],
-      unix_start: undefined,
-      unix_end: undefined,
-      passengers: undefined,
-      total_price: undefined,
-      unit_name: unitObject.name,
-      unit_id: unitObject.id,
-      customer: "manualEntry",
-      pickup_time: " 4 pm",
-      dropoff_time: "10 am",
-    };
+  $: nightlyRateSum =
+    parseInt(unitObject.information.rates_and_fees.pricing.base_rental_fee) *
+    selectedTripLength;
+  $: additionalFeesTotal = sumOfFees(selectedTripLength); // must pass in the dynamic value to rerun
+  $: totalBookingPrice = nightlyRateSum + additionalFeesTotal;
+
+  function sumOfFees(tripLength: number) {
+    let sum = 0;
+    let service_fee = 0;
+
+    let taxes_and_insurance =
+      parseInt(
+        unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+      ) * tripLength;
+
+    if (tripLength != 0) {
+      service_fee = parseInt(
+        unitObject.information.rates_and_fees.pricing.service_fee
+      );
+    }
+
+    sum = taxes_and_insurance + service_fee + pickup_dropoff_price_addition;
+
+    return sum;
+  }
+
+  // initial creation of the store with some default values
+  bookingStore.set({
+    id: newUUID(),
+    start: "",
+    end: "",
+    status: "manualEntry",
+    created: serverTimestamp() as Timestamp,
+    photos: [],
+    documents: [],
+    trip_length: selectedTripLength,
+    total_price: totalBookingPrice,
+    price_per_night: parseInt(
+      unitObject.information.rates_and_fees.pricing.base_rental_fee
+    ),
+    nightly_rate_sum: nightlyRateSum,
+    service_fee: parseInt(
+      unitObject.information.rates_and_fees.pricing.service_fee
+    ),
+    taxes_and_fees_per_night: parseInt(
+      unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+    ),
+    taxes_and_fees:
+      parseInt(
+        unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+      ) * selectedTripLength,
+    pickup_dropoff_price_addition: 0,
+    unit_name: unitObject.name,
+    unit_id: unitObject.id,
+    pickup_time: " 4 pm",
+    dropoff_time: "10 am",
+    in_checkout: false,
+    confirmed: true,
+    stripe_product_id: unitObject.stripe_product_id,
+    created_by: "CMS",
   });
 
+  // listener/dynamic update when the calendar get's changed
+  $: {
+    bookingStore.update((store) => {
+      store.total_price = totalBookingPrice;
+      store.price_per_night = parseInt(
+        unitObject.information.rates_and_fees.pricing.base_rental_fee
+      );
+      (store.nightly_rate_sum = nightlyRateSum),
+        (store.service_fee = parseInt(
+          unitObject.information.rates_and_fees.pricing.service_fee
+        ));
+      store.taxes_and_fees_per_night = parseInt(
+        unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+      );
+      store.taxes_and_fees =
+        parseInt(
+          unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+        ) * selectedTripLength;
+
+      console.log("store dynamically updated", store);
+      return store;
+    });
+  }
+
   function updateBookingDates(detail: { start: string; end: string }) {
-    if (newBookingData) {
-      newBookingData.start = detail.start;
-      newBookingData.end = detail.end;
+    if ($bookingStore) {
+      $bookingStore.start = detail.start;
+      $bookingStore.end = detail.end;
 
       let startDate = new DateTime(detail.start, "MMM-DD-YYYY");
       let endDate = new DateTime(detail.end, "MMM-DD-YYYY");
 
-      newBookingData.unix_start = Math.ceil(startDate.getTime() / 1000);
-      newBookingData.unix_end = Math.ceil(endDate.getTime() / 1000);
+      $bookingStore.unix_start = Math.ceil(startDate.getTime() / 1000);
+      $bookingStore.unix_end = Math.ceil(endDate.getTime() / 1000);
+
+      let differenceInTime = endDate.getTime() - startDate.getTime();
+      let differenceInDays = differenceInTime / (1000 * 3600 * 24);
+
+      selectedTripLength = differenceInDays;
+      $bookingStore.trip_length = selectedTripLength;
     }
   }
 
   function updateBookingPickupDropoff(detail: { key: string; value: string }) {
-    //@ts-ignore
-    newBookingData[detail.key] = detail.value;
+    if (detail.key == "pickup_time") {
+      $bookingStore.pickup_time = detail.value;
+    }
+    if (detail.key == "dropoff_time") {
+      $bookingStore.dropoff_time = detail.value;
+    }
   }
+
+  // create customer / and save booking... attach customerObject to booking
+  // create customer in stripe as well..
 
   async function saveBooking() {
     if (savingBooking) return;
     savingBooking = true;
     datesValidationError = false;
+    customerValidationError = false;
 
-    if (newBookingData) {
-      if (!newBookingData.unix_start || !newBookingData.unix_end) {
-        datesValidationError = true;
-        savingBooking = false;
+    if ($bookingStore.start == "" || $bookingStore.end == "") {
+      datesValidationError = true;
+      savingBooking = false;
+      return;
+    }
+
+    if (
+      firstNameInput.value == "" ||
+      lastNameInput.value == "" ||
+      emailInput.value == ""
+    ) {
+      customerValidationError = true;
+      savingBooking = false;
+      return;
+    }
+
+    //create a 'customerObject'
+    let newCustomer = {
+      id: newUUID(),
+      bookings: [$bookingStore.id],
+      contact_form_completed: true,
+      email: emailInput.value,
+      first_name: firstNameInput.value,
+      last_name: lastNameInput.value,
+      phone: phoneInput.value,
+      preferred_contact_method: {},
+      stripe_id: "",
+    } as Customer;
+
+    // send to stripe to establish a stripe_id
+    let createStripeCustomer = await fetch("/api/stripe/createCustomer", {
+      method: "POST",
+      body: JSON.stringify(newCustomer),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    let serverResponse = await createStripeCustomer.json();
+    if (serverResponse.error) {
+      console.error(serverResponse.code);
+      // return "error";
+    }
+    newCustomer.stripe_id = serverResponse.stripe_id;
+
+    // update booking
+    bookingStore.update((store) => {
+      store.customer = newCustomer.id;
+      store.customerObject = newCustomer;
+      return store;
+    });
+
+    // add customer to our DB
+    let newCustomerDocRef = doc($firebaseStore.db, "customers", newCustomer.id);
+    await setDoc(newCustomerDocRef, newCustomer);
+
+    //add the unit_img_link to file
+    unitObject.photos.forEach((photoObj) => {
+      if (photoObj.index == 1) {
+        let photoUrl = photoObj.downloadURL;
+
+        $bookingStore.unit_img_link = photoUrl;
+
         return;
       }
-      let newCustomer: Customer = {
-        id: newUUID(),
-        first_name: firstNameInput.value,
-        last_name: lastNameInput.value,
-        email: emailInput.value,
-        phone: phoneInput.value,
-        bookings: [newBookingData.id],
-      };
+    });
 
-      // add missing data, including the above customer id
-      newBookingData.total_price = parseInt(priceInput.value);
-      newBookingData.passengers = passengersInput.value;
-      newBookingData.customer = newCustomer.id;
+    // add booking to our DB
+    //@ts-ignore
+    let bookingDocRef = doc(
+      $firebaseStore.db,
+      "units",
+      $bookingStore.unit_id,
+      "bookings",
+      $bookingStore.id
+    );
+    $bookingStore.document_reference = bookingDocRef;
 
-      let newBookingDocRef = doc(
-        $firebaseStore.db,
-        "units",
-        unitObject.id,
-        "bookings",
-        newBookingData.id
-      );
-
-      await setDoc(newBookingDocRef, newBookingData);
-
-      let newCustomerDocRef = doc(
-        $firebaseStore.db,
-        "customers",
-        newCustomer.id
-      );
-
-      await setDoc(newCustomerDocRef, newCustomer);
-
-      newBookingData.customerObject = newCustomer;
-      unitObject.bookings?.push(newBookingData);
-    }
+    await setDoc(bookingDocRef, $bookingStore);
 
     savingBooking = false;
     dispatch("cancel", true);
@@ -211,47 +327,59 @@
         </select>
       </div>
     </div>
-    <div class="double-row">
-      <div class="section">
-        <div class="section-label">Total Price</div>
-        <input
-          type="number"
-          class="price"
-          name="price"
-          bind:this={priceInput}
-        />
+    <p class="section-label individual">Pricing Table</p>
+    <div class="double-row pricing">
+      <div class="section pricing">
+        {#if $bookingStore.total_price}
+          <p>
+            ${$bookingStore.price_per_night} x {$bookingStore.trip_length} nights
+          </p>
+          <p>Service Fee</p>
+          <p>Taxes & Insurance</p>
+          <p class="total-price">Total</p>
+        {:else}
+          <p>Select</p>
+        {/if}
       </div>
-      <div class="section">
-        <div class="section-label">Passengers</div>
-        <input
-          type="number"
-          class="price"
-          name="passengers"
-          bind:this={passengersInput}
-        />
+      <div class="section pricing right">
+        {#if $bookingStore.total_price}
+          <p>${$bookingStore.total_price}</p>
+          <p>${$bookingStore.service_fee}</p>
+          <p>${$bookingStore.taxes_and_fees}</p>
+          <p class="total-price">${$bookingStore.total_price}</p>
+        {:else}
+          <p>Dates</p>
+        {/if}
       </div>
     </div>
+
     <div class="section">
       <div class="section-label">Customer Info</div>
+      {#if customerValidationError}
+        <p class="validation-error customer">Customer Details Required</p>
+      {/if}
       <input
         type="text"
-        placeholder="First Name"
+        placeholder="First Name*"
         name="first-name"
         bind:this={firstNameInput}
+        required
       />
       <input
         class="margin-top"
         type="text"
-        placeholder="Last Name"
+        placeholder="Last Name*"
         name="last-name"
         bind:this={lastNameInput}
+        required
       />
       <input
         class="margin-top"
         type="email"
-        placeholder="Email"
+        placeholder="Email*"
         name="email"
         bind:this={emailInput}
+        required
       />
       <input
         class="margin-top"
@@ -323,6 +451,9 @@
     left: 67px;
     top: 16px;
   }
+  .validation-error.customer {
+    left: 125px;
+  }
   .section {
     display: flex;
     flex-direction: column;
@@ -342,12 +473,43 @@
     font-size: 14px;
     display: flex;
   }
+  .section-label.individual {
+    padding-left: 15px;
+    margin-top: 15px;
+  }
+  .section.pricing {
+    padding: 15px 0;
+  }
+  .section.pricing * {
+    font-size: 14px;
+  }
+  .section.pricing.right * {
+    text-align: right;
+  }
   .double-row {
     display: flex;
     width: 100%;
   }
   .double-row .section {
     width: 50%;
+  }
+  .double-row .section {
+    width: 50%;
+  }
+  .double-row.pricing .section {
+    width: 50%;
+  }
+  .double-row.pricing .section.right {
+    width: 30%;
+  }
+  .double-row.pricing {
+    justify-content: center;
+    border-top: 1px solid var(--cms-boxShadow);
+    border-bottom: 1px solid var(--cms-boxShadow);
+  }
+  .total-price {
+    color: hsl(var(--p));
+    font-family: cms-semibold;
   }
   select {
     padding: 10px;

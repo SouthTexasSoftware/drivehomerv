@@ -35,7 +35,7 @@ export const actions = {
     };
     // organize data and call email Handler to send the notification email out...
 
-    await emailHandler("request", emailPayload);
+    //await emailHandler("request", emailPayload);
   },
 } satisfies Actions;
 

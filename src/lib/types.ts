@@ -4,6 +4,7 @@ import type {
   Firestore,
   Timestamp,
   CollectionReference,
+  DocumentReference,
 } from "firebase/firestore";
 import type { FirebaseStorage } from "firebase/storage";
 import type { DateTime } from "@easepick/datetime";
@@ -59,7 +60,7 @@ export interface Unit {
     rules_and_policies: InformationRulesPolicies;
     rates_and_fees: InformationRatesFees;
   };
-  photos: PhotoDocument[];
+  photos?: PhotoDocument[];
   documents?: FileDocument[];
   stripe_product_id?: string;
 
@@ -73,6 +74,7 @@ export interface PhotoDocument {
   file_size: number; // in KiloBytes
   resolution?: string;
   index: number;
+  index_string?: string;
   date_added: Timestamp;
   file_path: string;
   downloadURL: string;
@@ -262,46 +264,46 @@ interface InformationRatesFees {
 }
 
 interface OptionPricing {
-  base_rental_fee: number;
-  taxes_and_insurance: number;
-  service_fee: number;
-  mileage_overage: number;
-  generator_usage: number;
-  weekly_discount: number;
-  monthly_discount: number;
-  minimum_nights: number;
-  security_deposit: number;
-  cleaning_and_restocking: number;
-  kitchen_utensils: number;
-  late_dropoff_fee: number;
+  base_rental_fee: string;
+  taxes_and_insurance: string;
+  service_fee: string;
+  mileage_overage: string;
+  generator_usage: string;
+  weekly_discount: string;
+  monthly_discount: string;
+  minimum_nights: string;
+  security_deposit: string;
+  cleaning_and_restocking: string;
+  kitchen_utensils: string;
+  late_dropoff_fee: string;
   additional_options: {
-    [option_name: string]: number;
+    [option_name: string]: string;
   };
 }
 
 interface OptionUpgrades {
-  dumping: number;
-  marshmellow_kit: number;
-  folding_chairs_and_table: number;
-  propane_refill: number;
+  dumping: string;
+  marshmellow_kit: string;
+  folding_chairs_and_table: string;
+  propane_refill: string;
   additional_options: {
-    [option_name: string]: number;
+    [option_name: string]: string;
   };
 }
 interface OptionDelivery {
-  price_per_mile: number;
+  price_per_mile: string;
   additional_options: {
-    [option_name: string]: number;
+    [option_name: string]: string;
   };
 }
 
-// TODO: add pickup, dropoff time and location
-// TODO: add booking referrer
 export interface Booking {
   id: string;
+  document_reference?: DocumentReference;
   customer?: string;
   customerObject?: Customer;
   unit_id?: string;
+  stripe_product_id?: string;
   unit_name?: string;
   start: string; //MMM-DD-YYYY
   end: string; //MMM-DD-YYYY
@@ -311,7 +313,14 @@ export interface Booking {
   unix_start?: number;
   unix_end?: number; // for ease of comparison
   total_price?: number;
+  price_per_night?: number;
+  trip_length?: number;
+  nightly_rate_sum?: number;
+  service_fee?: number;
+  taxes_and_fees_per_night?: number;
+  taxes_and_fees?: number;
   created?: Timestamp;
+  created_by?: string;
   updated?: Timestamp;
   status: string;
   pickup_time?: string;
@@ -319,11 +328,22 @@ export interface Booking {
   dropoff_time?: string;
   dropoff_location?: string;
   pickup_dropoff_price_addition?: number;
-  payment_status?: PaymentStatus;
-  agreement_status?: AgreementStatus;
+
+  agreement_status?: string;
+  agreement_link?: string;
+
   event_list?: BookingEvent[];
-  photos: PhotoDocument[];
+  photos?: PhotoDocument[];
   documents: FileDocument[];
+  unit_img_link?: string;
+
+  confirmed: boolean;
+  in_checkout: boolean;
+  confirmation_email_sent?: boolean;
+  receipt_date_string?: string; //MMM-DD-YYYY
+  payment_intent?: {[key:any]:string};
+  payment_status?: PaymentStatus;
+  payment_link?: string;
 
   stripe_price_id_list?: [string];
   stripe_invoiceItem_id_list?: [string];
@@ -355,16 +375,14 @@ enum BookingStatus {
 }
 
 enum PaymentStatus {
-  quoted,
-  invoiced,
-  paid_deposit,
-  paid_in_full,
+  generate_payment_link,
+  link_to_pay,
+  paid
 }
 enum AgreementStatus {
-  drafted,
+  queued,
   sent,
-  accepted,
-  denied,
+  accepted
 }
 
 export interface Fee {
@@ -423,4 +441,11 @@ export interface Customer {
   bookings?: string[];
   age_over_25?: boolean;
   stripe_id?: string;
+  preferred_contact_method?: {
+    text?: boolean;
+    call?: boolean;
+    email?: boolean;
+  };
+  contact_form_completed?: boolean;
+  paymentIntent?: string;
 }
