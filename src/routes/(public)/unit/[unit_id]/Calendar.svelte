@@ -558,6 +558,8 @@
     display: flex;
     justify-content: center;
     transform: translateY(0px) scale(0.9);
+    left: 0;
+    top: 0;
   }
   .pickup-dropoff {
     width: 300px;

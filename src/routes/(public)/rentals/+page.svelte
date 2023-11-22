@@ -116,4 +116,10 @@
     justify-content: center;
     margin-bottom: 100px;
   }
+  @media (max-width: 700px) { 
+    .flex-card-container {
+      width: 97vw;
+    }
+
+  }
 </style>

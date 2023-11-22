@@ -69,9 +69,12 @@
   }
   @media (max-width: 700px) {
     #card-wrapper {
-      width: 90vw;
+      width: 100vw;
       min-height: 120vw;
       padding-bottom: 25px;
+      margin: 0;
+      box-shadow: none;
+      background-color: rgba(255, 255, 255, 0.97);
     }
   }
 

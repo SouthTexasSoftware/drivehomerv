@@ -367,11 +367,13 @@
 
   @media (max-width: 500px) {
     .col {
-      margin: 0px 25px;
+      margin: 20px 25px;
     }
-
     .reserve-button {
       padding: 12px 0;
+    }
+    .trip-plan-container {
+      background-color: transparent;
     }
   }
 

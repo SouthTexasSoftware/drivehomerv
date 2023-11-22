@@ -199,8 +199,8 @@
         viewBox="0 0 26 14"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        in:fly={{ x: -100, duration: 2000, delay: 500 }}
-        out:fly={{ x: 100, duration: 2000 }}
+        in:fly|local={{ x: -100, duration: 2000, delay: 500 }}
+        out:fly|local={{ x: 100, duration: 2000 }}
         on:outroend={() => (rvAnimationTrigger = true)}
       >
         <path
