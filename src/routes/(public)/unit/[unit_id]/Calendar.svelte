@@ -368,7 +368,7 @@
   }
 
   function clearCalendarSelection() {
-    if(!pickerGlobal) return;
+    if (!pickerGlobal) return;
 
     pickerGlobal.clear();
   }
@@ -378,7 +378,9 @@
 
 <div class="row stack dates">
   <strong class="dates">Select Your Dates</strong>
-  <button class="clear-selection" on:click={clearCalendarSelection}>Reset</button>
+  <button class="clear-selection" on:click={clearCalendarSelection}
+    >Reset</button
+  >
 
   <label for="calendar-button" class="row date-display">
     <p>{selectedTripStart}</p>
@@ -558,8 +560,8 @@
     display: flex;
     justify-content: center;
     transform: translateY(0px) scale(0.9);
-    left: 0;
-    top: 0;
+    left: 0 !important;
+    top: 0 !important;
   }
   .pickup-dropoff {
     width: 300px;
