@@ -70,8 +70,14 @@
       width: 90vw;
       min-height: 300px;
       padding-bottom: 25px;
-      margin-top: 150px;
-      padding: 50px;
+      margin-top: 20px;
+      padding: 0px;
+    }
+    .section-title {
+      margin-top:35px;
+    }
+    .section-content {
+      margin: 20px 0;
     }
   }
 

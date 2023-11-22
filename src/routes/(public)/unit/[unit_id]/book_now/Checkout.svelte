@@ -20,7 +20,13 @@
 
   let dispatch = createEventDispatcher();
 
-  //   onMount(generatePaymentIntent);
+  onMount(() => {
+    window.scrollTo({
+      left: 0,
+      top: 0,
+      behavior: "smooth",
+    });
+  });
 
   async function initializeStripe() {
     let client_secret = "error";
@@ -161,7 +167,7 @@
       if (submittingPayment) return;
       submittingPayment = true;
 
-      dispatch('paymentStart', true);
+      dispatch("paymentStart", true);
 
       const paymentResponse = await stripe.confirmPayment({
         elements,
@@ -275,5 +281,19 @@
     100% {
       transform: rotate(360deg);
     }
+  }
+
+  @media (max-width: 700px) {
+    #submit {
+      margin-bottom: 50px;
+    }
+  }
+
+  @media (min-width: 700px) and (max-width: 1200px) {
+  }
+
+  @media (min-width: 1200px) and (max-width: 1800px) {
+  }
+  @media (min-width: 1800px) {
   }
 </style>
