@@ -283,7 +283,7 @@
     // return to unitView
     let unitLink = $page.url.origin + "/unit/" + $bookingStore.unit_id;
     cancellingBooking = true;
-    await goto(removeBookNow);
+    await goto(unitLink);
   }
 
   beforeNavigate(async (navigation) => {
