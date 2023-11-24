@@ -46,7 +46,7 @@ export interface Unit {
   bookings?: Booking[];
   bookingDates?: { start: Date; end: Date }[];
   prices?: CollectionReference;
-  min_booking_days: number; //TODO: should be NIGHTS
+  min_booking_days: number; 
   feature_sleeps?: string;
   feature_vehicle_class?: string;
   feature_year_built?: string;
@@ -334,8 +334,9 @@ export interface Booking {
 
   event_list?: BookingEvent[];
   photos?: PhotoDocument[];
-  documents: FileDocument[];
+  documents?: FileDocument[];
   unit_img_link?: string;
+  notes?: string;
 
   confirmed: boolean;
   in_checkout: boolean;

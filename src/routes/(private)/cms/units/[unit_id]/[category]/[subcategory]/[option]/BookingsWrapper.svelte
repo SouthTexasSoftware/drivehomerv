@@ -11,12 +11,13 @@
   import BookingsPhotos from "./BookingsPhotos.svelte";
   import BookingsAddPhotoDropdown from "./BookingsAddPhotoDropdown.svelte";
   import BookingsUpdate from "./BookingsUpdate.svelte";
+  import BookingBlocking from "./BookingBlocking.svelte";
 
   export let unitObject: Unit;
   export let subcategory: string;
   export let option: string;
 
-  let bookingObject: Booking | undefined;
+  let bookingObject: Booking | undefined = undefined;
   let showWrapper = true;
   let customerList: Customer[] = [];
   let settingsDropdownShowing = false;
@@ -24,8 +25,18 @@
   let updatePhotos = false;
   let updateBooking = false;
 
+  // stuff for blocking
+  let showBlocking = false;
+  let blockingObject: Booking | undefined = undefined;
+
   $: bookingObject = unitObject.bookings?.find((booking) => {
     if (booking.id == subcategory) {
+      //check for blocking, which will have no customer
+      if(booking.id.includes('block_')) {
+        blockingObject = booking;
+        return booking;
+      }
+
       // add customer Object?
       if (customerList.length > 0) {
         customerList.forEach((customer) => {
@@ -38,10 +49,18 @@
     }
   });
 
-
   beforeUpdate(() => {
     if (!option) {
       showWrapper = false;
+      return;
+    }
+    if (option == "Blocking") {
+      showWrapper = false;
+      showBlocking = true;
+      return;
+    } else {
+      showWrapper = true;
+      showBlocking = false;
     }
     if (customerList.length == 0) {
       fetchCustomerData().then(() => {
@@ -187,6 +206,17 @@
       }}
     />
   {/if}
+{/if}
+{#if showBlocking}
+  <!-- Options are basically to delete it? lol -->
+  <div class="bookings-option-container">
+    {#if blockingObject}
+      <div class="container-header">
+        <p class="option-title">Blocking ID: {blockingObject.id}</p>
+      </div>
+      <BookingBlocking {blockingObject} />
+    {/if}
+  </div>
 {/if}
 
 <style>

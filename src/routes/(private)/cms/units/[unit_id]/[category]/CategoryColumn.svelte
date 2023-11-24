@@ -88,7 +88,14 @@
               let endDay = endDateTime.getDate();
               let endDayString = ordinal_suffix_of(endDay);
 
+              let blockingPrefix = "";
+              //for blockings only
+              if (booking.status == "block") {
+                blockingPrefix = "*Block*";
+              }
+
               let fullString =
+                blockingPrefix +
                 startMonth +
                 " " +
                 startDayString +
@@ -122,7 +129,20 @@
     }
   }
 
-  function getOptions(key: string) {
+  // Blocking Example UUID
+  //block_kY3auZFpt0S8Kq
+
+  /**
+   * called onClick - spits out the proper 'options' that are under the subcategory label i.e. 'bullet points' would spit out summary, Rv Details, Drivable Features, etc
+   * @param key subcategory label shown in the column i.e. 'Bullet Points' 'Paragraphs' or for bookings, it is a booking_id or 'noBookingIdFound'
+   * @return list of options to select
+   */
+  function getOptions(key: string): string[] {
+    //check if blocking based on key
+    if(key.includes('block_')) {
+      return ["Blocking"];
+    }
+
     // check if in bookings category.. then just build standard options
     if ($page.params.category == "bookings") {
       return ["Overview", "Photos", "Documents"];
@@ -207,7 +227,6 @@
         showingSubcategory[subcategory] = !showingSubcategory[subcategory];
         if (showingSubcategory[subcategory]) {
           let optionsWithin = getOptions(subcategoryList[index]);
-          console.log(optionsWithin[0]);
           goto(
             "/cms/units/" +
               $page.params.unit_id +
