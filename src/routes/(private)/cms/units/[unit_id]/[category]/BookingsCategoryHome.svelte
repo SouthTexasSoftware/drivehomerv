@@ -6,8 +6,10 @@
   import { page } from "$app/stores";
   import { afterNavigate } from "$app/navigation";
   import { afterUpdate } from "svelte";
+  import BookingsCategoryNewBlocking from "./BookingsCategoryNewBlocking.svelte";
 
   let creatingNewBooking = false;
+  let creatingNewBlocking = false;
   let unitObject: Unit | undefined;
 
   checkUnitSelected();
@@ -33,11 +35,23 @@
           creatingNewBooking = false;
         }}
       />
+    {:else if creatingNewBlocking}
+      <BookingsCategoryNewBlocking
+        {unitObject}
+        on:cancel={() => {
+          creatingNewBlocking = false;
+        }}
+      />
     {:else}
       <BookingsCategoryCalendar {unitObject} />
       <div class="button-container">
         <button on:click={() => (creatingNewBooking = true)}
           >Create New Booking</button
+        >
+      </div>
+      <div class="button-container">
+        <button class="block" on:click={() => (creatingNewBlocking = true)}
+          >Block Dates</button
         >
       </div>
     {/if}
@@ -63,6 +77,9 @@
     align-items: center;
     background-color: hsl(var(--p));
     color: white;
+  }
+  .block {
+    background-color: hsl(var(--wa));
   }
   @media (max-width: 500px) {
     .button-container {

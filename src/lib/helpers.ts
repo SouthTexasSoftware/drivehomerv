@@ -109,12 +109,6 @@ export async function populateUnitStore(
           bookingsCollection,
           where("unix_end", ">=", todaysUnixTimestamp)
         );
-        let privateBookingsQuery = collection(
-          fbStore.db,
-          "units",
-          unit.id,
-          "bookings"
-        );
 
         // initialize the empty arrays...
         unit.bookings = [];
@@ -144,7 +138,7 @@ export async function populateUnitStore(
         let sortPhotos: PhotoDocument[] = [];
 
         unitPhotos.forEach((doc) => {
-          let photoDoc = doc.data() as PhotoDocument;          
+          let photoDoc = doc.data() as PhotoDocument;
 
           if (unit.photos) {
             unit.photos.push(photoDoc);
@@ -169,7 +163,7 @@ export async function populateUnitStore(
 
 /**
  * Helper function to process the data returned from a QuerySnapshot and modify the passing in Unit
- * @param snapshot - QuerySnapshot of a Booking collection of documents
+ * @param snapshot - QuerySnapshot of a Booking collection of documents | initially is set to only unixEnd > today (not past bookings)
  * @param unit - Unit associated with snapshot
  *
  */
@@ -177,6 +171,8 @@ export function populateUnitBookings(snapshot: QuerySnapshot, unit: Unit) {
   console.log("re-populating unit bookings for ", unit.name);
   let bookings = [];
   let bookingDates = [];
+
+  console.log(snapshot.docs);
 
   for (let bookingDoc of snapshot.docs) {
     let booking = bookingDoc.data() as Booking;
