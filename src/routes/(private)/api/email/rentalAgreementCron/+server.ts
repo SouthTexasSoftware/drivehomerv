@@ -2,7 +2,8 @@ import { json, error, fail } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { emailHandler } from "$lib/email";
 import type { Booking, Unit } from "$lib/types";
-import { DateTime } from "@easepick/bundle";
+import easepick from "@easepick/bundle";
+const { DateTime } = easepick;
 import { firebaseAdminConfig } from "../../../../../config";
 import {
   getApp,
