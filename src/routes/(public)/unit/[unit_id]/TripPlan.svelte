@@ -101,7 +101,6 @@
     additionalFeesTotal = sumOfFees(selectedTripLength);
 
     // handle pickup_dropoff modifiers...
-
   }
 
   async function bookNowRequested() {
@@ -124,7 +123,9 @@
     $bookingStore.confirmed = false;
     $bookingStore.in_checkout = true;
     $bookingStore.created = Timestamp.now();
-    $bookingStore.created_by = 'Customer';
+    $bookingStore.created_by = "Customer";
+    $bookingStore.pickup_location =
+      unitObject.information.bullet_points.summary.pickup_location;
 
     //@ts-ignore
     let docRef = doc(

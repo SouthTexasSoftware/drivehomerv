@@ -135,13 +135,14 @@
   }
   .cms-link.home {
     margin: 5px 0;
+    fill: transparent !important;
   }
   .cms-link.active svg path {
     fill: hsl(var(--p));
   }
   .cms-link.home.active svg path {
     stroke: hsl(var(--p));
-    fill: transparent;
+    fill: transparent !important;
   }
   .cms-link.active {
     background-color: var(--cms-highlightPrimary);

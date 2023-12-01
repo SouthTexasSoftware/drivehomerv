@@ -2,14 +2,14 @@ import sgMail from "@sendgrid/mail";
 import { dev } from "$app/environment";
 import { sendgridConfig } from "../config";
 
-
 const confirmationTemplateId = "d-24b1dabe9daa4e8c8191d5957ca5e90a";
 const ownerNotificationTemplateId = "d-4d6e684b748e479e9c5132abf0929f11";
+const rentalAgreementTemplateId = "d-2e4d9f8b57ef486281d8a2b19554e8ed";
 
 let msg: MessageObject = {
   from: {
     name: "Drive Home RV Bookings",
-    email: "notifications@southtexas.software",
+    email: "info@drivehomerv.com",
   },
   // 'alec@rapplitemedia.com',
 };
@@ -19,11 +19,11 @@ let msg: MessageObject = {
  * @param type template/name of email.
  * @param payload object who's keys match what is expected by it's template.
  */
-export async function emailHandler( to: string | string[],
+export async function emailHandler(
+  to: string | string[],
   type: string,
   payload: { [key: string]: string | undefined }
 ) {
-
   msg.to = to;
 
   //build 'msg' object based on the type and payload details
@@ -38,7 +38,7 @@ export async function emailHandler( to: string | string[],
        * link:
        * }
        */
-    break;
+      break;
 
     case "confirmation":
       msg.templateId = confirmationTemplateId;
@@ -63,6 +63,23 @@ export async function emailHandler( to: string | string[],
 
       }
       */
+      break;
+
+    case "rentalAgreement":
+      msg.templateId = rentalAgreementTemplateId;
+      msg.dynamicTemplateData = payload;
+      /*payload = {
+      "link":
+      "start_date":
+      "end_date": 
+      "unit_name":
+      "location":
+      "pickup_time":
+      "dropoff_time":
+      "unit_img_link":
+      "notes":
+        }
+        */
       break;
   }
 

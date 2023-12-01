@@ -1,5 +1,11 @@
 import { writable } from "svelte/store";
-import type { UnitStore, Booking, FirebaseStore, Unit, PhotoDocument } from "./types";
+import type {
+  UnitStore,
+  Booking,
+  FirebaseStore,
+  Unit,
+  PhotoDocument,
+} from "./types";
 import type { Unsubscribe } from "firebase/firestore";
 
 export const firebaseStore = writable<FirebaseStore>(undefined);
@@ -20,7 +26,15 @@ export const unitStore = writable<UnitStore>({
 
 export const bookingStore = writable<Booking>(undefined);
 
-export const cmsStore = writable<{ triggerRefresh: boolean, bookingListeners: [{unit_id:string, listener:Unsubscribe}] , photosUpdated: {unit_id: string, new_array: PhotoDocument[], deleted?: string} }>({
+export const cmsStore = writable<{
+  triggerRefresh: boolean;
+  bookingListeners: [{ unit_id: string; listener: Unsubscribe }];
+  photosUpdated: {
+    unit_id: string;
+    new_array: PhotoDocument[];
+    deleted?: string;
+  };
+}>({
   triggerRefresh: false,
   //@ts-ignore
   bookingListeners: [],
@@ -28,7 +42,12 @@ export const cmsStore = writable<{ triggerRefresh: boolean, bookingListeners: [{
   photosUpdated: {},
 });
 
-export const bookingUpdateStore = writable<{ triggerRefresh: boolean, unit_id: string }>({
+export const bookingUpdateStore = writable<{
+  triggerRefresh: boolean;
+  unit_id: string;
+}>({
   triggerRefresh: false,
-  unit_id: ''
+  unit_id: "",
 });
+
+export const serverAdminStore = writable<{ [storeKey: string]: any }>();

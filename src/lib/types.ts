@@ -46,7 +46,7 @@ export interface Unit {
   bookings?: Booking[];
   bookingDates?: { start: Date; end: Date }[];
   prices?: CollectionReference;
-  min_booking_days: number; 
+  min_booking_days: number;
   feature_sleeps?: string;
   feature_vehicle_class?: string;
   feature_year_built?: string;
@@ -329,8 +329,17 @@ export interface Booking {
   dropoff_location?: string;
   pickup_dropoff_price_addition?: number;
 
-  agreement_status?: string;
+  agreement_signed?: boolean;
   agreement_link?: string;
+  agreement_notification?: boolean;
+  agreement_notification_timestamp?: Timestamp;
+  agreement_viewed?: [date: string];
+  agreement_details?: {
+    name: string;
+    date: string;
+    accepted: boolean;
+    version: number;
+  };
 
   event_list?: BookingEvent[];
   photos?: PhotoDocument[];
@@ -342,7 +351,7 @@ export interface Booking {
   in_checkout: boolean;
   confirmation_email_sent?: boolean;
   receipt_date_string?: string; //MMM-DD-YYYY
-  payment_intent?: {[key:any]:string};
+  payment_intent?: { [key: any]: string };
   payment_status?: PaymentStatus;
   payment_link?: string;
 
@@ -378,12 +387,12 @@ enum BookingStatus {
 enum PaymentStatus {
   generate_payment_link,
   link_to_pay,
-  paid
+  paid,
 }
 enum AgreementStatus {
   queued,
   sent,
-  accepted
+  accepted,
 }
 
 export interface Fee {

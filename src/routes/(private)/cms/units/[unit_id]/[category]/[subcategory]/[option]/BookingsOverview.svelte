@@ -1,17 +1,9 @@
 <script lang="ts">
-  import { beforeNavigate } from "$app/navigation";
   import { page, updated } from "$app/stores";
   import { bookingStore, firebaseStore } from "$lib/stores";
   import type { Booking, Customer, Unit } from "$lib/types";
   import { getMonthString, getDayString } from "$lib/helpers";
-  import {
-    Timestamp,
-    arrayUnion,
-    collection,
-    doc,
-    setDoc,
-    updateDoc,
-  } from "firebase/firestore";
+  import { Timestamp, collection, setDoc } from "firebase/firestore";
   import { beforeUpdate } from "svelte";
   import { fade } from "svelte/transition";
 
@@ -27,6 +19,8 @@
 
   let tripStartLabel = "Departure";
   let tripEndLabel = "Return";
+  let createdString: string | undefined;
+  let updatedString: string | undefined;
 
   let bookingsSubcollectionRef = collection(
     $firebaseStore.db,
@@ -37,6 +31,7 @@
 
   beforeUpdate(() => {
     updateTripStartEndLabels();
+    formatDates();
   });
 
   function updateTripStartEndLabels() {
@@ -50,6 +45,33 @@
     } else {
       tripStartLabel = "Delivery";
       tripEndLabel = "Pick-up";
+    }
+  }
+
+  /**
+   * Silly function because sometimes the Timestamp.toDate() method doesn't play nicely.
+   */
+  function formatDates() {
+    let createdTimestamp = bookingObject?.created;
+
+    if (createdTimestamp) {
+      let newTimestamp = new Timestamp(
+        createdTimestamp.seconds,
+        createdTimestamp.nanoseconds
+      );
+
+      createdString = newTimestamp.toDate().toDateString();
+    }
+
+    let updatedTimestamp = bookingObject?.updated;
+
+    if (updatedTimestamp) {
+      let newTimestamp = new Timestamp(
+        updatedTimestamp.seconds,
+        updatedTimestamp.nanoseconds
+      );
+
+      updatedString = newTimestamp.toDate().toDateString();
     }
   }
 
@@ -172,17 +194,17 @@
           {/if}
         </div>
         <p class="small-date">
-          {getDayString(bookingObject.created)}, {getMonthString(
-            bookingObject.created
-          )}
+          {#if bookingObject.created}
+            {createdString}
+          {/if}
         </p>
       </div>
       <div class="section">
         <div class="section-label">Updated</div>
         <p class="small-date">
-          {getDayString(bookingObject.updated)}, {getMonthString(
-            bookingObject.updated
-          )}
+          {#if bookingObject.updated}
+            {updatedString}
+          {/if}
         </p>
       </div>
     </div>
@@ -193,7 +215,9 @@
           {#if bookingObject.payment_intent.status == "succeeded"}
             <p class="label-status">Paid</p>
           {:else}
-            <a href={bookingObject.payment_link} class="label-status pending">Link To Pay</a>
+            <a href={bookingObject.payment_link} class="label-status pending"
+              >Link To Pay</a
+            >
           {/if}
         {:else}
           <button on:click={generatePaymentLink} class="label-status generate">
@@ -227,29 +251,32 @@
       </p>
     </div>
 
-    <div class="section">
+    <div class="section agreement">
       <div class="section-label">
         Rental Agreement
-        {#if bookingObject.agreement_status}
-          {#if bookingObject.agreement_status == "queued"}
-            <p class="label-status pending">Queued</p>
-          {:else if bookingObject.agreement_status == "sent"}
-            <p class="label-status pending">Sent</p>
-          {:else if bookingObject.agreement_status == "accepted"}
-            <p class="label-status">Accepted</p>
-          {/if}
+        {#if bookingObject.agreement_notification}
+          <p class="label-status">Sent</p>
+        {:else}
+          <p class="label-status queue">In Queue</p>
+        {/if}
+        {#if bookingObject.agreement_signed}
+          <p class="label-status two">Signed</p>
         {/if}
       </div>
       <p>
-        {#if bookingObject.agreement_link}
-          <a
-            class="agreement-link"
-            href={bookingObject.agreement_link}
-            target="_blank">Agreement Link</a
-          >
-        {/if}
-        Coming Soon
+        <a
+          class="agreement-link"
+          href={$page.url.origin +
+            "/unit/" +
+            bookingObject.unit_id +
+            "/agreement/" +
+            bookingObject.id}
+          target="_blank">Agreement Link</a
+        >
       </p>
+      {#if bookingObject.agreement_viewed}
+        <p>Last Viewed: {bookingObject.agreement_viewed[0]}</p>
+      {/if}
     </div>
 
     <p class="section-label individual">Pricing Table</p>
@@ -393,6 +420,10 @@
     font-size: 12px;
     padding: 0px 13px;
     border-radius: 15px;
+    text-align: center;
+  }
+  .label-status.two {
+    left: 155%;
   }
   .label-status.mini {
     font-size: 10px;
@@ -408,6 +439,10 @@
     width: 180px;
     text-align: center;
     height: 18px;
+  }
+  .label-status.queue {
+    background-color: hsl(var(--wa));
+    width: 90px;
   }
   .small-date {
     font-size: 13px;
@@ -448,7 +483,6 @@
     font-size: 13px;
     padding: 3px 10px;
     margin-left: 15px;
-    height: 15px;
   }
   .total-price {
     color: hsl(var(--p));
