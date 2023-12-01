@@ -138,6 +138,10 @@
             $bookingStore.confirmed = true;
             $bookingStore.updated = Timestamp.now();
 
+            $bookingStore.agreement_link = $page.url.origin + '/unit/' + $bookingStore.unit_id + '/agreement/' + $bookingStore.id;
+            $bookingStore.agreement_notification = false;
+            $bookingStore.agreement_signed = false;
+
             await setDoc($bookingStore.document_reference, $bookingStore);
           } else {
             console.log("records show confirmation email already sent");
