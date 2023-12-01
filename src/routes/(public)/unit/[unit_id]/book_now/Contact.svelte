@@ -692,7 +692,8 @@
     .container-row {
       flex-direction: column;
     }
-    .unit-overview, .pricing-overview {
+    .unit-overview,
+    .pricing-overview {
       width: 100%;
       max-width: 300px;
       margin: 0 auto;
@@ -742,7 +743,6 @@
       height: 20px;
       width: 20px;
       margin-left: 10px;
-     
     }
   }
 
