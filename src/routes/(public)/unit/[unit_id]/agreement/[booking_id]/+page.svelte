@@ -101,4 +101,9 @@
     position: relative;
     width: 50px;
   }
+
+  @media (max-width: 700px) {
+    
+
+  }
 </style>

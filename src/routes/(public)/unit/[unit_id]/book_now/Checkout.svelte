@@ -287,6 +287,9 @@
     #submit {
       margin-bottom: 50px;
     }
+    .checkout-container {
+      padding: 0 20px;
+    }
   }
 
   @media (min-width: 700px) and (max-width: 1200px) {

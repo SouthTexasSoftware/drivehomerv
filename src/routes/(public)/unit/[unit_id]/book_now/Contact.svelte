@@ -726,6 +726,7 @@
     form {
       grid-template-columns: repeat(1, auto);
       grid-template-rows: repeat(4, auto);
+      padding: 0 20px;
     }
     input {
       width: 100%;
