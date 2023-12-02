@@ -7,7 +7,7 @@
 
   export let bookingObject: Booking;
 
-  let AgreementVersion:ComponentType;
+  let AgreementVersion: ComponentType;
   // this finds the associated Legacy version based on the saved version at signing... in a vite/svelte friendly way
   if (bookingObject.agreement_details?.version) {
     for (const path in svelteComponents) {
@@ -164,5 +164,21 @@
     color: hsl(var(--p));
     margin-top: -15px;
     margin-bottom: 15px;
+  }
+
+  @media (max-width: 700px) {
+    .row {
+      flex-direction: column;
+    }
+    .input-data.date {
+      width: 50%;
+    }
+    .input-wrapper.check {
+      margin: 10px 0;
+      align-items: flex-start;
+    }
+    .input-wrapper.check input {
+      margin-top: 3px;
+    }
   }
 </style>

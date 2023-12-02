@@ -67,18 +67,23 @@
   }
   @media (max-width: 700px) {
     section {
-      width: 90vw;
+      width: 100vw;
       min-height: 300px;
       padding-bottom: 25px;
-      margin-top: 20px;
       padding: 0px;
+      border-radius: 0;
+      background-color: rgba(255, 255, 255, 0.97);
+      margin-top: 0px;
+      box-shadow: none;
     }
     .section-title {
-      margin-top:35px;
+      margin-top:15px;
     }
     .section-content {
+      width: 95vw;
       margin: 20px 0;
     }
+    
   }
 
   @media (min-width: 700px) and (max-width: 1200px) {
