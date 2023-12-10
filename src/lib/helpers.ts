@@ -357,6 +357,12 @@ export const newUnitModel: Unit = {
         additional_options: {},
       },
     },
+    cms_only: {
+      color_scheme: {
+        primary: '',
+        secondary: '',
+      }
+    }
   },
   photos: {
     //@ts-ignore

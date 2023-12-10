@@ -12,6 +12,7 @@
   import BookingsAddPhotoDropdown from "./BookingsAddPhotoDropdown.svelte";
   import BookingsUpdate from "./BookingsUpdate.svelte";
   import BookingBlocking from "./BookingBlocking.svelte";
+  import { goto } from "$app/navigation";
 
   export let unitObject: Unit;
   export let subcategory: string;
@@ -32,7 +33,7 @@
   $: bookingObject = unitObject.bookings?.find((booking) => {
     if (booking.id == subcategory) {
       //check for blocking, which will have no customer
-      if(booking.id.includes('block_')) {
+      if (booking.id.includes("block_")) {
         blockingObject = booking;
         return booking;
       }
@@ -198,8 +199,8 @@
         showWrapper = true;
         settingsDropdownShowing = false;
       }}
-      on:save={(event) => {
-        bookingObject = event.detail;
+      on:save={async (event) => {
+        customerList = []; // reset customerList so it will repop on refresh
         updateBooking = false;
         showWrapper = true;
         settingsDropdownShowing = false;
@@ -274,7 +275,7 @@
   @media (max-width: 500px) {
     .bookings-option-container {
       width: 100%;
-      max-height: 90%;
+      max-height: 84%;
     }
   }
 </style>

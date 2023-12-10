@@ -32,7 +32,6 @@
   // load booking data from unitObject?
   let filteredBookings = unitObject.bookings?.filter((booking) => {
     if (booking.id == $page.params.subcategory) {
-      
       return booking;
     }
   });
@@ -206,7 +205,7 @@
     await setDoc(bookingDocRef, $bookingStore);
 
     savingBooking = false;
-    dispatch("save", { $bookingStore });
+    dispatch("save", $bookingStore);
   }
 
   function newUUID(): string {
@@ -414,7 +413,6 @@
     background-color: hsl(var(--b1));
     margin: 25px;
     margin-bottom: 25px;
-    position: relative;
     border-radius: 4px;
     box-shadow: 0 1px 3px var(--cms-boxShadow);
     width: 100%;
@@ -473,9 +471,7 @@
   .section p {
     font-family: cms-regular;
   }
-  .section.last {
-    margin-bottom: 50%;
-  }
+
   .section-label {
     font-family: cms-semibold;
     align-self: flex-start;
@@ -590,8 +586,11 @@
     }
   }
   @media (max-width: 500px) {
-    .new-booking-option-container {
-      width: 100%;
+    .update-booking-option-container {
+      position: absolute;
+      left: 0;
+      width: 90vw;
+      max-height: 74%;
     }
     select,
     input {

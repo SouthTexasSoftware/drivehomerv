@@ -224,7 +224,13 @@
   }
   @media (max-width: 500px) {
     .header-container {
-      display: none;
+      display: flex;
+      position: absolute;
+      top: 0px;
+      z-index: 100;
+      background-color: hsl(var(--b1));
+      border-bottom: 1px solid hsl(var(--p));
+      padding: 10px 35px;
     }
   }
 </style>

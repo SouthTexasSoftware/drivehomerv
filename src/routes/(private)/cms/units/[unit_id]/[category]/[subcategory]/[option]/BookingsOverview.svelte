@@ -151,6 +151,18 @@
 
     generatingPaymentLink = false;
   }
+
+  //helper because svelte won't do it inline
+  function timeStamptoDateAndTime(timestamp: Timestamp) {
+    let newTimestamp = new Timestamp(timestamp.seconds, timestamp.nanoseconds);
+
+    let formattedString =
+      newTimestamp.toDate().toDateString() +
+      " " +
+      newTimestamp.toDate().toLocaleTimeString();
+
+    return formattedString;
+  }
 </script>
 
 <div class="overview-container">
@@ -263,6 +275,7 @@
           <p class="label-status two">Signed</p>
         {/if}
       </div>
+
       <p>
         <a
           class="agreement-link"
@@ -274,8 +287,17 @@
           target="_blank">Agreement Link</a
         >
       </p>
+      {#if bookingObject.agreement_notification_timestamp && bookingObject.agreement_notification}
+        <p class="small-date indent">
+          Notification Sent: {timeStamptoDateAndTime(
+            bookingObject.agreement_notification_timestamp
+          )}
+        </p>
+      {/if}
       {#if bookingObject.agreement_viewed}
-        <p>Last Viewed: {bookingObject.agreement_viewed[0]}</p>
+        <p class="small-date indent">
+          Last Viewed: {bookingObject.agreement_viewed[0]}
+        </p>
       {/if}
     </div>
 
@@ -446,6 +468,10 @@
   }
   .small-date {
     font-size: 13px;
+  }
+  .small-date.indent {
+    margin-top: 5px;
+    margin-left: 16px;
   }
   .double-row {
     display: flex;

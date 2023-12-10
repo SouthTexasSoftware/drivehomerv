@@ -34,7 +34,10 @@ export async function emailHandler(
       /**
        * payload = {
        * subject:
-       * body:
+       * body_one:
+       * body_two:
+       * body_three:
+       * body_four:
        * link:
        * }
        */

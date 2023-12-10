@@ -24,13 +24,13 @@ export const POST = (async ({ request }) => {
   try {
     let emailPayload = {
       subject: "New Booking",
-      body:
+      body_one:
         requestData.unit_name +
         " has been booked from " +
         requestData.start +
         " to " +
-        requestData.end +
-        ". Please use the link below to review.",
+        requestData.end + ".",
+      body_two: "Please use the link below to review.",
       link:
         "https://booking.drivehomerv.com/cms/units/" +
         requestData.unit_id +

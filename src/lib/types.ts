@@ -59,6 +59,12 @@ export interface Unit {
     paragraphs: InformationParagraphs;
     rules_and_policies: InformationRulesPolicies;
     rates_and_fees: InformationRatesFees;
+    cms_only: {
+      color_scheme: {
+        primary: string;
+        secondary: string;
+      };
+    };
   };
   photos?: PhotoDocument[];
   documents?: FileDocument[];
@@ -364,6 +370,11 @@ export interface Booking {
       amount: number;
     }
   ];
+
+  unit_color_scheme?: {
+    primary: string;
+    secondary: string;
+  };
 }
 
 interface BookingEvent {
@@ -382,6 +393,13 @@ enum BookingStatus {
 
   completed,
   manualEntry,
+}
+
+export interface BookingDisplayFilter {
+  past: boolean;
+  ongoing: boolean;
+  upcoming: boolean;
+  units: { name: string; id: string; visible: boolean; color: string }[];
 }
 
 enum PaymentStatus {
