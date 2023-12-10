@@ -114,7 +114,9 @@ export const POST = (async ({ request }) => {
     console.log(e);
   }
 
-  await sendOwnerEmail(emailsSucceeded, emailsFailed);
+  if (emailsSucceeded.length > 0 || emailsFailed.length > 0) {
+    await sendOwnerEmail(emailsSucceeded, emailsFailed);
+  }
 
   responseJson.msg = todaysDate.toString();
 
@@ -162,14 +164,10 @@ async function sendOwnerEmail(successList: string[], failList: string[]) {
 
   let payload = {
     subject: "Automated Rental Agreement Report",
-    body:
-      "Total bookings reviewed: " +
-      totalBookings.toString() +
-      "\n Emails Sent: " +
-      successList.length.toString() +
-      "\n Emails Failed: " +
-      failList.length.toString() +
-      "\n You can find the latest booking information at the link below.",
+    body_one: "Total bookings reviewed: " + totalBookings.toString(),
+    body_two: "Emails Sent: " + successList.length.toString(),
+    body_three: "Emails Failed: " + failList.length.toString(),
+    body_four: "You can find the latest booking information at the link below.",
     link: "https://https://drivehomerv-git-preview-southtexassoftware.vercel.app/cms/bookings",
   };
 

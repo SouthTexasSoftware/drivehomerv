@@ -47,12 +47,14 @@
     "December",
   ];
 
-  // retro colors with %50 opacity
-  const colorPalette = [
-    "rgba(218, 102, 27, 0.5)",
-    "rgb(224, 112, 120, 0.5)",
-    "rgb(94, 194, 191, 0.5)",
-    "rgb(242, 196, 47, 0.5)",
+  $: unitColor = unitObject.information.cms_only.color_scheme.primary || 'grey';
+
+  // hacky, because original used 4 alternating colors
+  $: colorPalette = [
+    unitObject.information.cms_only.color_scheme.primary,
+    unitObject.information.cms_only.color_scheme.primary,
+    unitObject.information.cms_only.color_scheme.primary,
+    unitObject.information.cms_only.color_scheme.primary,
   ];
 
   onMount(() => {

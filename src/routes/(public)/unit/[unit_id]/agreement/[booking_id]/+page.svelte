@@ -54,7 +54,7 @@
       let formatDate = todaysDate.format("MMM-DD-YYYY");
       //@ts-ignore
       updateDoc(bookingObject.document_reference, {
-        agreementViewed: arrayUnion(formatDate),
+        agreement_viewed: arrayUnion(formatDate),
       });
     }
   }

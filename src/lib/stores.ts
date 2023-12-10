@@ -5,6 +5,7 @@ import type {
   FirebaseStore,
   Unit,
   PhotoDocument,
+  BookingDisplayFilter,
 } from "./types";
 import type { Unsubscribe } from "firebase/firestore";
 
@@ -51,3 +52,5 @@ export const bookingUpdateStore = writable<{
 });
 
 export const serverAdminStore = writable<{ [storeKey: string]: any }>();
+
+export const cmsBookingFilterStore = writable<BookingDisplayFilter>(undefined);

@@ -11,6 +11,8 @@
 
   export let unitObject: Unit;
 
+  let screenWidth: number;
+
   let subcategoryList: string[] = [];
   let subcategoryLabels: string[] = [];
   let showingSubcategory: { [key: string]: boolean } = {};
@@ -139,7 +141,7 @@
    */
   function getOptions(key: string): string[] {
     //check if blocking based on key
-    if(key.includes('block_')) {
+    if (key.includes("block_")) {
       return ["Blocking"];
     }
 
@@ -219,12 +221,18 @@
   }
 </script>
 
+<svelte:window bind:innerWidth={screenWidth} />
+
 <div class="column-container">
   {#each subcategoryLabels as subcategory, index}
     <button
       class="subcategory-title"
       on:click={() => {
         showingSubcategory[subcategory] = !showingSubcategory[subcategory];
+        if (screenWidth < 700) {
+          return;
+        }
+        // for autoclicking first option in desktop view
         if (showingSubcategory[subcategory]) {
           let optionsWithin = getOptions(subcategoryList[index]);
           goto(
@@ -364,6 +372,7 @@
       width: 100%;
       background-color: #fafafa;
       border: 1px solid hsl(var(--b2));
+      height: 100%;
     }
   }
 

@@ -187,6 +187,7 @@
       position: fixed;
       left: 2px;
       border-right-color: transparent;
+      bottom: 60px;
     }
     .icon-bar {
       flex-direction: row-reverse;

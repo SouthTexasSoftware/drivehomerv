@@ -11,7 +11,6 @@
   export let option: string;
 
   let propertiesScrollContainer: HTMLElement;
-  let showNavContainer = false;
   let scrollPositionLeft = 0;
 
   let propertyList: string[] = [];
@@ -27,20 +26,6 @@
     } else {
     }
   });
-
-  // afterUpdate(() => {
-  //   if (propertiesScrollContainer) {
-  //     if (option == "description" || option == "notes") {
-  //       showNavContainer = false;
-  //       return;
-  //     }
-  //     if (propertiesScrollContainer.scrollWidth > 300) {
-  //       showNavContainer = true;
-  //     } else {
-  //       showNavContainer = false;
-  //     }
-  //   }
-  // });
 
   function convertToInputType(dataType: string) {
     switch (dataType) {
@@ -138,6 +123,9 @@
     class="information-option-container"
     class:widen={option == "description" || option == "notes"}
   >
+    <div class="container-header">
+      <div class="option-title">{objectKeyToLabel(option)}</div>
+    </div>
     <div class="properties-list" bind:this={propertiesScrollContainer}>
       {#each propertyList as property}
         <!-- TODO: Add #if check for additional_options and display accordingly -->
@@ -191,98 +179,6 @@
         </div>
       {/each}
     </div>
-    {#if showNavContainer}
-      <div class="nav-container">
-        {#if scrollPositionLeft > 0}
-          <button
-            class="left"
-            transition:fade
-            on:click={() => {
-              propertiesScrollContainer.scrollTo({
-                left: scrollPositionLeft - 300,
-                behavior: "smooth",
-              });
-              scrollPositionLeft -= 300;
-            }}
-          >
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <g id="Complete">
-                <g>
-                  <g>
-                    <polyline
-                      data-name="Left"
-                      fill="none"
-                      id="Right-2"
-                      points="16.4 7 21.5 12 16.4 17"
-                      stroke="#000000"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                    />
-
-                    <line
-                      fill="none"
-                      stroke="#000000"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      x1="2.5"
-                      x2="19.2"
-                      y1="12"
-                      y2="12"
-                    />
-                  </g>
-                </g>
-              </g>
-            </svg></button
-          >
-        {/if}
-        {#if scrollPositionLeft < propertiesScrollContainer.scrollWidth - 300}
-          <button
-            class="right"
-            transition:fade
-            on:click={() => {
-              propertiesScrollContainer.scrollTo({
-                left: scrollPositionLeft + 300,
-                behavior: "smooth",
-              });
-              scrollPositionLeft += 300;
-            }}
-          >
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <g id="Complete">
-                <g>
-                  <g>
-                    <polyline
-                      data-name="Right"
-                      fill="none"
-                      id="Right-2"
-                      points="16.4 7 21.5 12 16.4 17"
-                      stroke="#000000"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                    />
-
-                    <line
-                      fill="none"
-                      stroke="#000000"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      x1="2.5"
-                      x2="19.2"
-                      y1="12"
-                      y2="12"
-                    />
-                  </g>
-                </g>
-              </g>
-            </svg></button
-          >
-        {/if}
-      </div>
-    {/if}
   </div>
 {/if}
 
@@ -296,8 +192,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding-top: 20px;
-    width: 300px;
+    width: 450px;
     max-height: 90%;
     margin-bottom: auto;
     padding-bottom: 35px;
@@ -305,23 +200,31 @@
   .information-option-container.widen {
     width: 100%;
   }
-  .information-option-container::-webkit-scrollbar {
-    display: none;
+  .container-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background-color: #eee;
+    border-radius: 4px 4px 0 0;
+    position: relative;
+  }
+  .option-title {
+    font-family: cms-semibold;
+    font-size: 14px;
+    line-height: 25px;
+    color: var(--cms-text);
   }
   .properties-list {
     display: flex;
-    flex-wrap: wrap;
     flex-direction: column;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    scroll-snap-type: x mandatory;
     max-height: 95%;
-    overflow: hidden;
+    overflow-y: scroll;
   }
   .property {
-    width: 300px;
+    width: 350px;
     padding: 0 25px;
     scroll-snap-align: center;
+    margin: 0 auto;
   }
   .property.button {
     display: flex;
@@ -380,7 +283,7 @@
   @media (max-width: 500px) {
     .information-option-container {
       width: 100%;
-      max-height: 90%;
+      max-height: 75%;
     }
     .property {
       width: 100%;

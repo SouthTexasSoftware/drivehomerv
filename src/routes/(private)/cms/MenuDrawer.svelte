@@ -117,10 +117,12 @@
   .divider {
     width: 100%;
     margin: 0;
+    height: 2px;
   }
   .divider.small {
     margin: 0 auto;
     width: 50%;
+    height: 2px;
   }
   .cms-link {
     margin: 25px 0;
