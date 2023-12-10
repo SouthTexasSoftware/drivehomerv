@@ -168,7 +168,7 @@ async function sendOwnerEmail(successList: string[], failList: string[]) {
     body_two: "Emails Sent: " + successList.length.toString(),
     body_three: "Emails Failed: " + failList.length.toString(),
     body_four: "You can find the latest booking information at the link below.",
-    link: "https://https://drivehomerv-git-preview-southtexassoftware.vercel.app/cms/bookings",
+    link: "https://drivehomerv-git-preview-southtexassoftware.vercel.app/cms/bookings",
   };
 
   try {
