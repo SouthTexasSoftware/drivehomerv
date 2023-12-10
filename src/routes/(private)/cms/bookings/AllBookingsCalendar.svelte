@@ -806,9 +806,40 @@
     }
   }
 
-  @media (max-width: 500px) {
+  @media (max-width: 1000px) {
+    .unit-toggles {
+      padding: 0;
+      margin-top: 25px;
+      display: none;
+    }
+    .unit-toggle {
+      padding: 1px 5px;
+      font-size: 13px;
+    }
     .bookings-calendar-container {
-      width: 100%;
+      height: 45vh;
+      width: 95vw;
+      margin-top:1vh;
+      margin-left:2.5vw;
+    }
+    .bookings-calendar-container .calendar-header {
+      padding: 5px 15px 0px;
+      font-size: 15px;
+    }
+    .calendar-header .current-month {
+      font-size: 18px;
+    }
+    .calendar-body {
+      padding: 10px;
+    }
+    .calendar-body .calendar-dates {
+      margin-bottom: 0;
+    }
+    .calendar-body .calendar-dates li {
+      height: 5.5vh;
+    }
+    .spinner {
+      margin-top: 10vh;
     }
   }
 </style>

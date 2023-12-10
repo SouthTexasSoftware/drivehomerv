@@ -13,9 +13,9 @@
 </script>
 
 {#if loadCalendar}
-<div class="page-container">
-  <AllBookingsCalendar />
-</div>
+  <div class="page-container">
+    <AllBookingsCalendar />
+  </div>
 {:else}
   <div class="loading-container">
     <div class="spinner"></div>
@@ -27,7 +27,7 @@
   .page-container {
     display: flex;
     flex-direction: column;
-   justify-content: center;
+    justify-content: center;
   }
   .loading-container {
     width: 100%;
@@ -66,11 +66,22 @@
       transform: rotate(360deg);
     }
   }
-  @media (min-width: 700px) and (max-width: 1200px) {
+  @media (max-width: 1000px) {
+    .page-container {
+      height: 50vh;
+      flex-direction: column;
+      max-width: 100vw;
+    }
+    .loading-container {
+      height: 50vh;
+      width: 100vw;
+    }
+    .spinner {
+      margin: auto auto 15px;
+    }
+    .spinner-label {
+      margin: 5px auto auto;
+    }
   }
 
-  @media (min-width: 1200px) and (max-width: 1800px) {
-  }
-  @media (min-width: 1800px) {
-  }
 </style>

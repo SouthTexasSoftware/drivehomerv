@@ -82,4 +82,11 @@
       transform: rotate(360deg);
     }
   }
+
+  @media (max-width: 1000px) {
+    .units-container {
+      flex-direction: column;
+    }
+  }
+
 </style>
