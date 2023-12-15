@@ -278,6 +278,11 @@
           </p>
         </div>
       </div>
+
+      <div class="pickup-row">
+        <p>Pickup: <span class="bold">{$bookingStore.pickup_time}</span></p>
+        <p>Dropoff: <span class="bold">{$bookingStore.dropoff_time}</span></p>
+      </div>
       <div class="unit-price-row">
         <p class="price">
           ${unitObject.information.rates_and_fees.pricing.base_rental_fee}&nbsp;
@@ -285,6 +290,7 @@
         <p>per night</p>
       </div>
     </div>
+
     <div class="pricing-overview">
       <div class="row fee nightly-rate">
         <p>
@@ -550,7 +556,7 @@
     margin-top: 0;
   }
   .preview-image {
-    width: 200px;
+    width: 100%;
     border-radius: 10px;
     min-height: 120px;
     background-size: contain;
@@ -571,19 +577,22 @@
     width: 100%;
     justify-content: space-between;
     margin-bottom: 5px;
+    margin-top: 10px;
   }
   .feature-item {
     display: flex;
     align-items: center;
-    width: 50%;
+
     justify-content: flex-start;
   }
   .feature-label {
     margin-left: 5px;
+    font-size: 16px;
   }
   .unit-price-row {
     display: flex;
     align-self: flex-start;
+    margin-top: 5px;
   }
   .price {
     font-family: "font-medium";
@@ -594,6 +603,19 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: flex-start;
+  }
+  .pickup-row {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    /* margin-top: 5px; */
+  }
+  .pickup-row p {
+    font-size: 16px;
+  }
+  .bold {
+    font-family: font-bold;
+    color: hsl(var(--p));
   }
   .pricing-overview {
     width: 50%;
@@ -710,6 +732,14 @@
       min-height: 160px;
       margin: 5px auto;
       /* border-radius: 30px; doesn't work because image is embedded into bg of div */
+    }
+    .features-row,
+    .pickup-row {
+      justify-content: center;
+    }
+    .feature-item:nth-child(1),
+    .pickup-row p:nth-child(1) {
+      margin-right: 15px;
     }
     .feature-item {
       justify-content: center;
