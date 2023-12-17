@@ -2,7 +2,7 @@ import sgMail from "@sendgrid/mail";
 import { dev } from "$app/environment";
 import { sendgridConfig } from "../config";
 
-const confirmationTemplateId = "d-24b1dabe9daa4e8c8191d5957ca5e90a";
+const confirmationTemplateId = "d-d9d1191bbaf84a578f35ee147cb6db57";
 const ownerNotificationTemplateId = "d-4d6e684b748e479e9c5132abf0929f11";
 const rentalAgreementTemplateId = "d-2e4d9f8b57ef486281d8a2b19554e8ed";
 
