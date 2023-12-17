@@ -1,6 +1,7 @@
 <script lang="ts">
   import companyLogo from "$lib/photos/company-logo.png";
   import { fade, slide } from "svelte/transition";
+  import WinterSpecial from "./WinterSpecial.svelte";
 
   let screenWidth: number | undefined;
   let mobileMenuElement: HTMLElement;
@@ -41,6 +42,8 @@
 
 <header>
   <a id="logo-link" href="/rentals"><img src={companyLogo} alt="Company Logo" /></a>
+
+  <WinterSpecial/>
 
   <nav>
     {#if screenWidth}
@@ -122,6 +125,7 @@
     justify-content: space-between;
     max-width: 1800px;
     margin: 10px auto 0;
+    position: relative;
   }
   #logo-link {
     transition: all 1s;

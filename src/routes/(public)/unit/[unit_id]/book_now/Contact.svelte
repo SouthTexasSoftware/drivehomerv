@@ -316,33 +316,49 @@
           {/if}
         </p>
       </div>
-
-      <div class="row fee mi-per-night">
-        <p>100 mi per night ($0.00/night)</p>
-        <p class="green-highlight">FREE</p>
-      </div>
-      <div class="banner">
-        <div class="row fee miles-included">
-          <p>Miles included</p>
-          {#if $bookingStore.trip_length}
-            <p>{100 * $bookingStore.trip_length} mi</p>
-          {/if}
+      {#if !$bookingStore.total_price == 1895}
+        <div class="row fee mi-per-night">
+          <p>100 mi per night ($0.00/night)</p>
+          <p class="green-highlight">FREE</p>
         </div>
-        <p class="row fee small-note">
-          Additional miles: ${unitObject.information.rates_and_fees.pricing
-            .mileage_overage}/mi
-        </p>
-      </div>
-      <div class="bar" />
-      <div class="row total">
-        <p>Total</p>
+        <div class="banner">
+          <div class="row fee miles-included">
+            <p>Miles included</p>
+            {#if $bookingStore.trip_length}
+              <p>{100 * $bookingStore.trip_length} mi</p>
+            {/if}
+          </div>
+          <p class="row fee small-note">
+            Additional miles: ${unitObject.information.rates_and_fees.pricing
+              .mileage_overage}/mi
+          </p>
+        </div>
+        <div class="bar" />
+        <div class="row total">
+          <p>Total</p>
 
-        <p>${$bookingStore.total_price}</p>
-      </div>
+          <p>${$bookingStore.total_price}</p>
+        </div>
+      {:else}
+        <div class="banner winter">
+          <div class="row fee miles-included">
+            <p>Miles included</p>
+            <p>Unlimited</p>
+          </div>
+        </div>
+        <div class="bar" />
+        <div class="row total">
+          <p class="winter-special">Total</p>
+
+          <p class="winter-special price">${$bookingStore.total_price}</p>
+          <p class="strikethrough">${$bookingStore.original_price}</p>
+        </div>
+      {/if}
     </div>
   </div>
 
   <div class="divider wide" />
+
   <div class="container-row col">
     <div class="contact-info-header">Contact Information</div>
 
@@ -648,6 +664,21 @@
     margin-bottom: 10px;
     color: hsl(var(--b3));
     width: 100%;
+  }
+  .banner.winter {
+    background-color: #d3e3f7;
+  }
+  
+  .winter-special {
+    color: #3c618b;
+  }
+  .winter-special.price {
+    margin-left: auto;
+    margin-right: 10px;
+  }
+  .strikethrough {
+    text-decoration: line-through;
+    font-family: font-light !important;
   }
   .row.miles-included {
     font-size: 17px;

@@ -20,6 +20,9 @@
 
   let loadingBookingRecap = false;
 
+  let winterSpecial = false;
+  let originalPrice = 0;
+
   $: nightlyRateSum =
     parseInt(unitObject.information.rates_and_fees.pricing.base_rental_fee) *
     selectedTripLength;
@@ -28,8 +31,16 @@
 
   // update bookingStore on different calendar selections
   $: {
+    if (totalBookingPrice > 1895 && selectedTripLength < 22) {
+      winterSpecial = true;
+      originalPrice = structuredClone(totalBookingPrice);
+      totalBookingPrice = 1895;
+    } else {
+      winterSpecial = false;
+    }
     bookingStore.update((store) => {
       store.total_price = totalBookingPrice;
+      store.original_price = originalPrice;
       (store.price_per_night = parseInt(
         unitObject.information.rates_and_fees.pricing.base_rental_fee
       )),
@@ -181,29 +192,49 @@
         </p>
       </div>
 
-      <div class="row fee mi-per-night">
-        <p>100 mi per night ($0.00/night)</p>
-        <p class="green-highlight">FREE</p>
-      </div>
-      <div class="banner">
-        <div class="row fee miles-included">
-          <p>Miles included</p>
-          <p>{100 * selectedTripLength} mi</p>
+      {#if !winterSpecial}
+        <div class="row fee mi-per-night">
+          <p>100 mi per night ($0.00/night)</p>
+          <p class="green-highlight">FREE</p>
         </div>
-        <p class="row fee small-note">
-          Additional miles: ${unitObject.information.rates_and_fees.pricing
-            .mileage_overage}/mi
-        </p>
-      </div>
-      <div class="bar" />
-      <div class="row total">
-        <p>Total</p>
-        {#if selectedTripLength == 0}
-          <p>Select Dates</p>
-        {:else}
-          <p>${totalBookingPrice}</p>
-        {/if}
-      </div>
+        <div class="banner">
+          <div class="row fee miles-included">
+            <p>Miles included</p>
+            <p>{100 * selectedTripLength} mi</p>
+          </div>
+          <p class="row fee small-note">
+            Additional miles: ${unitObject.information.rates_and_fees.pricing
+              .mileage_overage}/mi
+          </p>
+        </div>
+        <div class="bar" />
+        <div class="row total">
+          <p>Total</p>
+          {#if selectedTripLength == 0}
+            <p>Select Dates</p>
+          {:else}
+            <p>${totalBookingPrice}</p>
+          {/if}
+        </div>
+      {:else}
+        <div class="banner winter">
+          <div class="row fee miles-included">
+            <p>Miles included</p>
+            <p>Unlimited</p>
+          </div>
+        </div>
+        <div class="bar" />
+        <div class="row total">
+          <p class="winter-special">Total</p>
+          {#if selectedTripLength == 0}
+            <p>Select Dates</p>
+          {:else}
+            <p class="winter-special price">${totalBookingPrice}</p>
+            <p class="strikethrough">${originalPrice}</p>
+          {/if}
+        </div>
+      {/if}
+
       {#if screenWidth > 500}
         {#if !selectedTripLength}
           <button class="reserve-button"><p>SELECT DATES</p></button>
@@ -309,6 +340,9 @@
     margin-bottom: 10px;
     color: hsl(var(--b3));
   }
+  .banner.winter {
+    background-color: #d3e3f7;
+  }
   .row.miles-included {
     font-size: 17px;
   }
@@ -343,6 +377,17 @@
     font-family: font-light;
   }
 
+  .winter-special {
+    color: #3c618b;
+  }
+  .winter-special.price {
+    margin-left: auto;
+    margin-right: 10px;
+  }
+  .strikethrough {
+    text-decoration: line-through;
+    font-family: font-light;
+  }
   .spinner {
     content: "";
     border-radius: 50%;

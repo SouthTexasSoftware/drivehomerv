@@ -1,6 +1,7 @@
 <script lang="ts">
   import { unitStore } from "$lib/stores";
   import type { Unit } from "$lib/types";
+  import WinterSpecial from "$lib/components/WinterSpecial.svelte";
   import DateSelector from "./DateSelector.svelte";
   import UnitCard from "./UnitCard.svelte";
   import UnitCardLoader from "./UnitCardLoader.svelte";

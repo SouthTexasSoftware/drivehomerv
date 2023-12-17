@@ -11,6 +11,7 @@
   import { firebaseStore, unitStore } from "$lib/stores";
   import { onMount } from "svelte";
   import { dev } from "$app/environment";
+  import WinterSpecial from "$lib/components/WinterSpecial.svelte";
 
   onMount(() => {
     loadResources();
