@@ -637,9 +637,6 @@
     .row.stack.dates {
       align-items: center;
     }
-    :global(.easepick-wrapper) {
-      width: 90vw;
-    }
   }
 
   @media (min-width: 500px) and (max-width: 1000px) {

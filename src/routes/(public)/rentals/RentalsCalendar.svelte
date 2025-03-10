@@ -289,8 +289,8 @@
       position: absolute;
       pointer-events: none;
       top: 25px;
-      left: -15%;
-      width: 130%;
+      left: -11vw !important;
+      width: 100vw !important;
     }
   }
   @media (min-width: 500px) and (max-width: 1000px) {
