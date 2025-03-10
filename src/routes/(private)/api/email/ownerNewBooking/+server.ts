@@ -35,7 +35,7 @@ export const POST = (async ({ request }) => {
         ".",
       body_two: "Please use the link below to review.",
       link:
-        "https://drivehomerv-git-preview-southtexassoftware.vercel.app/cms/units/" +
+        "https://drivehomerv-hs3z-git-preview-southtexassoftwares-projects.vercel.app/cms/units/" +
         requestData.unit_id +
         "/bookings/" +
         requestData.id +
