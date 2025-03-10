@@ -66,12 +66,14 @@
         //@ts-ignore
         formObject[key] = value;
       }
-
+      //@ts-ignore
       let newDate = new DateTime(formObject.date, "YYYY-MM-DD");
       let formattedDate = newDate.format("MMM-DD-YYYY");
+      //@ts-ignore
       let acceptedBool = formObject.checkbox == "on" ? true : false;
 
       bookingObject.agreement_details = {
+        //@ts-ignore
         name: formObject.name,
         date: formattedDate,
         accepted: acceptedBool,
@@ -239,4 +241,18 @@
       transform: rotate(360deg);
     }
   }
+
+  
+  @media (max-width: 700px) {
+    .row {
+        flex-direction: column;
+    }
+    .input-wrapper.check {
+        margin: 10px 0;
+        align-items: flex-start;
+    }
+    .input-wrapper.check input {
+        margin-top: 3px;
+    }
+}
 </style>

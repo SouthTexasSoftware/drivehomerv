@@ -65,8 +65,9 @@
     }
 
     buildUnitCalendar();
-    updatePickupDropoff();
     updateTripStartEndLabels();
+    updatePickupDropoff();
+    pickupDropoffSelectionHandler();
   }
 
   function buildUnitCalendar() {
@@ -236,6 +237,26 @@
             //@ts-ignore
             selectedPickupDropoff.pickup[anyUnitBooking.pickup_time].available =
               false;
+
+            if (
+              //@ts-ignore
+              selectedPickupDropoff.pickup[anyUnitBooking.pickup_time].selected
+            ) {
+              let next_flag = false;
+              let next_pickup = Object.keys(
+                selectedPickupDropoff.pickup
+              ).forEach((key) => {
+                if (next_flag) {
+                  //@ts-ignore
+                  selectedPickupDropoff.pickup[key].selected = true;
+                  next_flag = false;
+                  return;
+                }
+                if (key == anyUnitBooking.pickup_time) {
+                  next_flag = true;
+                }
+              });
+            }
 
             pickupModified = true;
           }

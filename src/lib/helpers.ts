@@ -1,5 +1,5 @@
 import { firebaseClientConfig } from "../config";
-import { QuerySnapshot } from "firebase/firestore";
+import type { QuerySnapshot } from "firebase/firestore";
 import {
   collection,
   getDocs,
@@ -20,6 +20,7 @@ import type {
   FileDocument,
 } from "./types";
 import {
+  bookingTimerStore,
   bookingUpdateStore,
   cmsStore,
   firebaseStore,
@@ -332,7 +333,8 @@ export const newUnitModel: Unit = {
     rates_and_fees: {
       pricing: {
         base_rental_fee: "",
-        taxes_and_insurance: "",
+        sales_tax: "",
+        damage_protection: "",
         service_fee: "",
         mileage_overage: "",
         generator_usage: "",
@@ -355,6 +357,12 @@ export const newUnitModel: Unit = {
         folding_chairs_and_table: "",
         propane_refill: "",
         additional_options: {},
+      },
+    },
+    cms_only: {
+      color_scheme: {
+        primary: "",
+        secondary: "",
       },
     },
   },
@@ -446,4 +454,95 @@ export function newUUID(): string {
     autoId += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return autoId;
+}
+
+/**
+ * Front end function for initiating a backend booking timer
+ * @params bookingID
+ */
+export async function setBookingTimer(
+  bookingID: string,
+  minutes: number,
+  cancelBookingCallback: () => void
+) {
+  let setTimer = await fetch("/api/bookingTimer/set", {
+    method: "POST",
+    body: JSON.stringify({ id: bookingID }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  let serverResponse = await setTimer.json();
+
+  if (serverResponse.error) {
+    return false;
+  }
+
+  // start our frontend timer and assign the reset to the store
+  let timerStore = get(bookingTimerStore);
+  timerStore.timer = countdownTimer(minutes, cancelBookingCallback);
+
+  return true;
+}
+
+function countdownTimer(
+  durationMinutes: number,
+  cancelBookingCallback: () => void,
+  initialDurationMinutes?: number
+): { reset: () => void; stop: () => void } {
+  let durationSeconds = initialDurationMinutes
+    ? initialDurationMinutes * 60
+    : durationMinutes * 60;
+  let timer: NodeJS.Timeout;
+
+  const displayTimer = (minutes: number, seconds: number): void => {
+    let outputString = `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+
+    bookingTimerStore.update((storeData) => {
+      storeData.value = outputString;
+      return storeData;
+    });
+  };
+
+  const startTimer = (): void => {
+    let minutes = Math.floor(durationSeconds / 60);
+    let seconds = durationSeconds % 60;
+
+    displayTimer(minutes, seconds);
+
+    timer = setInterval(() => {
+      if (durationSeconds < 0) {
+        clearInterval(timer);
+        cancelBookingCallback();
+      } else {
+        minutes = Math.floor(durationSeconds / 60);
+        seconds = durationSeconds % 60;
+        displayTimer(minutes, seconds);
+        durationSeconds--;
+      }
+    }, 1000);
+  };
+
+  startTimer();
+
+  // Function to reset the timer
+  const resetTimer = (): void => {
+    clearInterval(timer);
+    durationSeconds = initialDurationMinutes
+      ? initialDurationMinutes * 60
+      : durationMinutes * 60;
+    startTimer();
+  };
+
+  // Function to stop the timer
+  const stopTimer = (): void => {
+    clearInterval(timer);
+  };
+
+  return {
+    reset: resetTimer,
+    stop: stopTimer,
+  };
 }

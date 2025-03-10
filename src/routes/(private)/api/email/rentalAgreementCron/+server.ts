@@ -2,7 +2,8 @@ import { json, error, fail } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { emailHandler } from "$lib/email";
 import type { Booking, Unit } from "$lib/types";
-import { DateTime } from "@easepick/bundle";
+import easepick from "@easepick/bundle";
+const { DateTime } = easepick;
 import { firebaseAdminConfig } from "../../../../../config";
 import {
   getApp,
@@ -113,12 +114,17 @@ export const POST = (async ({ request }) => {
     console.log(e);
   }
 
-  await sendOwnerEmail(emailsSucceeded, emailsFailed);
+  if (emailsSucceeded.length > 0 || emailsFailed.length > 0) {
+    await sendOwnerEmail(emailsSucceeded, emailsFailed);
+  }
 
   responseJson.msg = todaysDate.toString();
 
   return json(responseJson);
 }) satisfies RequestHandler;
+
+// preview for agreementLink
+// "https://drivehomerv-git-preview-southtexassoftware.vercel.app/unit/" +
 
 // organize payload and call emailHandler
 async function sendAgreementEmail(booking: Booking) {
@@ -138,7 +144,7 @@ async function sendAgreementEmail(booking: Booking) {
     dropoff_time: booking.dropoff_time,
     unit_img_link: booking.unit_img_link,
     notes:
-      "notes will be discussed after verifying that these automated emails are working!",
+      "We're excited to see you soon! Please take a minute to review and sign our Rental Agreement, we will go over this in detail when you get the keys to your Rental. Feel free to call or text us if you have any questions in the meantime!",
   };
 
   try {
@@ -161,15 +167,11 @@ async function sendOwnerEmail(successList: string[], failList: string[]) {
 
   let payload = {
     subject: "Automated Rental Agreement Report",
-    body:
-      "Total bookings reviewed: " +
-      totalBookings.toString() +
-      "\n Emails Sent: " +
-      successList.length.toString() +
-      "\n Emails Failed: " +
-      failList.length.toString() +
-      "\n You can find the latest booking information at the link below.",
-    link: "https://https://drivehomerv-git-preview-southtexassoftware.vercel.app/cms/bookings",
+    body_one: "Total bookings reviewed: " + totalBookings.toString(),
+    body_two: "Emails Sent: " + successList.length.toString(),
+    body_three: "Emails Failed: " + failList.length.toString(),
+    body_four: "You can find the latest booking information at the link below.",
+    link: "https://192.168.1.155:5173/cms/bookings",
   };
 
   try {

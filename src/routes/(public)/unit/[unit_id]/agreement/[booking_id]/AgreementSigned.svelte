@@ -1,15 +1,25 @@
 <script lang="ts">
   import type { Booking } from "$lib/types";
   import { DateTime } from "@easepick/bundle";
+  import type { ComponentType } from "svelte";
+  import Agreement from "./Agreement.svelte";
+  const svelteComponents = import.meta.glob("./*.svelte");
 
   export let bookingObject: Booking;
 
-  let componentName =
-    "./AgreementVerbiage" +
-    bookingObject.agreement_details?.version.toString() +
-    ".svelte";
-
-  console.log(componentName);
+  let AgreementVersion: ComponentType;
+  // this finds the associated Legacy version based on the saved version at signing... in a vite/svelte friendly way
+  if (bookingObject.agreement_details?.version) {
+    for (const path in svelteComponents) {
+      if (path.includes(bookingObject.agreement_details?.version.toString())) {
+        // fancy lookig , but basically the key:value pair is a filename paired with an <Promise>import() function. weird to me.
+        svelteComponents[path]().then((component) => {
+          //@ts-ignore because it doesn't technically know this will be a svelte component.
+          AgreementVersion = component.default;
+        });
+      }
+    }
+  }
 
   let timeStamp = new DateTime(
     bookingObject.agreement_details?.date,
@@ -36,11 +46,9 @@
         {bookingObject.customerObject?.last_name}
       </p>
     </div>
-    <!-- -->
-    {#if bookingObject}
-      {#await import(componentName) then Module}
-        <Module.default />
-      {/await}
+
+    {#if AgreementVersion}
+      <svelte:component this={AgreementVersion} />
     {/if}
   </div>
   <div class="divider wide" />
@@ -52,7 +60,6 @@
       <div class="input-wrapper name">
         <p class="label">Renter Name</p>
         <p class="input-data name">{bookingObject.agreement_details?.name}</p>
-        
       </div>
       <div class="input-wrapper date">
         <p class="label">Date Signed</p>
@@ -66,6 +73,8 @@
       </div>
     </div>
   </form>
+
+
 </div>
 
 <style>
@@ -151,12 +160,27 @@
   }
   .input-data.date {
     width: 120%;
-
   }
   .signature-captured {
     font-size: 12px;
     color: hsl(var(--p));
     margin-top: -15px;
     margin-bottom: 15px;
+  }
+
+  @media (max-width: 700px) {
+    .row {
+      flex-direction: column;
+    }
+    .input-data.date {
+      width: 50%;
+    }
+    .input-wrapper.check {
+      margin: 10px 0;
+      align-items: flex-start;
+    }
+    .input-wrapper.check input {
+      margin-top: 3px;
+    }
   }
 </style>

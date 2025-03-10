@@ -4,14 +4,15 @@
   import { unitStore } from "$lib/stores";
   import { page } from "$app/stores";
   import PageDataLoading from "../../../../lib/components/PageDataLoading.svelte";
-  import { onMount } from "svelte";
+  import { beforeUpdate, onMount } from "svelte";
 
   let unitObject: Unit;
   let loadingUnit = true;
 
-  onMount(loadUnit);
+  beforeUpdate(loadUnit);
 
   function loadUnit() {
+    unitObject = {};
     if ($unitStore.isPopulated) {
       let loadedUnit = $unitStore.getUnit($page.params.unit_id);
       if (loadedUnit) {

@@ -151,6 +151,18 @@
 
     generatingPaymentLink = false;
   }
+
+  //helper because svelte won't do it inline
+  function timeStamptoDateAndTime(timestamp: Timestamp) {
+    let newTimestamp = new Timestamp(timestamp.seconds, timestamp.nanoseconds);
+
+    let formattedString =
+      newTimestamp.toDate().toDateString() +
+      " " +
+      newTimestamp.toDate().toLocaleTimeString();
+
+    return formattedString;
+  }
 </script>
 
 <div class="overview-container">
@@ -263,6 +275,7 @@
           <p class="label-status two">Signed</p>
         {/if}
       </div>
+
       <p>
         <a
           class="agreement-link"
@@ -274,37 +287,66 @@
           target="_blank">Agreement Link</a
         >
       </p>
+      {#if bookingObject.agreement_notification_timestamp && bookingObject.agreement_notification}
+        <p class="small-date indent">
+          Notification Sent: {timeStamptoDateAndTime(
+            bookingObject.agreement_notification_timestamp
+          )}
+        </p>
+      {/if}
       {#if bookingObject.agreement_viewed}
-        <p>Last Viewed: {bookingObject.agreement_viewed[0]}</p>
+        <p class="small-date indent">
+          Last Viewed: {bookingObject.agreement_viewed[0]}
+        </p>
       {/if}
     </div>
 
     <p class="section-label individual">Pricing Table</p>
-    <div class="double-row pricing">
-      <div class="section pricing last">
-        {#if bookingObject.total_price}
+    <div class="pricing-table">
+      {#if bookingObject.total_price}
+        <div class="line-item">
           <p>
             ${bookingObject.price_per_night} x {bookingObject.trip_length} nights
           </p>
+          <p>${bookingObject.nightly_rate_sum}</p>
+        </div>
+        <div class="line-item">
           <p>Service Fee</p>
-          <p>Taxes & Insurance</p>
-          <p>Pickup/Dropoff Fee</p>
-          <p class="total-price">Total</p>
-        {:else}
-          <p>Not Added</p>
-        {/if}
-      </div>
-      <div class="section pricing right">
-        {#if bookingObject.total_price}
-          <p>${bookingObject.total_price}</p>
           <p>${bookingObject.service_fee}</p>
-          <p>${bookingObject.taxes_and_fees}</p>
-          <p>${bookingObject.pickup_dropoff_price_addition}</p>
-          <p class="total-price">${bookingObject.total_price}</p>
-        {:else}
-          <p>Not Added</p>
+        </div>
+        <div class="line-item">
+          <p>Dmg Prot. & Assistance</p>
+          <p>${bookingObject.damage_protection || "null"}</p>
+        </div>
+        <div class="line-item">
+          <p>Sales Tax</p>
+          <p>${bookingObject.sales_tax || bookingObject.taxes_and_fees}</p>
+        </div>
+        {#if bookingObject.additional_line_items}
+          {#each Object.keys(bookingObject.additional_line_items) as item_name}
+            <div class="line-item">
+              <p>{item_name}</p>
+              <p>
+                {#if bookingObject.additional_line_items[item_name].type == "subtract"}
+                  -
+                {/if}
+                ${bookingObject.additional_line_items[item_name].value}
+              </p>
+            </div>
+          {/each}
         {/if}
-      </div>
+
+        <div class="line-item-total-bar"></div>
+        <div class="line-item total">
+          <p>Total</p>
+          <p>${bookingObject.total_price}</p>
+        </div>
+      {:else}
+        <div class="line-item">
+          <p>Not</p>
+          <p>Added</p>
+        </div>
+      {/if}
     </div>
 
     <div class="id-container">
@@ -386,18 +428,7 @@
     align-items: flex-start;
     padding: 15px;
   }
-  .section.pricing {
-    padding: 15px 0;
-  }
-  .section.pricing * {
-    font-size: 14px;
-  }
-  .section.pricing.right * {
-    text-align: right;
-  }
-  .section.last {
-    margin-bottom: 50%;
-  }
+
   .section-label {
     font-family: cms-semibold;
     align-self: flex-start;
@@ -447,23 +478,43 @@
   .small-date {
     font-size: 13px;
   }
+  .small-date.indent {
+    margin-top: 5px;
+    margin-left: 16px;
+  }
   .double-row {
     display: flex;
     width: 100%;
   }
-  .double-row.pricing {
-    justify-content: center;
-    border-top: 1px solid var(--cms-boxShadow);
-    border-bottom: 1px solid var(--cms-boxShadow);
-  }
+
   .double-row .section {
     width: 50%;
   }
-  .double-row.pricing .section {
-    width: 50%;
+  .pricing-table {
+    margin: 0 auto;
+    min-width: 80%;
+    width: 60%;
+    margin-top: 15px;
+    margin-bottom: 100px;
   }
-  .double-row.pricing .section.right {
-    width: 30%;
+  .line-item {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 20px;
+    position: relative;
+  }
+  .line-item p {
+    font-size: 16px;
+  }
+  .line-item-total-bar {
+    width: 100%;
+    padding: 0 20px;
+    height: 1px;
+    background-color: var(--cms-boxShadow);
+  }
+  .line-item.total p {
+    font-family: cms-semibold;
   }
   .stripe-link {
     font-family: cms-semibold;

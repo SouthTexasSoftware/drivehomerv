@@ -20,7 +20,7 @@ export const POST = (async ({ request }) => {
     error: false,
     client_secret: "placeholder",
     code: "",
-    payment_intent: {}
+    payment_intent: {},
   };
 
   //@ts-ignore
@@ -28,7 +28,7 @@ export const POST = (async ({ request }) => {
 
   try {
     const newPaymentIntent = await stripe.paymentIntents.create({
-      amount: paymentTotal * 100,
+      amount: Math.round(paymentTotal * 100),
       currency: "usd",
       //@ts-ignore
       customer: bookingObject.customerObject.stripe_id,
@@ -43,8 +43,7 @@ export const POST = (async ({ request }) => {
         pickup_time: bookingObject.pickup_time,
         //@ts-ignore
         dropoff_time: bookingObject.dropoff_time,
-        cms_booking_id: bookingObject.id
-        
+        cms_booking_id: bookingObject.id,
       },
     });
     if (newPaymentIntent.client_secret) {

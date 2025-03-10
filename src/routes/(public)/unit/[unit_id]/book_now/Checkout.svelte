@@ -87,10 +87,20 @@
       return "error";
     }
 
+    // format = $page.url.origin + "/unit/" + unit_id + "book_now" + ?payment_intent=___ + &payment_intent_client_secret=___
+    let generatedLink =
+      $page.url.origin +
+      "/unit/" +
+      $bookingStore.unit_id +
+      "/book_now?payment_intent=" +
+      serverResponse.payment_intent.id +
+      "&payment_intent_client_secret=" +
+      serverResponse.payment_intent.client_secret;
+
     bookingStore.update((storeData) => {
       //@ts-ignore
       storeData.payment_intent = serverResponse.payment_intent;
-
+      storeData.payment_link = generatedLink;
       storeData.receipt_date_string = new DateTime().format("MMM-DD-YYYY");
 
       return storeData;
@@ -98,6 +108,7 @@
 
     $bookingStore.updated = Timestamp.now();
 
+    //@ts-ignore
     await setDoc($bookingStore.document_reference, $bookingStore);
 
     return serverResponse.client_secret;
@@ -194,7 +205,7 @@
         <div class="spinner small" id="spinner" />
       {:else}
         <span id="button-text"
-          >${$bookingStore.total_price} &#8226; PAY NOW</span
+          >${$bookingStore.total_price?.toFixed(2)} &#8226; PAY NOW</span
         >
       {/if}
     </button>
@@ -211,6 +222,27 @@
       dispatch("back", true);
     }}><ArrowIcon active={true} /></button
   >
+  <div class="agreement-statement">
+    {#if $bookingStore.agreement_signed}
+      <p>
+        Thank you for signing your <a
+          class="agreement-link"
+          href="/unit/{unitObject.id}/agreement/{$bookingStore.id}"
+          >Rental Agreement</a
+        >.
+      </p>
+    {:else}
+      <p>
+        By making this payment, you agree to review and sign the
+        <a
+          class="agreement-link"
+          href="/unit/{unitObject.id}/agreement/{$bookingStore.id}?ref=checkout"
+          >Rental Agreement</a
+        >
+        prior to your Booking.
+      </p>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -235,7 +267,9 @@
     border: 1px solid hsl(var(--p));
     color: hsl(var(--p));
     height: 47px;
-    box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.03), 0px 3px 6px rgba(0, 0, 0, 0.02);
+    box-shadow:
+      0px 1px 1px rgba(0, 0, 0, 0.03),
+      0px 3px 6px rgba(0, 0, 0, 0.02);
   }
   #button-text {
     font-family: font-medium;
@@ -248,6 +282,18 @@
   .error-text {
     font-family: font-bold;
     color: hsl(var(--er));
+  }
+  .agreement-statement {
+    margin-top: 10px;
+  }
+  .agreement-statement p {
+    font-size: 13px;
+    font-family: cms-regular;
+    text-align: center;
+  }
+  .agreement-link {
+    font-family: cms-semibold;
+    border-bottom: 1px solid hsl(var(--p));
   }
   .left-arrow {
     position: absolute;
@@ -285,7 +331,13 @@
 
   @media (max-width: 700px) {
     #submit {
-      margin-bottom: 50px;
+      margin-bottom: 0px;
+    }
+    .checkout-container {
+      padding: 0 20px;
+    }
+    .agreement-statement {
+      margin-bottom: 40px;
     }
   }
 

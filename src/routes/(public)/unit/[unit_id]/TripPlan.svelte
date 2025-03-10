@@ -9,6 +9,7 @@
   import { page } from "$app/stores";
   import { newUUID } from "$lib/helpers";
   import { Timestamp, doc, setDoc } from "firebase/firestore";
+  import { fade, slide } from "svelte/transition";
 
   export let unitObject: Unit;
   export let showRequest: boolean;
@@ -20,61 +21,27 @@
 
   let loadingBookingRecap = false;
 
-  $: nightlyRateSum =
-    parseInt(unitObject.information.rates_and_fees.pricing.base_rental_fee) *
-    selectedTripLength;
-  $: additionalFeesTotal = sumOfFees(selectedTripLength); // must pass in the dynamic value to rerun
-  $: totalBookingPrice = nightlyRateSum + additionalFeesTotal;
-
-  // update bookingStore on different calendar selections
-  $: {
-    bookingStore.update((store) => {
-      store.total_price = totalBookingPrice;
-      (store.price_per_night = parseInt(
-        unitObject.information.rates_and_fees.pricing.base_rental_fee
-      )),
-        (store.trip_length = selectedTripLength);
-      store.nightly_rate_sum = nightlyRateSum;
-      store.service_fee = parseInt(
-        unitObject.information.rates_and_fees.pricing.service_fee
-      );
-      store.taxes_and_fees_per_night = parseInt(
-        unitObject.information.rates_and_fees.pricing.taxes_and_insurance
-      );
-      store.taxes_and_fees =
-        parseInt(
-          unitObject.information.rates_and_fees.pricing.taxes_and_insurance
-        ) * selectedTripLength;
-
-      return store;
-    });
-  }
-
-  function sumOfFees(tripLength: number) {
-    let sum = 0;
-    let service_fee = 0;
-
-    let taxes_and_insurance =
-      parseInt(
-        unitObject.information.rates_and_fees.pricing.taxes_and_insurance
-      ) * tripLength;
-
-    if (tripLength != 0) {
-      service_fee = parseInt(
-        unitObject.information.rates_and_fees.pricing.service_fee
-      );
-    }
-
-    sum = taxes_and_insurance + service_fee + pickup_dropoff_price_addition;
-
-    return sum;
-  }
+  let winterSpecial = false;
+  let originalPrice = 0;
+  let additionalFeesTotal = 0;
+  let nightlyRateSum = 0;
+  let totalBookingPrice = 0;
 
   function handleNewCalendarSelection(event: CustomEvent) {
     if (event.detail.reset) {
       selectedTripLength = 0;
       return;
     }
+    // calculate trip length prior to performing updates to the cost variables
+    let differenceInTime =
+      event.detail.end.getTime() - event.detail.start.getTime();
+    let differenceInDays = differenceInTime / (1000 * 3600 * 24);
+
+    selectedTripLength = Math.round(differenceInDays);
+
+    nightlyRateSum =
+      parseInt(unitObject.information.rates_and_fees.pricing.base_rental_fee) *
+      selectedTripLength;
 
     pickup_dropoff_price_addition = 0;
     if (event.detail.pickup) {
@@ -84,31 +51,110 @@
       if (event.detail.dropoff.price > 0) {
         pickup_dropoff_price_addition += event.detail.dropoff.price;
       }
+
+      if (!$bookingStore.additional_line_items) {
+        $bookingStore.additional_line_items = {};
+      }
+
+      $bookingStore.additional_line_items["Early/Late Request"] = {
+        value: pickup_dropoff_price_addition,
+        type: "add",
+      };
+
+      if (pickup_dropoff_price_addition == 0) {
+        if ($bookingStore.additional_line_items["Early/Late Request"]) {
+          delete $bookingStore.additional_line_items["Early/Late Request"];
+        }
+      }
     }
 
-    bookingStore.update((storeData) => {
-      storeData.pickup_dropoff_price_addition = pickup_dropoff_price_addition;
+    let service_fee = parseInt(
+      unitObject.information.rates_and_fees.pricing.service_fee
+    );
 
-      return storeData;
+    let damage_protection =
+      parseInt(
+        unitObject.information.rates_and_fees.pricing.damage_protection
+      ) * selectedTripLength;
+
+    let sales_tax =
+      (parseInt(unitObject.information.rates_and_fees.pricing.sales_tax) /
+        100) *
+      nightlyRateSum;
+
+    totalBookingPrice = parseFloat(
+      (
+        nightlyRateSum +
+        service_fee +
+        damage_protection +
+        sales_tax +
+        pickup_dropoff_price_addition
+      ).toFixed(2)
+    );
+
+    // always set orignal price at this point
+    originalPrice = structuredClone(totalBookingPrice);
+
+    // handle the winter special - which will modify the total price if necessary
+    // if (totalBookingPrice > 1895) {
+    //   if (selectedTripLength < 22) {
+    //     winterSpecial = true;
+    //     totalBookingPrice = 1895;
+
+    //     // manage additional line item
+    //     if (!$bookingStore.additional_line_items) {
+    //       $bookingStore.additional_line_items = {};
+    //     }
+
+    //     $bookingStore.additional_line_items["Winter Special"] = {
+    //       value: originalPrice - totalBookingPrice,
+    //       type: "subtract",
+    //     };
+    //   }
+    // } else {
+    //   winterSpecial = false;
+    //   if ($bookingStore.additional_line_items) {
+    //     if ($bookingStore.additional_line_items["Winter Special"]) {
+    //       delete $bookingStore.additional_line_items["Winter Special"];
+    //     }
+    //   }
+    // }
+
+    bookingStore.update((store) => {
+      store.pickup_dropoff_price_addition = pickup_dropoff_price_addition;
+
+      store.total_price = totalBookingPrice;
+      store.original_price = originalPrice;
+
+      (store.price_per_night = parseFloat(
+        unitObject.information.rates_and_fees.pricing.base_rental_fee
+      )),
+        (store.trip_length = selectedTripLength);
+      store.nightly_rate_sum = nightlyRateSum;
+      store.service_fee = parseFloat(
+        unitObject.information.rates_and_fees.pricing.service_fee
+      );
+      store.damage_protection =
+        parseFloat(
+          unitObject.information.rates_and_fees.pricing.damage_protection
+        ) * selectedTripLength;
+
+      let sales_tax_percentage =
+        parseFloat(unitObject.information.rates_and_fees.pricing.sales_tax) /
+        100;
+      let sales_tax_unrounded = sales_tax_percentage * store.nightly_rate_sum;
+      store.sales_tax = parseFloat(sales_tax_unrounded.toFixed(2));
+
+      return store;
     });
-
-    let differenceInTime =
-      event.detail.end.getTime() - event.detail.start.getTime();
-    let differenceInDays = differenceInTime / (1000 * 3600 * 24);
-
-    selectedTripLength = differenceInDays;
-
-    additionalFeesTotal = sumOfFees(selectedTripLength);
-
-    // handle pickup_dropoff modifiers...
   }
 
   async function bookNowRequested() {
     if (loadingBookingRecap) return;
     loadingBookingRecap = true;
 
-    let currentUrl = $page.url.href;
-    goto(currentUrl + "/book_now");
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
     // CREATE CUSTOMER ID if not already available
     if (!$bookingStore.customer) {
       let newCustomerId = newUUID();
@@ -140,7 +186,12 @@
 
     await setDoc(docRef, $bookingStore);
 
-    loadingBookingRecap = false;
+    let currentUrl = $page.url.href;
+
+    setTimeout(() => {
+      goto(currentUrl + "/book_now?id=" + docRef.id);
+      loadingBookingRecap = false;
+    }, 300);
   }
 </script>
 
@@ -173,37 +224,77 @@
         {/if}
       </div>
       <div class="row fee">
-        <p>Taxes & Insurance</p>
-        <p>
-          ${parseInt(
-            unitObject.information.rates_and_fees.pricing.taxes_and_insurance
-          ) * selectedTripLength}
-        </p>
-      </div>
-
-      <div class="row fee mi-per-night">
-        <p>100 mi per night ($0.00/night)</p>
-        <p class="green-highlight">FREE</p>
-      </div>
-      <div class="banner">
-        <div class="row fee miles-included">
-          <p>Miles included</p>
-          <p>{100 * selectedTripLength} mi</p>
-        </div>
-        <p class="row fee small-note">
-          Additional miles: ${unitObject.information.rates_and_fees.pricing
-            .mileage_overage}/mi
-        </p>
-      </div>
-      <div class="bar" />
-      <div class="row total">
-        <p>Total</p>
+        <p>Damage Protection & Roadside Assistance</p>
         {#if selectedTripLength == 0}
-          <p>Select Dates</p>
+          <p>$0</p>
         {:else}
-          <p>${totalBookingPrice}</p>
+          <p>${$bookingStore.damage_protection}</p>
         {/if}
       </div>
+      <div class="row fee">
+        <p>Sales Tax</p>
+        {#if selectedTripLength == 0}
+          <p>$0</p>
+        {:else}
+          <p>${$bookingStore.sales_tax?.toFixed(2)}</p>
+        {/if}
+      </div>
+      {#if $bookingStore.additional_line_items}
+        {#each Object.keys($bookingStore.additional_line_items) as item_name}
+          <div class="row fee">
+            <p>{item_name}</p>
+            <p>
+              {#if $bookingStore.additional_line_items[item_name].type == "subtract"}
+                -
+              {/if}
+              ${$bookingStore.additional_line_items[item_name].value}
+            </p>
+          </div>
+        {/each}
+      {/if}
+      {#if winterSpecial == false}
+        <div class="row fee mi-per-night">
+          <p>100 mi per night ($0.00/night)</p>
+          <p class="green-highlight">FREE</p>
+        </div>
+        <div class="banner">
+          <div class="row fee miles-included">
+            <p>Miles included</p>
+            <p>{100 * selectedTripLength} mi</p>
+          </div>
+          <p class="row fee small-note">
+            Additional miles: ${unitObject.information.rates_and_fees.pricing
+              .mileage_overage}/mi
+          </p>
+        </div>
+        <div class="bar" />
+        <div class="row total">
+          <p>Total</p>
+          {#if selectedTripLength == 0}
+            <p>Select Dates</p>
+          {:else}
+            <p>${totalBookingPrice.toFixed(2)}</p>
+          {/if}
+        </div>
+      {:else}
+        <div class="banner winter">
+          <div class="row fee miles-included">
+            <p>Miles included</p>
+            <p>Unlimited</p>
+          </div>
+        </div>
+        <div class="bar" />
+        <div class="row total">
+          <p class="winter-special">Total</p>
+          {#if selectedTripLength == 0}
+            <p>Select Dates</p>
+          {:else}
+            <p class="winter-special price">${totalBookingPrice}</p>
+            <p class="strikethrough">${originalPrice}</p>
+          {/if}
+        </div>
+      {/if}
+
       {#if screenWidth > 500}
         {#if !selectedTripLength}
           <button class="reserve-button"><p>SELECT DATES</p></button>
@@ -309,6 +400,9 @@
     margin-bottom: 10px;
     color: hsl(var(--b3));
   }
+  .banner.winter {
+    background-color: #d3e3f7;
+  }
   .row.miles-included {
     font-size: 17px;
   }
@@ -343,6 +437,17 @@
     font-family: font-light;
   }
 
+  .winter-special {
+    color: #3c618b;
+  }
+  .winter-special.price {
+    margin-left: auto;
+    margin-right: 10px;
+  }
+  .strikethrough {
+    text-decoration: line-through;
+    font-family: font-light;
+  }
   .spinner {
     content: "";
     border-radius: 50%;

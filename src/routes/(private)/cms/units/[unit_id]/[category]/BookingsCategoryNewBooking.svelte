@@ -5,6 +5,7 @@
   import { Timestamp, doc, serverTimestamp, setDoc } from "firebase/firestore";
   import { DateTime } from "@easepick/bundle";
   import { bookingStore, firebaseStore } from "$lib/stores";
+  import { fly } from "svelte/transition";
 
   export let unitObject: Unit;
 
@@ -22,28 +23,34 @@
   let pickup_dropoff_price_addition = 0;
   let selectedTripLength: number = 0;
 
-  $: nightlyRateSum =
-    parseInt(unitObject.information.rates_and_fees.pricing.base_rental_fee) *
-    selectedTripLength;
-  $: additionalFeesTotal = sumOfFees(selectedTripLength); // must pass in the dynamic value to rerun
-  $: totalBookingPrice = nightlyRateSum + additionalFeesTotal;
+  let showLineItemDialog = false;
+  let new_line_item_name = "";
+  let new_line_item_type = "add";
+  let new_line_item_amount = 0;
 
   function sumOfFees(tripLength: number) {
     let sum = 0;
     let service_fee = 0;
-
-    let taxes_and_insurance =
-      parseInt(
-        unitObject.information.rates_and_fees.pricing.taxes_and_insurance
-      ) * tripLength;
+    let sales_tax = 0;
+    let damage_protection = 0;
 
     if (tripLength != 0) {
       service_fee = parseInt(
         unitObject.information.rates_and_fees.pricing.service_fee
       );
+
+      sales_tax =
+        (parseInt(unitObject.information.rates_and_fees.pricing.sales_tax) /
+          100) *
+        $bookingStore.nightly_rate_sum!;
+
+      damage_protection =
+        parseInt(
+          unitObject.information.rates_and_fees.pricing.damage_protection
+        ) * tripLength;
     }
 
-    sum = taxes_and_insurance + service_fee + pickup_dropoff_price_addition;
+    sum = service_fee + sales_tax + damage_protection;
 
     return sum;
   }
@@ -58,20 +65,21 @@
     photos: [],
     documents: [],
     trip_length: selectedTripLength,
-    total_price: totalBookingPrice,
+    total_price: 0,
     price_per_night: parseInt(
       unitObject.information.rates_and_fees.pricing.base_rental_fee
     ),
-    nightly_rate_sum: nightlyRateSum,
+    nightly_rate_sum: 0,
     service_fee: parseInt(
       unitObject.information.rates_and_fees.pricing.service_fee
     ),
-    taxes_and_fees_per_night: parseInt(
-      unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+    sales_tax: 0,
+    damage_protection_per_night: parseInt(
+      unitObject.information.rates_and_fees.pricing.damage_protection
     ),
-    taxes_and_fees:
+    damage_protection:
       parseInt(
-        unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+        unitObject.information.rates_and_fees.pricing.damage_protection
       ) * selectedTripLength,
     pickup_dropoff_price_addition: 0,
     unit_name: unitObject.name,
@@ -83,30 +91,6 @@
     stripe_product_id: unitObject.stripe_product_id,
     created_by: "CMS",
   });
-
-  // listener/dynamic update when the calendar get's changed
-  $: {
-    bookingStore.update((store) => {
-      store.total_price = totalBookingPrice;
-      store.price_per_night = parseInt(
-        unitObject.information.rates_and_fees.pricing.base_rental_fee
-      );
-      (store.nightly_rate_sum = nightlyRateSum),
-        (store.service_fee = parseInt(
-          unitObject.information.rates_and_fees.pricing.service_fee
-        ));
-      store.taxes_and_fees_per_night = parseInt(
-        unitObject.information.rates_and_fees.pricing.taxes_and_insurance
-      );
-      store.taxes_and_fees =
-        parseInt(
-          unitObject.information.rates_and_fees.pricing.taxes_and_insurance
-        ) * selectedTripLength;
-
-      console.log("store dynamically updated", store);
-      return store;
-    });
-  }
 
   function updateBookingDates(detail: { start: string; end: string }) {
     if ($bookingStore) {
@@ -124,6 +108,53 @@
 
       selectedTripLength = differenceInDays;
       $bookingStore.trip_length = selectedTripLength;
+
+      bookingStore.update((store) => {
+        store.price_per_night = parseInt(
+          unitObject.information.rates_and_fees.pricing.base_rental_fee
+        );
+
+        store.nightly_rate_sum = store.price_per_night * selectedTripLength;
+
+        store.damage_protection_per_night = parseInt(
+          unitObject.information.rates_and_fees.pricing.damage_protection
+        );
+
+        store.service_fee = parseInt(
+          unitObject.information.rates_and_fees.pricing.service_fee
+        );
+
+        store.damage_protection =
+          parseInt(
+            unitObject.information.rates_and_fees.pricing.damage_protection
+          ) * selectedTripLength;
+
+        store.sales_tax =
+          (parseInt(unitObject.information.rates_and_fees.pricing.sales_tax) /
+            100) *
+          store.nightly_rate_sum;
+
+        store.total_price =
+          store.nightly_rate_sum +
+          store.service_fee +
+          store.damage_protection +
+          store.sales_tax;
+
+        if (store.additional_line_items) {
+          Object.entries(store.additional_line_items).forEach((item) => {
+            if (store.total_price) {
+              if (item[1].type == "subtract") {
+                store.total_price -= item[1].value;
+              } else {
+                store.total_price += item[1].value;
+              }
+            }
+          });
+        }
+
+        console.log("store dynamically updated", store);
+        return store;
+      });
     }
   }
 
@@ -138,7 +169,6 @@
 
   // create customer / and save booking... attach customerObject to booking
   // create customer in stripe as well..
-
   async function saveBooking() {
     if (savingBooking) return;
     savingBooking = true;
@@ -201,7 +231,7 @@
     await setDoc(newCustomerDocRef, newCustomer);
 
     //add the unit_img_link to file
-    unitObject.photos.forEach((photoObj) => {
+    unitObject.photos?.forEach((photoObj) => {
       if (photoObj.index == 1) {
         let photoUrl = photoObj.downloadURL;
 
@@ -237,6 +267,57 @@
       autoId += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return autoId;
+  }
+
+  function createNewLineItem() {
+    if (!$bookingStore.additional_line_items) {
+      $bookingStore.additional_line_items = {};
+    }
+
+    $bookingStore.additional_line_items[new_line_item_name] = {
+      value: new_line_item_amount,
+      type: new_line_item_type as "add" | "subtract",
+    };
+
+    console.log(
+      "updated additional line items: ",
+      $bookingStore.additional_line_items
+    );
+    if ($bookingStore.total_price) {
+      if (new_line_item_type == "subtract") {
+        if ($bookingStore.total_price - new_line_item_amount < 0) {
+          window.alert("Total price cannot be less than 0 !");
+          return;
+        }
+        $bookingStore.total_price -= new_line_item_amount;
+      } else {
+        $bookingStore.total_price += new_line_item_amount;
+      }
+    }
+    new_line_item_name = "";
+    new_line_item_amount = 0;
+    new_line_item_type = "add";
+
+    showLineItemDialog = false;
+  }
+
+  function removeLineItem(item_name: string) {
+    if ($bookingStore.additional_line_items) {
+      Object.entries($bookingStore.additional_line_items).forEach((item) => {
+        if ($bookingStore.total_price) {
+          if (item[0] == item_name) {
+            if (item[1].type == "subtract") {
+              $bookingStore.total_price += item[1].value;
+            } else {
+              $bookingStore.total_price -= item[1].value;
+            }
+
+            //@ts-ignore
+            delete $bookingStore.additional_line_items[item[0]];
+          }
+        }
+      });
+    }
   }
 </script>
 
@@ -327,28 +408,103 @@
         </select>
       </div>
     </div>
-    <p class="section-label individual">Pricing Table</p>
-    <div class="double-row pricing">
+    <div class="pricing-table-header">
+      <p class="section-label">Pricing Table</p>
+      <button
+        class="line-item-button"
+        on:click={() => (showLineItemDialog = true)}>Add Line Item</button
+      >
+
+      {#if showLineItemDialog}
+        <div class="line-item-modal" in:fly={{ y: -20 }}>
+          <p class="modal-title">Create New Line Item</p>
+          <div class="modal-bar"></div>
+          <p class="modal-label">Name</p>
+          <input
+            class="modal-input"
+            type="text"
+            bind:value={new_line_item_name}
+          />
+          <p class="modal-label">Type</p>
+          <select class="modal-input" bind:value={new_line_item_type}>
+            <option value="add" selected>Addition</option>
+            <option value="subtract">Subtraction</option>
+          </select>
+          <p class="modal-label">Dollar Amount</p>
+          <input
+            class="modal-input"
+            type="number"
+            min="0"
+            bind:value={new_line_item_amount}
+          />
+          <div class="modal-button-row">
+            <button
+              class="modal-cancel"
+              on:click={() => {
+                new_line_item_amount = 0;
+                new_line_item_name = "";
+                new_line_item_type = "add";
+
+                showLineItemDialog = false;
+              }}>Cancel</button
+            >
+            <button class="modal-save" on:click={createNewLineItem}>Save</button
+            >
+          </div>
+        </div>
+      {/if}
+    </div>
+    <div class="pricing-container">
       <div class="section pricing">
         {#if $bookingStore.total_price}
-          <p>
-            ${$bookingStore.price_per_night} x {$bookingStore.trip_length} nights
-          </p>
-          <p>Service Fee</p>
-          <p>Taxes & Insurance</p>
-          <p class="total-price">Total</p>
+          <div class="line-item">
+            <p>
+              ${$bookingStore.price_per_night} x {$bookingStore.trip_length} nights
+            </p>
+            <p>${$bookingStore.nightly_rate_sum}</p>
+          </div>
+          <div class="line-item">
+            <p>Service Fee</p>
+            <p>${$bookingStore.service_fee}</p>
+          </div>
+          <div class="line-item">
+            <p>Dmg Prot. & Assistance</p>
+            <p>${$bookingStore.damage_protection}</p>
+          </div>
+          <div class="line-item">
+            <p>Sales Tax</p>
+            <p>${$bookingStore.sales_tax}</p>
+          </div>
+          {#if $bookingStore.additional_line_items}
+            {#each Object.keys($bookingStore.additional_line_items) as item_name}
+              <div class="line-item">
+                <p>{item_name}</p>
+                <p>
+                  {#if $bookingStore.additional_line_items[item_name].type == "subtract"}
+                    -
+                  {/if}
+                  ${$bookingStore.additional_line_items[item_name].value}
+                </p>
+                <button
+                  class="remove-line-item"
+                  on:click={() => {
+                    removeLineItem(item_name);
+                  }}>X</button
+                >
+              </div>
+            {/each}
+          {/if}
+
+          <div class="line-item-total-bar"></div>
+          <div class="line-item total">
+            <p>Total</p>
+            <p>${$bookingStore.total_price}</p>
+          </div>
         {:else}
-          <p>Select</p>
-        {/if}
-      </div>
-      <div class="section pricing right">
-        {#if $bookingStore.total_price}
-          <p>${$bookingStore.total_price}</p>
-          <p>${$bookingStore.service_fee}</p>
-          <p>${$bookingStore.taxes_and_fees}</p>
-          <p class="total-price">${$bookingStore.total_price}</p>
-        {:else}
-          <p>Dates</p>
+          <div class="line-item">
+            <p>Select</p>
+            <p>Dates</p>
+          </div>
         {/if}
       </div>
     </div>
@@ -473,18 +629,104 @@
     font-size: 14px;
     display: flex;
   }
-  .section-label.individual {
-    padding-left: 15px;
+  .pricing-table-header {
     margin-top: 15px;
+    padding-left: 15px;
+    padding-right: 45px;
+    display: flex;
+    justify-content: space-between;
+    position: relative;
   }
-  .section.pricing {
-    padding: 15px 0;
+
+  .pricing-container {
+    display: flex;
+    flex-direction: column;
   }
-  .section.pricing * {
+  .line-item {
+    display: flex;
+    justify-content: space-between;
+    width: 70%;
+    padding: 0 20px;
+    position: relative;
+  }
+  .remove-line-item {
+    position: absolute;
+    right: -10px;
+    top: 4px;
+    border-radius: 4px;
+    font-size: 10px;
+
+    padding: 0px 4px;
+    background-color: var(--cms-text);
+    color: white;
+    font-family: cms-bold;
+  }
+  .line-item-total-bar {
+    width: 70%;
+    padding: 0 20px;
+    height: 1px;
+    background-color: var(--cms-boxShadow);
+  }
+  .line-item.total p {
+    font-family: cms-semibold;
+  }
+  .line-item-button {
+    border-radius: 6px;
+    background-color: var(--cms-text);
+    padding: 5px 10px;
+    color: var(--cms-bgColor);
+    font-family: cms-semibold;
     font-size: 14px;
   }
-  .section.pricing.right * {
-    text-align: right;
+  .line-item-modal {
+    position: absolute;
+    background-color: white;
+    border-radius: 6px;
+    z-index: 10;
+    padding: 30px;
+    padding-bottom: 15px;
+    box-shadow: 0 1px 4px grey;
+    top: -100px;
+    right: 55px;
+    width: 350px;
+    font-family: cms-light;
+  }
+  .line-item-modal p {
+    font-family: cms-regular;
+  }
+  p.modal-title {
+    font-family: cms-semibold;
+    font-size: 18px;
+  }
+  .modal-bar {
+    width: 100%;
+    height: 1px;
+    background-color: var(--cms-boxShadow);
+    margin-bottom: 15px;
+    margin-top: 5px;
+  }
+  .modal-input {
+    margin-bottom: 10px;
+    width: 100%;
+  }
+  .modal-button-row {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .modal-cancel {
+    border-radius: 4px;
+    background-color: var(--cms-boxShadow);
+    font-family: cms-semibold;
+    padding: 5px 10px;
+    color: var(--cms-text);
+  }
+  .modal-save {
+    border-radius: 4px;
+    background-color: var(--cms-text);
+    font-family: cms-semibold;
+    padding: 5px 20px;
+    color: white;
   }
   .double-row {
     display: flex;
@@ -496,21 +738,7 @@
   .double-row .section {
     width: 50%;
   }
-  .double-row.pricing .section {
-    width: 50%;
-  }
-  .double-row.pricing .section.right {
-    width: 30%;
-  }
-  .double-row.pricing {
-    justify-content: center;
-    border-top: 1px solid var(--cms-boxShadow);
-    border-bottom: 1px solid var(--cms-boxShadow);
-  }
-  .total-price {
-    color: hsl(var(--p));
-    font-family: cms-semibold;
-  }
+
   select {
     padding: 10px;
     background-color: hsl(var(--b1));
