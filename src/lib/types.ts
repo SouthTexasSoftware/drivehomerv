@@ -271,7 +271,10 @@ interface InformationRatesFees {
 
 interface OptionPricing {
   base_rental_fee: string;
-  taxes_and_insurance: string;
+  // @deprecated
+  taxes_and_fees?: string;
+  sales_tax: string;
+  damage_protection: string;
   service_fee: string;
   mileage_overage: string;
   generator_usage: string;
@@ -319,12 +322,19 @@ export interface Booking {
   unix_start?: number;
   unix_end?: number; // for ease of comparison
   total_price?: number;
+  additional_line_items?: {
+    [itemName: string]: { value: number; type: "add" | "subtract" };
+  };
+  original_price?: number;
   price_per_night?: number;
   trip_length?: number;
   nightly_rate_sum?: number;
   service_fee?: number;
-  taxes_and_fees_per_night?: number;
+  // @deprecated
   taxes_and_fees?: number;
+  damage_protection?: number;
+  damage_protection_per_night?: number;
+  sales_tax?: number; //8% sales tax charged on rentals (RV or equipment) fees, and charges not taxed.
   created?: Timestamp;
   created_by?: string;
   updated?: Timestamp;
@@ -357,7 +367,7 @@ export interface Booking {
   in_checkout: boolean;
   confirmation_email_sent?: boolean;
   receipt_date_string?: string; //MMM-DD-YYYY
-  payment_intent?: { [key: any]: string };
+  payment_intent?: { [key: string]: string };
   payment_status?: PaymentStatus;
   payment_link?: string;
 

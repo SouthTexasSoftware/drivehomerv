@@ -15,7 +15,7 @@
   } from "firebase/firestore";
   import { DateTime } from "@easepick/bundle";
   import { navigating, page } from "$app/stores";
-  import { fly } from "svelte/transition";
+  import { fly, slide } from "svelte/transition";
 
   export let unitObject: Unit;
   let submittingForm = false;
@@ -33,7 +33,7 @@
 
   let dispatch = createEventDispatcher();
 
-  unitObject.photos.forEach((photoObj) => {
+  unitObject.photos?.forEach((photoObj) => {
     if (photoObj.index == 1) {
       photoUrl = photoObj.downloadURL;
 
@@ -44,7 +44,6 @@
   });
 
   onMount(() => {
-    console.log($bookingStore.customerObject);
     setAnimationTimer();
   });
 
@@ -307,16 +306,35 @@
         <p>${unitObject.information.rates_and_fees.pricing.service_fee}</p>
       </div>
       <div class="row fee">
-        <p>Taxes & Insurance</p>
+        <p>Damage Protection & Roadside Assistance</p>
         <p>
           {#if $bookingStore.trip_length}
-            ${parseInt(
-              unitObject.information.rates_and_fees.pricing.taxes_and_insurance
-            ) * $bookingStore.trip_length}
+            ${$bookingStore.damage_protection}
           {/if}
         </p>
       </div>
-      {#if !$bookingStore.total_price == 1895}
+      <div class="row fee">
+        <p>Sales Tax</p>
+        <p>
+          {#if $bookingStore.trip_length}
+            ${$bookingStore.sales_tax?.toFixed(2)}
+          {/if}
+        </p>
+      </div>
+      {#if $bookingStore.additional_line_items}
+        {#each Object.keys($bookingStore.additional_line_items) as item_name}
+          <div class="row fee">
+            <p>{item_name}</p>
+            <p>
+              {#if $bookingStore.additional_line_items[item_name].type == "subtract"}
+                -
+              {/if}
+              ${$bookingStore.additional_line_items[item_name].value}
+            </p>
+          </div>
+        {/each}
+      {/if}
+      {#if $bookingStore.total_price != 1895}
         <div class="row fee mi-per-night">
           <p>100 mi per night ($0.00/night)</p>
           <p class="green-highlight">FREE</p>
@@ -337,7 +355,7 @@
         <div class="row total">
           <p>Total</p>
 
-          <p>${$bookingStore.total_price}</p>
+          <p>${$bookingStore.total_price?.toFixed(2)}</p>
         </div>
       {:else}
         <div class="banner winter">
@@ -574,8 +592,8 @@
   .preview-image {
     width: 100%;
     border-radius: 10px;
-    min-height: 120px;
-    background-size: contain;
+    min-height: 170px;
+    background-size: cover;
     background-repeat: no-repeat;
     display: flex;
     justify-content: center;
@@ -668,7 +686,7 @@
   .banner.winter {
     background-color: #d3e3f7;
   }
-  
+
   .winter-special {
     color: #3c618b;
   }
@@ -760,7 +778,7 @@
     }
     .preview-image {
       width: 100%;
-      min-height: 160px;
+      min-height: 200px;
       margin: 5px auto;
       /* border-radius: 30px; doesn't work because image is embedded into bg of div */
     }

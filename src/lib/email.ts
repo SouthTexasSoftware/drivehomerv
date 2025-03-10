@@ -9,7 +9,7 @@ const rentalAgreementTemplateId = "d-2e4d9f8b57ef486281d8a2b19554e8ed";
 let msg: MessageObject = {
   from: {
     name: "Drive Home RV Bookings",
-    email: "info@drivehomerv.com",
+    email: "donotreply@booking.drivehomerv.com",
   },
   // 'alec@rapplitemedia.com',
 };
@@ -22,10 +22,11 @@ let msg: MessageObject = {
 export async function emailHandler(
   to: string | string[],
   type: string,
-  payload: { [key: string]: string | undefined }
+  payload: { [key: string]: any | undefined }
 ) {
   msg.to = to;
 
+  console.log("attempting email payload = ", payload);
   //build 'msg' object based on the type and payload details
   switch (type) {
     case "owner_notification":
@@ -46,6 +47,7 @@ export async function emailHandler(
     case "confirmation":
       msg.templateId = confirmationTemplateId;
       msg.dynamicTemplateData = payload;
+
       /*payload = {
         booking_id,
         receipt_date,
@@ -59,7 +61,8 @@ export async function emailHandler(
         trip_length,
         nightly_rate_sum,
         service_fee,
-        taxes_and_fees,
+        sales_tax,
+        damage_protection,
         total_price,
         unit_img_link,
         notes
@@ -87,7 +90,7 @@ export async function emailHandler(
   }
 
   // d: change to dev if testing other features
-  if (dev) {
+  if (false) {
     console.log(
       "****************** SIMULATING EMAIL PAYLOAD *********************"
     );

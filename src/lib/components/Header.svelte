@@ -43,7 +43,7 @@
 <header>
   <a id="logo-link" href="/rentals"><img src={companyLogo} alt="Company Logo" /></a>
 
-  <WinterSpecial/>
+  <!-- <WinterSpecial/> -->
 
   <nav>
     {#if screenWidth}

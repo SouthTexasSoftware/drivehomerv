@@ -5,7 +5,7 @@
 
   $: categorySelected = $page.params.category
     ? $page.params.category
-    : "information";
+    : "bookings";
 
   // these are left out because they do not work with bookings..
   $: subcategorySelected = $page.params.subcategory

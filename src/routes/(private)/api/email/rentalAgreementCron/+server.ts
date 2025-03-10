@@ -123,6 +123,9 @@ export const POST = (async ({ request }) => {
   return json(responseJson);
 }) satisfies RequestHandler;
 
+// preview for agreementLink
+// "https://drivehomerv-git-preview-southtexassoftware.vercel.app/unit/" +
+
 // organize payload and call emailHandler
 async function sendAgreementEmail(booking: Booking) {
   let agreementLink =
@@ -141,7 +144,7 @@ async function sendAgreementEmail(booking: Booking) {
     dropoff_time: booking.dropoff_time,
     unit_img_link: booking.unit_img_link,
     notes:
-      "notes will be discussed after verifying that these automated emails are working!",
+      "We're excited to see you soon! Please take a minute to review and sign our Rental Agreement, we will go over this in detail when you get the keys to your Rental. Feel free to call or text us if you have any questions in the meantime!",
   };
 
   try {
@@ -168,7 +171,7 @@ async function sendOwnerEmail(successList: string[], failList: string[]) {
     body_two: "Emails Sent: " + successList.length.toString(),
     body_three: "Emails Failed: " + failList.length.toString(),
     body_four: "You can find the latest booking information at the link below.",
-    link: "https://drivehomerv-git-preview-southtexassoftware.vercel.app/cms/bookings",
+    link: "https://192.168.1.155:5173/cms/bookings",
   };
 
   try {

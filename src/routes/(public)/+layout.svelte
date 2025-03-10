@@ -55,6 +55,25 @@
 
 <div class="background-stripe" />
 
+<!-- <chat-widget
+  location-id="yib8fiHoKhd688afHwys"
+  style="--chat-widget-primary-color: #AE2623FF; --chat-widget-active-color:#AE2623FF ;--chat-widget-bubble-color: #AE2623FF ;"
+  use-email-field="true"
+  agency-name="RappLiteMedia"
+  agency-website="rapplitemedia.com"
+  locale="en-us"
+  primary-color="#AE2623FF"
+>
+</chat-widget>
+
+<svelte:head>
+  <script
+    src="https://widgets.leadconnectorhq.com/loader.js"
+    data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js"
+  >
+  </script>
+</svelte:head> -->
+
 <style>
   #page-content {
     min-height: 95vh;

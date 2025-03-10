@@ -36,8 +36,8 @@
     }
   });
 
-  delete filteredBookings[0].document_reference;
-  let bookingCopy = structuredClone(filteredBookings[0]);
+  delete filteredBookings![0].document_reference;
+  let bookingCopy = structuredClone(filteredBookings![0]);
 
   //@ts-ignore
   bookingStore.set(bookingCopy);
@@ -65,13 +65,17 @@
         (store.service_fee = parseInt(
           unitObject.information.rates_and_fees.pricing.service_fee
         ));
-      store.taxes_and_fees_per_night = parseInt(
-        unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+      store.damage_protection_per_night = parseInt(
+        unitObject.information.rates_and_fees.pricing.damage_protection
       );
-      store.taxes_and_fees =
+      store.damage_protection =
         parseInt(
-          unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+          unitObject.information.rates_and_fees.pricing.damage_protection
         ) * selectedTripLength;
+      store.sales_tax =
+        (parseInt(unitObject.information.rates_and_fees.pricing.sales_tax) /
+          100) *
+        store.nightly_rate_sum;
 
       console.log("store dynamically updated", store);
       return store;
@@ -109,19 +113,26 @@
   function sumOfFees(tripLength: number) {
     let sum = 0;
     let service_fee = 0;
-
-    let taxes_and_insurance =
-      parseInt(
-        unitObject.information.rates_and_fees.pricing.taxes_and_insurance
-      ) * tripLength;
+    let sales_tax = 0;
+    let damage_protection = 0;
 
     if (tripLength != 0) {
       service_fee = parseInt(
         unitObject.information.rates_and_fees.pricing.service_fee
       );
+
+      sales_tax =
+        (parseInt(unitObject.information.rates_and_fees.pricing.sales_tax) /
+          100) *
+        $bookingStore.nightly_rate_sum!;
+
+      damage_protection =
+        parseInt(
+          unitObject.information.rates_and_fees.pricing.damage_protection
+        ) * tripLength;
     }
 
-    sum = taxes_and_insurance + service_fee + pickup_dropoff_price_addition;
+    sum = service_fee + sales_tax + damage_protection;
 
     return sum;
   }
@@ -334,29 +345,51 @@
       </div>
     </div>
     <p class="section-label individual">Pricing Table</p>
-    <div class="double-row pricing">
-      <div class="section pricing">
-        {#if $bookingStore.total_price}
+    <div class="pricing-table">
+      {#if $bookingStore.total_price}
+        <div class="line-item">
           <p>
             ${$bookingStore.price_per_night} x {$bookingStore.trip_length} nights
           </p>
+          <p>${$bookingStore.nightly_rate_sum}</p>
+        </div>
+        <div class="line-item">
           <p>Service Fee</p>
-          <p>Taxes & Insurance</p>
-          <p class="total-price">Total</p>
-        {:else}
-          <p>Select</p>
-        {/if}
-      </div>
-      <div class="section pricing right">
-        {#if $bookingStore.total_price}
-          <p>${$bookingStore.total_price}</p>
           <p>${$bookingStore.service_fee}</p>
-          <p>${$bookingStore.taxes_and_fees}</p>
-          <p class="total-price">${$bookingStore.total_price}</p>
-        {:else}
-          <p>Dates</p>
+        </div>
+        <div class="line-item">
+          <p>Dmg Prot. & Assistance</p>
+          <p>${$bookingStore.damage_protection || "null"}</p>
+        </div>
+        <div class="line-item">
+          <p>Sales Tax</p>
+          <p>${$bookingStore.sales_tax || $bookingStore.taxes_and_fees}</p>
+        </div>
+        {#if $bookingStore.additional_line_items}
+          {#each Object.keys($bookingStore.additional_line_items) as item_name}
+            <div class="line-item">
+              <p>{item_name}</p>
+              <p>
+                {#if $bookingStore.additional_line_items[item_name].type == "subtract"}
+                  -
+                {/if}
+                ${$bookingStore.additional_line_items[item_name].value}
+              </p>
+            </div>
+          {/each}
         {/if}
-      </div>
+
+        <div class="line-item-total-bar"></div>
+        <div class="line-item total">
+          <p>Total</p>
+          <p>${$bookingStore.total_price}</p>
+        </div>
+      {:else}
+        <div class="line-item">
+          <p>Not</p>
+          <p>Added</p>
+        </div>
+      {/if}
     </div>
 
     <div class="section">
@@ -482,15 +515,7 @@
     padding-left: 15px;
     margin-top: 15px;
   }
-  .section.pricing {
-    padding: 15px 0;
-  }
-  .section.pricing * {
-    font-size: 14px;
-  }
-  .section.pricing.right * {
-    text-align: right;
-  }
+
   .double-row {
     display: flex;
     width: 100%;
@@ -501,19 +526,30 @@
   .double-row .section {
     width: 50%;
   }
-  .double-row.pricing .section {
-    width: 50%;
+  .pricing-table {
+    margin: 0 auto;
+    min-width: 80%;
+    width: 60%;
+    margin-top: 15px;
+    margin-bottom: 100px;
   }
-  .double-row.pricing .section.right {
-    width: 30%;
+  .line-item {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 20px;
+    position: relative;
   }
-  .double-row.pricing {
-    justify-content: center;
-    border-top: 1px solid var(--cms-boxShadow);
-    border-bottom: 1px solid var(--cms-boxShadow);
+  .line-item p {
+    font-size: 16px;
   }
-  .total-price {
-    color: hsl(var(--p));
+  .line-item-total-bar {
+    width: 100%;
+    padding: 0 20px;
+    height: 1px;
+    background-color: var(--cms-boxShadow);
+  }
+  .line-item.total p {
     font-family: cms-semibold;
   }
   select {
@@ -536,9 +572,7 @@
     outline: none;
     width: 250px;
   }
-  input.price {
-    width: 100px;
-  }
+
   input.margin-top {
     margin-top: 20px;
   }

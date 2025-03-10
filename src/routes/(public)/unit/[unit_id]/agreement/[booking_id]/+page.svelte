@@ -1,6 +1,8 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { unitStore } from "$lib/stores";
+  import { goto } from "$app/navigation";
+  import { unitStore, bookingTimerStore } from "$lib/stores";
+  import { setBookingTimer } from "$lib/helpers";
   import type { Booking } from "$lib/types";
   import { onMount } from "svelte";
   import ReviewIcon from "./zIconReview.svelte";
@@ -8,12 +10,19 @@
   import ReestablishingSession from "../../book_now/ReestablishingSession.svelte";
   import Agreement from "./Agreement.svelte";
   import { dev } from "$app/environment";
-  import { arrayUnion, updateDoc } from "firebase/firestore";
+  import { arrayUnion, updateDoc, deleteDoc } from "firebase/firestore";
   import { DateTime } from "@easepick/bundle";
   import AgreementSigned from "./AgreementSigned.svelte";
+  import BackToCheckout from "./BackToCheckout.svelte";
 
   let bookingObject: Booking;
   let agreementSigned = false;
+
+  let redirectToCheckout = false;
+
+  if ($page.url.searchParams.get("ref") == "checkout") {
+    redirectToCheckout = true;
+  }
 
   onMount(populateBookingObject);
 
@@ -45,6 +54,15 @@
       }
     }
 
+    // handle timer situation if still in checkout
+    if (bookingObject.in_checkout) {
+      if ($bookingTimerStore.timer) {
+        $bookingTimerStore.timer.reset();
+      } else {
+        setBookingTimer(bookingObject.id, 10, cancelBooking);
+      }
+    }
+
     agreementViewedListener();
   }
 
@@ -57,6 +75,18 @@
         agreement_viewed: arrayUnion(formatDate),
       });
     }
+  }
+
+  async function cancelBooking() {
+    if (bookingObject) {
+      // call to firebase to delete doc
+      //@ts-ignore
+      await deleteDoc(bookingObject.document_reference);
+    }
+
+    $bookingTimerStore.timer?.stop();
+    // return to unitView
+    await goto("/unit/" + bookingObject.unit_id);
   }
 </script>
 
@@ -72,10 +102,12 @@
     >
   {:else if agreementSigned}
     <SectionWrapper title={"Agreement Signed"}>
+      <BackToCheckout {bookingObject} />
       <AgreementSigned {bookingObject} />
     </SectionWrapper>
   {:else}
     <SectionWrapper title={"Rental Agreement"}>
+      <BackToCheckout {bookingObject} />
       <Agreement {bookingObject} />
     </SectionWrapper>
   {/if}
@@ -103,7 +135,5 @@
   }
 
   @media (max-width: 700px) {
-    
-
   }
 </style>

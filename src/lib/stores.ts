@@ -54,3 +54,8 @@ export const bookingUpdateStore = writable<{
 export const serverAdminStore = writable<{ [storeKey: string]: any }>();
 
 export const cmsBookingFilterStore = writable<BookingDisplayFilter>(undefined);
+
+export const bookingTimerStore = writable<{
+  value: string;
+  timer: { reset: () => void; stop: () => void } | undefined;
+}>({ value: "", timer: undefined });

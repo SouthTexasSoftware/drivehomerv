@@ -13,7 +13,9 @@ list of things required to build new unit object and throw no errors!  all under
     name 
     information.paragraphs.description.content
     information.rates_and_fees.pricing.base_rental_fee 
-    unitObject.information.rates_and_fees.pricing.taxes_and_insurance
+    unitObject.information.rates_and_fees.pricing.taxes_and_fees @deprecated
+    unitObject.information.rates_and_fees.pricing.damage_protection
+    unitObject.information.rates_and_fees.pricing.sales_tax 
     unitObject.information.rates_and_fees.pricing.service_fee
     unitObject.information.bullet_points.summary.pickup_location
     unitObject.information.rates_and_fees.pricing.mileage_overage
@@ -50,8 +52,13 @@ list of things required to build new unit object and throw no errors!  all under
       formObject.description;
     newUnitObject.information.rates_and_fees.pricing.base_rental_fee =
       formObject.base_rental_fee;
-    newUnitObject.information.rates_and_fees.pricing.taxes_and_insurance =
-      formObject.taxes_and_insurance;
+    // @depracated
+    newUnitObject.information.rates_and_fees.pricing.taxes_and_fees =
+      formObject.taxes_and_fees;
+    newUnitObject.information.rates_and_fees.pricing.damage_protection =
+      formObject.damage_protection;
+    newUnitObject.information.rates_and_fees.pricing.sales_tax =
+      formObject.sales_tax;
     newUnitObject.information.rates_and_fees.pricing.service_fee =
       formObject.service_fee;
     newUnitObject.information.bullet_points.summary.pickup_location =
@@ -64,7 +71,8 @@ list of things required to build new unit object and throw no errors!  all under
     newUnitObject.information.bullet_points.summary.vehicle_type =
       formObject.vehicle_type;
     newUnitObject.information.bullet_points.summary.length = formObject.length;
-    newUnitObject.information.rates_and_fees.pricing.minimum_nights = formObject.min_nights;
+    newUnitObject.information.rates_and_fees.pricing.minimum_nights =
+      formObject.min_nights;
 
     let unitsCollection = collection($firebaseStore.db, "units");
     let newUnitDocRef = doc(unitsCollection);
@@ -147,11 +155,11 @@ list of things required to build new unit object and throw no errors!  all under
 
     <div class="double-row">
       <div class="property">
-        <p class="label">Tax & Ins. (per night)</p>
+        <p class="label">Protect & Assist</p>
         <input
           class="property-input"
           type="text"
-          name="taxes_and_insurance"
+          name="damage_protection"
           placeholder="e.g. 29"
           required
         />
@@ -228,8 +236,16 @@ list of things required to build new unit object and throw no errors!  all under
           required
         />
       </div>
-
-     
+      <div class="property">
+        <p class="label">Sales Tax (%)</p>
+        <input
+          class="property-input"
+          type="text"
+          name="sales_tax"
+          placeholder="e.g. 8"
+          required
+        />
+      </div>
     </div>
 
     <div class="property textarea">
