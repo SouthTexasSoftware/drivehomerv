@@ -748,16 +748,21 @@
   }
   /* inherit by all 'pieces' that could contain a booking */
   .unit-booking-row {
+    opacity: 40%;
   }
   .unit-booking-row.in-booking {
     /* fill entire row i.e. take up all the columns */
     grid-column: 1 / 3;
   }
   .unit-booking-row.pickup {
-    border-top-left-radius: 100%;
+    filter: brightness(0.8);
+    border-bottom-left-radius: 50%;
+    border-top-left-radius: 50%;
   }
   .unit-booking-row.dropoff {
-    border-top-right-radius: 100%;
+    filter: brightness(0.8);
+    border-bottom-right-radius: 50%;
+    border-top-right-radius: 50%;
   }
 
   .arrow-container {
@@ -819,8 +824,8 @@
     .bookings-calendar-container {
       height: 45vh;
       width: 95vw;
-      margin-top:1vh;
-      margin-left:2.5vw;
+      margin-top: 1vh;
+      margin-left: 2.5vw;
     }
     .bookings-calendar-container .calendar-header {
       padding: 5px 15px 0px;

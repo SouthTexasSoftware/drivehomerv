@@ -74,10 +74,18 @@
 
     dispatch("selection", selection);
 
-    bookingStore.update((store) => {
-      (store.start = selectedTripStart), (store.end = selectedTripEnd);
-      return store;
-    });
+    if ($bookingStore) {
+      bookingStore.update((store) => {
+        (store.start = selectedTripStart), (store.end = selectedTripEnd);
+        return store;
+      });
+    } else {
+      //@ts-ignore - we don't need to set the rest of the booking up just to get this populated
+      bookingStore.set({
+        start: selectedTripStart,
+        end: selectedTripEnd,
+      });
+    }
   }
 
   function dateToString(date: Date) {
@@ -278,12 +286,12 @@
   }
   @media (max-width: 700px) {
     :global(.easepick-wrapper) {
-    position: absolute;
-    pointer-events: none;
-    top: 25px;
-    left: -15%;
-    width: 130%;
-  }
+      position: absolute;
+      pointer-events: none;
+      top: 25px;
+      left: -15%;
+      width: 130%;
+    }
   }
   @media (min-width: 500px) and (max-width: 1000px) {
   }

@@ -2,14 +2,14 @@ import sgMail from "@sendgrid/mail";
 import { dev } from "$app/environment";
 import { sendgridConfig } from "../config";
 
-const confirmationTemplateId = "d-24b1dabe9daa4e8c8191d5957ca5e90a";
+const confirmationTemplateId = "d-d9d1191bbaf84a578f35ee147cb6db57";
 const ownerNotificationTemplateId = "d-4d6e684b748e479e9c5132abf0929f11";
 const rentalAgreementTemplateId = "d-2e4d9f8b57ef486281d8a2b19554e8ed";
 
 let msg: MessageObject = {
   from: {
     name: "Drive Home RV Bookings",
-    email: "info@drivehomerv.com",
+    email: "donotreply@booking.drivehomerv.com",
   },
   // 'alec@rapplitemedia.com',
 };
@@ -22,10 +22,11 @@ let msg: MessageObject = {
 export async function emailHandler(
   to: string | string[],
   type: string,
-  payload: { [key: string]: string | undefined }
+  payload: { [key: string]: any | undefined }
 ) {
   msg.to = to;
 
+  console.log("attempting email payload = ", payload);
   //build 'msg' object based on the type and payload details
   switch (type) {
     case "owner_notification":
@@ -46,6 +47,7 @@ export async function emailHandler(
     case "confirmation":
       msg.templateId = confirmationTemplateId;
       msg.dynamicTemplateData = payload;
+
       /*payload = {
         booking_id,
         receipt_date,
@@ -59,7 +61,8 @@ export async function emailHandler(
         trip_length,
         nightly_rate_sum,
         service_fee,
-        taxes_and_fees,
+        sales_tax,
+        damage_protection,
         total_price,
         unit_img_link,
         notes
@@ -87,7 +90,7 @@ export async function emailHandler(
   }
 
   // d: change to dev if testing other features
-  if (dev) {
+  if (false) {
     console.log(
       "****************** SIMULATING EMAIL PAYLOAD *********************"
     );

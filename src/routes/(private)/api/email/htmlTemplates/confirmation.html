@@ -18,7 +18,7 @@
         padding: 0 25px;
       }
       #main-wrapper {
-        border: 1px solid #ededed;
+        /*border: 1px solid #ededed;*/
         width: 550px;
       }
       #top-row {
@@ -79,9 +79,18 @@
         padding-top: 50px;
         font-size: 16px;
         color: #606060;
-        padding-bottom: 10px;
+        padding-bottom: 5px;
         text-align: center;
         font-weight: bold;
+      }
+      .trip-timeline {
+        font-size: 14px;
+        color: #606060;
+        text-align: center;
+        font-weight: bold;
+      }
+      .trip-timeline.last {
+        padding-bottom: 10px;
       }
       .price {
         font-size: 13px;
@@ -127,8 +136,8 @@
           display: none;
         }
         #mobile-wrapper {
-          border: 1px solid #ededed;
-          width: 310px;
+          /*border: 1px solid #ededed;*/
+          max-width: 450px;
           display: block;
         }
         #table-1 {
@@ -136,23 +145,32 @@
         }
         #table-2-mobile,
         #table-3-mobile {
-          width: 300px;
+          max-width: 450px;
           padding: 0 5px;
+          width:100%;
         }
         .photo {
           text-align: center;
         }
         #unit-img-mobile {
-          width: 200px;
+          width: 220px;
           border-radius: 5px;
         }
         .trip-header {
           padding-top: 15px;
           font-size: 20px;
         }
-        .address-col {
-          padding-left: 20px;
+        .trip-timeline {
+          padding-top: 0px;
           font-size: 16px;
+        }
+        .trip-timeline.last {
+          padding-bottom: 10px;
+        }
+        .address-col {
+          padding-left: 60px;
+          font-size: 16px;
+          
         }
         .address-col.space-after {
           padding-bottom: 20px;
@@ -186,7 +204,7 @@
                 <td id="logo-container">
                   <img
                     id="logo-img"
-                    src="https://booking.drivehomerv.com/_app/immutable/assets/company-logo.97b775b2.png"
+                    src="https://cdn.mcauto-images-production.sendgrid.net/fc930e69dda2c2c5/7268914f-7c34-4c1f-979a-8bc6966f2714/265x313.png"
                   />
                 </td>
 
@@ -225,7 +243,7 @@
               <tr>
                 <td colspan="1" class="address-col">United States</td>
                 <td colspan="1" class="address-col light righthand">
-                  Issued {{receipt_date}}
+                  Issued {{{receipt_date}}}
                 </td>
               </tr>
               <tr class="last-row">
@@ -243,17 +261,29 @@
             <table id="table-3">
               <tr>
                 <td class="trip-header" colspan="2">
-                  {{start_date}} to {{end_date}}
+                  {{{start_date}}} to {{{end_date}}}
                 </td>
-                <td class="trip-header" colspan="2">{{unit_name}}</td>
+                
+              </tr>
+              <tr>
+                <td class="trip-timeline" colspan="2">
+                  Pickup Time: {{pickup_time}}
+                </td>
+                
+              </tr>
+              <tr>
+              <td class="trip-timeline last" colspan="2">
+                  Dropoff Time: {{dropoff_time}}
+                </td>
+                <td class="trip-timeline" colspan="2">{{unit_name}}</td>
               </tr>
               <tr>
                 <td class="price left">
                   ${{price_per_night}} x {{trip_length}} Nights
                 </td>
                 <td class="price right">${{nightly_rate_sum}}</td>
-                <td class="photo" colspan="2" rowspan="5">
-                  <img id="unit-img" src="{{unit_img_link}}"
+                <td class="photo" colspan="2" rowspan="6">
+                  <img id="unit-img" src="{{{unit_img_link}}}">
                 </td>
               </tr>
               <tr>
@@ -261,9 +291,21 @@
                 <td class="price right">${{service_fee}}</td>
               </tr>
               <tr>
-                <td class="price left">Taxes & Insurance</td>
-                <td class="price right">${{taxes_and_fees}}</td>
+                <td class="price left">Damage Protection</td>
+                <td class="price right">${{damage_protection}}</td>
               </tr>
+              <tr>
+                <td class="price left">Sales Tax</td>
+                <td class="price right">${{sales_tax}}</td>
+              </tr>
+              
+              {{#each additional_line_items}}
+              <tr>
+                <td class="price left">{{name}}</td>
+                <td class="price right">{{string_value}}</td>
+              </tr>
+              {{/each}}
+              
               <tr>
                 <td class="price bar" colspan="2"></td>
               </tr>
@@ -272,14 +314,14 @@
                 <td class="price right total">${{total_price}}</td>
               </tr>
               <tr>
-                <td colspan="4" class="notes">{{notes}}</td>
+                <td colspan="4" class="notes">{{{notes}}}</td>
               </tr>
               <tr class="full-width-bar">
                 <td colspan="4"></td>
               </tr>
               <tr>
                 <td class="footer-note" colspan="4">
-                  Questions? Call Drive Home RV at +1 845-400-9499
+                  Questions? Text or Call us anytime at +1 845-400-9499
                 </td>
               </tr>
             </table>
@@ -290,7 +332,7 @@
                 <td id="logo-container">
                   <img
                     id="logo-img"
-                    src="https://booking.drivehomerv.com/_app/immutable/assets/company-logo.97b775b2.png"
+                    src="https://cdn.mcauto-images-production.sendgrid.net/fc930e69dda2c2c5/7268914f-7c34-4c1f-979a-8bc6966f2714/265x313.png"
                   />
                 </td>
 
@@ -304,6 +346,7 @@
               </tr>
               <tr>
                 <td colspan="1" class="address-col bold label">From:</td>
+                <td></td>
               </tr>
               <tr>
                 <td colspan="2" class="address-col bold">Drive Home RV LLC</td>
@@ -324,6 +367,7 @@
               </tr>
               <tr>
                 <td colspan="1" class="address-col bold label">Billed to:</td>
+                <td></td>
               </tr>
               <tr>
                 <td colspan="2" class="address-col bold">{{customer_name}}</td>
@@ -355,12 +399,22 @@
               </tr>
               <tr>
                 <td class="photo" colspan="2">
-                  <img id="unit-img-mobile" src="{{unit_img_link}}"
+                  <img id="unit-img-mobile" src="{{{unit_img_link}}}">
                 </td>
               </tr>
               <tr>
                 <td class="trip-header" colspan="2">
                   {{start_date}} to {{end_date}}
+                </td>
+              </tr>
+              <tr>
+                <td class="trip-timeline" colspan="2">
+                  Pickup Time: {{pickup_time}}
+                </td>
+              </tr>
+              <tr>
+                <td class="trip-timeline last" colspan="2">
+                  Dropoff Time: {{dropoff_time}}
                 </td>
               </tr>
               <tr>
@@ -374,9 +428,20 @@
                 <td class="price right">${{service_fee}}</td>
               </tr>
               <tr>
-                <td class="price left">Taxes & Insurance</td>
-                <td class="price right">${{taxes_and_fees}}</td>
+                <td class="price left">Damage Protection</td>
+                <td class="price right">${{damage_protection}}</td>
               </tr>
+              <tr>
+                <td class="price left">Sales Tax</td>
+                <td class="price right">${{sales_tax}}</td>
+              </tr>
+              
+              {{#each additional_line_items}}
+              <tr>
+                <td class="price left">{{name}}</td>
+                <td class="price right">{{string_value}}</td>
+              </tr>
+              {{/each}}
               <tr>
                 <td class="price bar" colspan="2"></td>
               </tr>
@@ -386,14 +451,14 @@
               </tr>
 
               <tr>
-                <td colspan="2" class="notes">{{notes}}</td>
+                <td colspan="2" class="notes">{{{notes}}}</td>
               </tr>
               <tr class="full-width-bar">
                 <td colspan="2"></td>
               </tr>
               <tr>
                 <td class="footer-note" colspan="2">
-                  Questions? Call Drive Home RV at +1 845-400-9499
+                  Questions? Text or Call us anytime at +1 845-400-9499
                 </td>
               </tr>
             </table>

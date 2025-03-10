@@ -15,7 +15,7 @@
   } from "firebase/firestore";
   import { DateTime } from "@easepick/bundle";
   import { navigating, page } from "$app/stores";
-  import { fly } from "svelte/transition";
+  import { fly, slide } from "svelte/transition";
 
   export let unitObject: Unit;
   let submittingForm = false;
@@ -33,7 +33,7 @@
 
   let dispatch = createEventDispatcher();
 
-  unitObject.photos.forEach((photoObj) => {
+  unitObject.photos?.forEach((photoObj) => {
     if (photoObj.index == 1) {
       photoUrl = photoObj.downloadURL;
 
@@ -44,7 +44,6 @@
   });
 
   onMount(() => {
-    console.log($bookingStore.customerObject);
     setAnimationTimer();
   });
 
@@ -278,6 +277,11 @@
           </p>
         </div>
       </div>
+
+      <div class="pickup-row">
+        <p>Pickup: <span class="bold">{$bookingStore.pickup_time}</span></p>
+        <p>Dropoff: <span class="bold">{$bookingStore.dropoff_time}</span></p>
+      </div>
       <div class="unit-price-row">
         <p class="price">
           ${unitObject.information.rates_and_fees.pricing.base_rental_fee}&nbsp;
@@ -285,6 +289,7 @@
         <p>per night</p>
       </div>
     </div>
+
     <div class="pricing-overview">
       <div class="row fee nightly-rate">
         <p>
@@ -301,42 +306,77 @@
         <p>${unitObject.information.rates_and_fees.pricing.service_fee}</p>
       </div>
       <div class="row fee">
-        <p>Taxes & Insurance</p>
+        <p>Damage Protection & Roadside Assistance</p>
         <p>
           {#if $bookingStore.trip_length}
-            ${parseInt(
-              unitObject.information.rates_and_fees.pricing.taxes_and_insurance
-            ) * $bookingStore.trip_length}
+            ${$bookingStore.damage_protection}
           {/if}
         </p>
       </div>
-
-      <div class="row fee mi-per-night">
-        <p>100 mi per night ($0.00/night)</p>
-        <p class="green-highlight">FREE</p>
-      </div>
-      <div class="banner">
-        <div class="row fee miles-included">
-          <p>Miles included</p>
+      <div class="row fee">
+        <p>Sales Tax</p>
+        <p>
           {#if $bookingStore.trip_length}
-            <p>{100 * $bookingStore.trip_length} mi</p>
+            ${$bookingStore.sales_tax?.toFixed(2)}
           {/if}
-        </div>
-        <p class="row fee small-note">
-          Additional miles: ${unitObject.information.rates_and_fees.pricing
-            .mileage_overage}/mi
         </p>
       </div>
-      <div class="bar" />
-      <div class="row total">
-        <p>Total</p>
+      {#if $bookingStore.additional_line_items}
+        {#each Object.keys($bookingStore.additional_line_items) as item_name}
+          <div class="row fee">
+            <p>{item_name}</p>
+            <p>
+              {#if $bookingStore.additional_line_items[item_name].type == "subtract"}
+                -
+              {/if}
+              ${$bookingStore.additional_line_items[item_name].value}
+            </p>
+          </div>
+        {/each}
+      {/if}
+      {#if $bookingStore.total_price != 1895}
+        <div class="row fee mi-per-night">
+          <p>100 mi per night ($0.00/night)</p>
+          <p class="green-highlight">FREE</p>
+        </div>
+        <div class="banner">
+          <div class="row fee miles-included">
+            <p>Miles included</p>
+            {#if $bookingStore.trip_length}
+              <p>{100 * $bookingStore.trip_length} mi</p>
+            {/if}
+          </div>
+          <p class="row fee small-note">
+            Additional miles: ${unitObject.information.rates_and_fees.pricing
+              .mileage_overage}/mi
+          </p>
+        </div>
+        <div class="bar" />
+        <div class="row total">
+          <p>Total</p>
 
-        <p>${$bookingStore.total_price}</p>
-      </div>
+          <p>${$bookingStore.total_price?.toFixed(2)}</p>
+        </div>
+      {:else}
+        <div class="banner winter">
+          <div class="row fee miles-included">
+            <p>Miles included</p>
+            <p>Unlimited</p>
+          </div>
+        </div>
+        <div class="bar" />
+        <div class="row total">
+          <p class="winter-special">Total</p>
+
+          <p class="winter-special price">${$bookingStore.total_price}</p>
+          <p class="strikethrough">${$bookingStore.original_price}</p>
+        </div>
+      {/if}
     </div>
   </div>
 
   <div class="divider wide" />
+
   <div class="container-row col">
     <div class="contact-info-header">Contact Information</div>
 
@@ -550,10 +590,10 @@
     margin-top: 0;
   }
   .preview-image {
-    width: 200px;
+    width: 100%;
     border-radius: 10px;
-    min-height: 120px;
-    background-size: contain;
+    min-height: 170px;
+    background-size: cover;
     background-repeat: no-repeat;
     display: flex;
     justify-content: center;
@@ -571,19 +611,22 @@
     width: 100%;
     justify-content: space-between;
     margin-bottom: 5px;
+    margin-top: 10px;
   }
   .feature-item {
     display: flex;
     align-items: center;
-    width: 50%;
+
     justify-content: flex-start;
   }
   .feature-label {
     margin-left: 5px;
+    font-size: 16px;
   }
   .unit-price-row {
     display: flex;
     align-self: flex-start;
+    margin-top: 5px;
   }
   .price {
     font-family: "font-medium";
@@ -594,6 +637,19 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: flex-start;
+  }
+  .pickup-row {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    /* margin-top: 5px; */
+  }
+  .pickup-row p {
+    font-size: 16px;
+  }
+  .bold {
+    font-family: font-bold;
+    color: hsl(var(--p));
   }
   .pricing-overview {
     width: 50%;
@@ -626,6 +682,21 @@
     margin-bottom: 10px;
     color: hsl(var(--b3));
     width: 100%;
+  }
+  .banner.winter {
+    background-color: #d3e3f7;
+  }
+
+  .winter-special {
+    color: #3c618b;
+  }
+  .winter-special.price {
+    margin-left: auto;
+    margin-right: 10px;
+  }
+  .strikethrough {
+    text-decoration: line-through;
+    font-family: font-light !important;
   }
   .row.miles-included {
     font-size: 17px;
@@ -707,9 +778,17 @@
     }
     .preview-image {
       width: 100%;
-      min-height: 160px;
+      min-height: 200px;
       margin: 5px auto;
       /* border-radius: 30px; doesn't work because image is embedded into bg of div */
+    }
+    .features-row,
+    .pickup-row {
+      justify-content: center;
+    }
+    .feature-item:nth-child(1),
+    .pickup-row p:nth-child(1) {
+      margin-right: 15px;
     }
     .feature-item {
       justify-content: center;

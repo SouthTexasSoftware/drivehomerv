@@ -1,7 +1,12 @@
 <script lang="ts">
   import { navigating, page } from "$app/stores";
-  import { bookingStore, firebaseStore, unitStore } from "$lib/stores";
-  import type { Booking, Customer, Unit } from "lib/types";
+  import {
+    bookingStore,
+    bookingTimerStore,
+    firebaseStore,
+    unitStore,
+  } from "$lib/stores";
+  import type { Booking, Customer, Unit } from "$lib/types";
   import { onMount } from "svelte";
   import { beforeNavigate, goto } from "$app/navigation";
   import ContactIcon from "./zIconContact.svelte";
@@ -21,28 +26,28 @@
     updateDoc,
   } from "firebase/firestore";
   import { DateTime } from "@easepick/bundle";
+  import { setBookingTimer } from "$lib/helpers";
 
   let unitObject: Unit | undefined = undefined;
   let unitLoadingCounter = 0;
   let currentViewNumber = 0;
-  let timerStatement = "Holding Dates:";
-  let timerValue = "5:00";
-  let timer = 1000 * 60 * 5;
+
   let cancellingBooking = false;
   let confirmingPaymentNavigation = false;
 
+  let timerStatement = "Holding Dates:";
+  let defaultTimerMinutes = 10;
+
   export let data: PageData;
 
-  console.log("server loaded data = ", data);
-
-  let viewArray = ["contact", "connecting", "checkout", "thankyou"];
+  let viewArray = ["connecting", "contact", "checkout", "thankyou"];
 
   let flowStates = {
-    onContact: true,
+    onContact: false,
     onCheckout: false,
     onThankyou: false,
 
-    onConnecting: false,
+    onConnecting: true,
     transitionDirection: "movingRight",
 
     agreementAccepted: false,
@@ -54,9 +59,8 @@
   //intercept a redirect and hit pause for now.
   async function checkForRedirect(): Promise<boolean> {
     if (data.paymentIntentObject) {
-      console.log("redirect detected", data);
       confirmingPaymentNavigation = true;
-      setFlowStateView(1);
+      setFlowStateView(0);
       checkUnitSelected();
       recreateSession(); // this may take some time.. but we cannot await here
 
@@ -70,7 +74,7 @@
       setTimeout(recreateSession, 200);
       return;
     }
-    console.log("recreating session");
+
     let bookingId = data.paymentIntentObject?.metadata.cms_booking_id;
     let unitId = $page.params.unit_id;
     if (bookingId) {
@@ -103,13 +107,21 @@
             "MMM-DD-YYYY"
           );
           // send confirmation emails..
+          // format sales_tax and total_price on bookingStore just for emails?
+          let emailObject = stripMethods($bookingStore);
+
+          // @ts-ignore
+          emailObject.sales_tax = emailObject.sales_tax?.toFixed(2);
+          // @ts-ignore
+          emailObject.total_price = emailObject.total_price?.toFixed(2);
+
           // check to see if this has already been triggered????
           if (!$bookingStore.confirmation_email_sent) {
             let sendConfirmationEmail = await fetch(
               "/api/email/customerConfirmation",
               {
                 method: "POST",
-                body: JSON.stringify($bookingStore),
+                body: JSON.stringify(emailObject),
                 headers: {
                   "Content-Type": "application/json",
                 },
@@ -137,11 +149,18 @@
             $bookingStore.confirmation_email_sent = true;
             $bookingStore.confirmed = true;
             $bookingStore.updated = Timestamp.now();
+            $bookingStore.in_checkout = false;
 
-            $bookingStore.agreement_link = $page.url.origin + '/unit/' + $bookingStore.unit_id + '/agreement/' + $bookingStore.id;
+            $bookingStore.agreement_link =
+              $page.url.origin +
+              "/unit/" +
+              $bookingStore.unit_id +
+              "/agreement/" +
+              $bookingStore.id;
             $bookingStore.agreement_notification = false;
             $bookingStore.agreement_signed = false;
 
+            //@ts-ignore
             await setDoc($bookingStore.document_reference, $bookingStore);
           } else {
             console.log("records show confirmation email already sent");
@@ -153,14 +172,16 @@
 
         // this hits on redirects and internally generated payment links
         // if this payment link exists, the booking was made internally
-        if ($bookingStore.payment_link) {
+        if ($bookingStore.created_by == "CMS") {
           timerStatement = "Timer Disabled: ";
-          timerValue = "Internal Booking";
-        } else {
-          timerIntervalHandler();
+          $bookingTimerStore.value = "Internal Booking";
         }
 
-        setFlowStateView(2);
+        if ($page.url.searchParams.get("state") == "checkout") {
+          setTimeout(() => setFlowStateView(2), 1000);
+        } else {
+          setTimeout(() => setFlowStateView(1), 1000);
+        }
         return;
       }
     }
@@ -174,7 +195,9 @@
       let unitBookingPage = $page.url.pathname;
       unitBookingPage = unitBookingPage.slice(0, -9);
       goto(unitBookingPage);
+      return;
     }
+
     if ($bookingStore.total_price == 0) {
       //redirect back to unit booking page
       let unitBookingPage = $page.url.pathname;
@@ -182,7 +205,11 @@
       goto(unitBookingPage);
     }
     checkUnitSelected();
-    timerIntervalHandler();
+    setFlowStateView(1);
+
+    if (!$bookingTimerStore.timer) {
+      setBookingTimer($bookingStore.id, defaultTimerMinutes, cancelBooking);
+    }
   });
 
   function checkUnitSelected() {
@@ -231,14 +258,18 @@
         flowStates.onCheckout = false;
         flowStates.onThankyou = false;
         flowStates.onConnecting = false;
-
+        if ($bookingTimerStore.timer) {
+          $bookingTimerStore.timer.reset();
+        }
         break;
       case "checkout":
         flowStates.onContact = false;
         flowStates.onCheckout = true;
         flowStates.onThankyou = false;
         flowStates.onConnecting = false;
-        timer = 5 * 60 * 1000;
+        if ($bookingTimerStore.timer) {
+          $bookingTimerStore.timer.reset();
+        }
         break;
 
       case "connecting":
@@ -260,38 +291,22 @@
     currentViewNumber = viewNumber;
   }
 
-  function timerIntervalHandler() {
-    setInterval(() => {
-      timer -= 1000;
-      updateTimerValue(timer);
-      if (timer == 0) {
-        // deleteBooking and return to unit view
-        cancelBooking();
-      }
-    }, 1000);
-  }
-
-  function updateTimerValue(timerNum: number) {
-    var minutes = Math.floor(timerNum / 60000);
-    var seconds = Math.floor((timerNum % 60000) / 1000);
-
-    timerValue =
-      seconds == 60
-        ? minutes + 1 + ":00"
-        : minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
-  }
-
   async function cancelBooking() {
-    // call to firebase to delete doc
-    await deleteDoc($bookingStore.document_reference);
+    if ($bookingStore) {
+      // call to firebase to delete doc
+      //@ts-ignore
+      await deleteDoc($bookingStore.document_reference);
+    }
+
+    $bookingTimerStore.timer?.stop();
     // return to unitView
-    let unitLink = $page.url.origin + "/unit/" + $bookingStore.unit_id;
+    let unitBookingPage = $page.url.pathname;
+    unitBookingPage = unitBookingPage.slice(0, -9);
     cancellingBooking = true;
-    await goto(unitLink);
+    await goto(unitBookingPage);
   }
 
   beforeNavigate(async (navigation) => {
-    console.log(navigation);
     if (cancellingBooking) {
       return;
     }
@@ -300,18 +315,33 @@
     }
     if (navigation.type == "link") {
       console.log("going to another link");
+      if (navigation.to?.url.pathname.includes("agreement")) {
+        if ($bookingTimerStore.timer) {
+          $bookingTimerStore.timer.reset();
+        }
+        return;
+      }
       await cancelBooking();
     }
     if (navigation.type == "popstate") {
-      console.log("trying to return a page");
       await cancelBooking();
     }
     if (navigation.type == "leave") {
-      console.log("leaving site");
       await cancelBooking();
     }
-    navigation.cancel();
+    // navigation.cancel();
   });
+
+  const stripMethods = (obj: Booking) => {
+    return Object.keys(obj).reduce((acc, key) => {
+      // @ts-ignore
+      if (typeof obj[key] !== "function") {
+        // @ts-ignore
+        acc[key] = obj[key];
+      }
+      return acc;
+    }, {});
+  };
 </script>
 
 <div class="book-now-container">
@@ -332,7 +362,6 @@
         title={"Booking Recap"}
         transitionDirection={flowStates.transitionDirection}
         {timerStatement}
-        {timerValue}
         ><Contact
           {unitObject}
           on:complete={() => setFlowStateView(2)}
@@ -344,10 +373,9 @@
         title={"Checkout"}
         transitionDirection={flowStates.transitionDirection}
         {timerStatement}
-        {timerValue}
         ><Checkout
           {unitObject}
-          on:back={() => setFlowStateView(0)}
+          on:back={() => setFlowStateView(1)}
           on:paymentStart={() => {
             confirmingPaymentNavigation = true;
           }}
@@ -419,19 +447,6 @@
     background-color: hsl(var(--b2));
   }
 
-  section {
-    box-shadow: 0px 1px 2px grey;
-    border-radius: 2px;
-    margin: 25px 0 50px;
-    background-color: hsl(var(--b1));
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 600px;
-    min-width: 400px;
-    max-width: 500px;
-  }
   .loading-unit-container {
     width: 100%;
     min-height: 700px;
@@ -465,12 +480,8 @@
   }
 
   @media (max-width: 700px) {
-    section {
-      width: 90vw;
-      min-height: 300px;
-      padding-bottom: 25px;
-      margin-top: 150px;
-      padding: 50px;
+    .book-now-container {
+      margin-top: 40px;
     }
   }
 

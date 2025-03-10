@@ -11,10 +11,12 @@ interface RequestData {
 export const POST = (async ({ request }) => {
   const requestData = (await request.json()) as Booking;
 
-  console.log(
-    "Server Received an OwnerNotification email call to API : ",
-    requestData
-  );
+  console.log("Server Received an OwnerNotification email call to API : ");
+
+  // console.log(
+  //   "Server Received an OwnerNotification email call to API : ",
+  //   requestData
+  // );
 
   let responseJson = {
     error: false,
@@ -29,10 +31,11 @@ export const POST = (async ({ request }) => {
         " has been booked from " +
         requestData.start +
         " to " +
-        requestData.end + ".",
+        requestData.end +
+        ".",
       body_two: "Please use the link below to review.",
       link:
-        "https://booking.drivehomerv.com/cms/units/" +
+        "https://drivehomerv-git-preview-southtexassoftware.vercel.app/cms/units/" +
         requestData.unit_id +
         "/bookings/" +
         requestData.id +
