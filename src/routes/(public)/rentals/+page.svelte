@@ -5,11 +5,15 @@
   import DateSelector from "./DateSelector.svelte";
   import UnitCard from "./UnitCard.svelte";
   import UnitCardLoader from "./UnitCardLoader.svelte";
+  import NoUnitsAvailableCard from "./NoUnitsAvailableCard.svelte";
 
   let loadingUnitStore = true;
+  let recalculatingUnits = false;
 
-  let availableUnits: Unit[];
+  let availableUnits: Unit[] = [];
   let loaderUnits = [0, 1, 2, 3, 4, 5, 6];
+
+  let noUnitsAvailable = false;
 
   unitStore.subscribe((storeData) => {
     if (storeData.isPopulated) {
@@ -30,6 +34,9 @@
   function updateAvailableUnits(selection: {
     detail: { start: Date; end: Date };
   }) {
+    // show some laoders when doing this recalculation (to inform the customer that something is happening)
+    recalculatingUnits = true;
+
     let selectionStartInteger = selection.detail.start.getTime();
     let selectionEndInteger = selection.detail.end.getTime();
 
@@ -38,7 +45,7 @@
     //@ts-ignore
     $unitStore.units.forEach((unit: Unit, index: number): Unit | undefined => {
       // if unit is not publicly available, don't add it to the available array or do any math on it
-      if(!unit.publicly_visible) return;
+      if (!unit.publicly_visible) return;
 
       // compare selection to bookings
       // auto set unit to available by default
@@ -84,8 +91,6 @@
         }
       });
 
-      
-
       // if unit is still available after comparing all bookings, push to temp array
       if (unitIsAvailable) {
         tempNewArray.push(unit);
@@ -93,6 +98,18 @@
     });
     // all units have been analyzed, now set available units to match the temp array
     availableUnits = tempNewArray;
+
+    //check if there are no units available and display a customer message
+    if (availableUnits?.length == 0) {
+      noUnitsAvailable = true;
+    } else {
+      noUnitsAvailable = false;
+    }
+
+    //remove loading shaders in a minimum of .2 seconds. (tells the customer that a calculation was done)
+    setTimeout(() => {
+      recalculatingUnits = false;
+    }, 200);
   }
 </script>
 
@@ -104,9 +121,18 @@
     {/each}
   {:else}
     <DateSelector on:selection={updateAvailableUnits} />
-    {#each availableUnits as unit (unit.id)}
-      <UnitCard unitObject={unit} />
-    {/each}
+    {#if recalculatingUnits}
+      {#each availableUnits as unit}
+        <UnitCardLoader />
+      {/each}
+    {:else}
+      {#each availableUnits as unit (unit.id)}
+        <UnitCard unitObject={unit} />
+      {/each}
+    {/if}
+    {#if noUnitsAvailable}
+      <NoUnitsAvailableCard />
+    {/if}
   {/if}
 </div>
 
@@ -125,10 +151,9 @@
     justify-content: center;
     margin-bottom: 100px;
   }
-  @media (max-width: 700px) { 
+  @media (max-width: 700px) {
     .flex-card-container {
       width: 97vw;
     }
-
   }
 </style>

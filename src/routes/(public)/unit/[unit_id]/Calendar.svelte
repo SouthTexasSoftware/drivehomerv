@@ -195,7 +195,7 @@
       tripStartLabel = "Departure";
       tripEndLabel = "Return";
     } else {
-      tripStartLabel = "Delivery";
+      tripStartLabel = "Delivered By:";
       tripEndLabel = "Pick-up";
     }
   }
