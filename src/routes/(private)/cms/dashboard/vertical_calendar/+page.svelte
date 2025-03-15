@@ -2,12 +2,6 @@
   import { unitStore } from "$lib/stores";
   import type { Booking, Unit } from "$lib/types";
 
-  let jsonData: string;
-
-  unitStore.subscribe((storeData) => {
-    jsonData = JSON.stringify(storeData.units);
-  });
-
   // Define interfaces for the data structure
   interface ScheduleEntry {
     delivery?: string;
@@ -140,6 +134,16 @@
     return dates;
   }
 
+  // Helper function to format the date as "day + suffix"
+  function formatDateText(dateStr: string) {
+    const day = parseInt(dateStr.split(" ")[1], 10); // Get the day (e.g., 18 from "Mar 18, 2025")
+    let suffix = "th";
+    if (day % 10 === 1 && day !== 11) suffix = "st";
+    else if (day % 10 === 2 && day !== 12) suffix = "nd";
+    else if (day % 10 === 3 && day !== 13) suffix = "rd";
+    return `${day}${suffix}`;
+  }
+
   // Function to filter bookings within the 31-day window
   function filterBookingsWithinWindow(
     bookings: Booking[],
@@ -166,85 +170,142 @@
       return overlaps;
     });
   }
-
-  function copyJson() {
-    navigator.clipboard
-      .writeText(jsonData)
-      .then(() => {
-        alert("Data has been copied to the clipboard as JSON!");
-      })
-      .catch((err) => {
-        console.error("Failed to copy to clipboard:", err);
-        alert(
-          "Failed to copy data to clipboard. Check the console for details or use the download option."
-        );
-      });
-  }
 </script>
 
-<!-- <button class="fixed bottom-4 right-4" on:click={copyJson}>Copy JSON</button> -->
-
-<div
-  class="calendar grid gap-1 border border-gray-500 text-center text-xs font-sans"
-  style="grid-template-columns: {gridTemplateColumns}; grid-template-rows: {gridTemplateRows};"
->
-  <!-- Headers -->
-  <div class="header bg-primary text-white font-bold sticky top-0 z-10"></div>
-  {#each units as unit}
+<div class="calendar-wrapper overflow-auto">
+  <div
+    class="calendar-grid"
+    style="grid-template-columns: 150px repeat({units.length}, 120px);"
+  >
+    <!-- Header Row -->
     <div
-      class="header bg-primary text-white font-bold text-lg sticky top-0 z-10"
+      class="header-cell sticky top-0 z-20 bg-primary text-white font-bold flex items-center justify-center"
     >
-      {unit}
+      <!-- Empty cell above dates -->
     </div>
-  {/each}
-
-  <!-- Rows for each date -->
-  {#each dates as date, rowIndex}
-    <div
-      class="date-header bg-gray-200 font-semiibold text-md sticky left-0 z-10"
-      style="{date === todayStr
-        ? 'border-top: 2px solid #ae2623; border-bottom: 2px solid #ae2623;'
-        : ''}
-      "
-    >
-      {date}
-    </div>
-    {#each units as unit, colIndex}
+    {#each units as unit}
       <div
-        class="cell flex flex-col items-center justify-center gap-1 p-1 border border-gray-300"
-        style="{scheduleData[date] && scheduleData[date][unit]
-          ? `background-color: ${unitColors[unit]};`
-          : 'background-color: white;'} 
-
-          {date === todayStr
-          ? 'border-top: 2px solid #ae2623; border-bottom: 2px solid #ae2623;'
-          : ''}"
+        class="header-cell sticky top-0 z-20 bg-primary text-white font-bold flex items-center justify-center"
       >
-        {#if scheduleData[date] && scheduleData[date][unit]}
-          {#if scheduleData[date][unit].delivery}
-            <span class="delivery"
-              >Delivery {scheduleData[date][unit].delivery}</span
-            >
-          {/if}
-          {#if scheduleData[date][unit].departure}
-            <span class="departure"
-              >Depart {scheduleData[date][unit].departure}</span
-            >
-          {/if}
-          {#if scheduleData[date][unit].pickup}
-            <span class="pickup">Pick up {scheduleData[date][unit].pickup}</span
-            >
-          {/if}
-          {#if scheduleData[date][unit].return}
-            <span class="return">Return {scheduleData[date][unit].return}</span>
-          {/if}
-          {#if scheduleData[date][unit].count}
-            <span class="count bg-gray-300 text-gray rounded px-1"
-              >Day {scheduleData[date][unit].count}</span
-            >
-          {/if}
-        {/if}
+        {unit}
       </div>
     {/each}
-  {/each}
+
+    <!-- Data Rows -->
+    {#each dates as date}
+      <div
+        class="date-cell relative bg-gray-200 font-semibold flex items-center justify-center {date ===
+        todayStr
+          ? 'today-row'
+          : ''}"
+      >
+        {date}
+      </div>
+      {#each units as unit}
+        <div
+          class="data-cell relative flex flex-col items-center justify-center gap-1 p-1 border border-gray-300 {date ===
+          todayStr
+            ? 'today-row'
+            : ''}"
+          style={scheduleData[date] && scheduleData[date][unit]
+            ? `background-color: ${unitColors[unit]};`
+            : "background-color: white;"}
+        >
+          {#if scheduleData[date] && scheduleData[date][unit]}
+            {#if scheduleData[date][unit].delivery}
+              <span>Delivery {scheduleData[date][unit].delivery}</span>
+            {/if}
+            {#if scheduleData[date][unit].departure}
+              <span>Depart {scheduleData[date][unit].departure}</span>
+            {/if}
+            {#if scheduleData[date][unit].pickup}
+              <span>Pick up {scheduleData[date][unit].pickup}</span>
+            {/if}
+            {#if scheduleData[date][unit].return}
+              <span>Return {scheduleData[date][unit].return}</span>
+            {/if}
+            {#if scheduleData[date][unit].count}
+              <span class="bg-gray-300 text-gray-700 rounded px-1"
+                >Day {scheduleData[date][unit].count}</span
+              >
+            {/if}
+          {:else}
+            <!-- Subtle date text for blank cells -->
+            <span class="text-xs text-gray-500 opacity-30"
+              >{formatDateText(date)}</span
+            >
+          {/if}
+        </div>
+      {/each}
+    {/each}
+  </div>
 </div>
+
+<style>
+  .calendar-wrapper {
+    height: 80vh;
+    overflow: auto;
+  }
+
+  .calendar-grid {
+    display: grid;
+    grid-auto-rows: 35px;
+    gap: 4px;
+  }
+
+  .header-cell {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background-color: #ae2623; /* Primary color */
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 35px;
+    box-sizing: border-box;
+  }
+
+  .date-cell,
+  .data-cell {
+    position: relative;
+    height: 35px;
+    box-sizing: border-box;
+  }
+
+  .date-cell {
+    background-color: #f9fafb;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .data-cell {
+    border: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+  }
+
+  .today-row::before,
+  .today-row::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #ae2623;
+  }
+
+  .today-row::before {
+    top: 0;
+  }
+
+  .today-row::after {
+    bottom: 0;
+  }
+</style>

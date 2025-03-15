@@ -89,7 +89,6 @@ export async function populateUnitStore(
       unitCollectionDocs.forEach((doc) => {
         initialUnits.push(doc.data() as Unit);
       });
-
       for (let unit of initialUnits) {
         // *** BOOKINGS SUBCOLLECTION DATA PULL
 

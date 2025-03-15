@@ -22,6 +22,7 @@
   .units-container {
     width: 100%;
     display: flex;
+    max-height: 100vh;
   }
   .spinner-container {
     margin: auto;
