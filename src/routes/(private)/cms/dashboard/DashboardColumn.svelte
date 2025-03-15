@@ -1,10 +1,18 @@
 <script lang="ts">
-  import { unitStore } from "$lib/stores";
+  import { page } from "$app/stores";
 </script>
 
 <div class="dashboard-selection-container">
   <h2>Dashboard</h2>
   <div class="divider" />
+  <div id="dashboard-links" class="flex flex-col gap-6">
+    <a
+      href="/cms/dashboard/vertical_calendar"
+      class:active={$page.url.pathname.includes("vertical_calendar")}
+    >
+      Vertical Calendar
+    </a>
+  </div>
 </div>
 
 <style>
@@ -26,6 +34,17 @@
     margin: 0 0 20px 20px;
     width: 50px;
     height: 2px;
+  }
+  a {
+    font-family: cms-medium;
+    color: var(--cms-text);
+    padding: 10px 40px 10px 20px;
+    width: 250px;
+    transition: all 0.3s;
+  }
+  a.active {
+    background-color: var(--cms-highlightPrimary);
+    border-right: 3px solid hsl(var(--p));
   }
 
   @media (max-width: 1000px) {
