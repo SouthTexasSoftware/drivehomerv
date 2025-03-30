@@ -16,6 +16,7 @@
   import { DateTime } from "@easepick/bundle";
   import { navigating, page } from "$app/stores";
   import { fly, slide } from "svelte/transition";
+  import ZIconCheckout from "./zIconCheckout.svelte";
 
   export let unitObject: Unit;
   let submittingForm = false;
@@ -479,11 +480,12 @@
           value={$bookingStore.customerObject?.phone || ""}
         />
       </div>
-      <div class="flex w-full space-x-2 mt-4">
+      <div class="flex w-full items-center space-x-2 mt-4 mb-10 sm:mb-0">
         <input
           type="checkbox"
           bind:checked={$bookingStore.agreement_signed}
           class="checkbox"
+          style="width:1.5rem; height: 1.5rem;"
           name="terms"
           required
           on:change={() => inputFilled("terms")}
@@ -497,10 +499,14 @@
         </p>
       </div>
     </form>
-    <button type="submit" class="right-arrow" form="contact-form">
+    <button type="submit" class="right-arrow space-x-1" form="contact-form">
       {#if submittingForm}
         <div class="spinner" />
       {:else}
+        <ZIconCheckout
+          active={buttonActive ||
+            $bookingStore.customerObject?.contact_form_completed}
+        />
         <ArrowIcon
           active={buttonActive ||
             $bookingStore.customerObject?.contact_form_completed}
