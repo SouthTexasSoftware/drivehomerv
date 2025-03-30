@@ -200,7 +200,9 @@
             {/if}
           </div>
         </div>
-        <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:gap-3">
+        <div
+          class="bg-gray-50 mt-6 px-6 py-4 sm:flex sm:flex-row-reverse sm:gap-3 sm:mt-0"
+        >
           <button
             type="button"
             class="w-full bg-[#ae2623] text-white px-4 py-2 rounded-md hover:bg-[#8e1f1d] disabled:bg-[#ae2623]/50 disabled:cursor-not-allowed sm:w-auto"
@@ -211,7 +213,7 @@
           </button>
           <button
             type="button"
-            class="w-full bg-white text-gray-900 px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 sm:w-auto"
+            class="w-full mt-4 bg-white text-gray-900 px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 sm:w-auto sm:mt-0"
             on:click={cancelDelivery}
           >
             Cancel
