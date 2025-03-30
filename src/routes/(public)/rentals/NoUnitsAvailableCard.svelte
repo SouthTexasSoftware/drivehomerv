@@ -6,7 +6,7 @@
     <h2 class="font-bold text-xl">No Units Available!</h2>
     <p class="font-semibold text-center mt-2">Please choose different dates</p>
     <p class="text-sm font-base">
-      Or <a href="">contact us</a> for urgent requests
+      Or contact us for urgent requests
     </p>
   </div>
 

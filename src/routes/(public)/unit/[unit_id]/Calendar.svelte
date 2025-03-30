@@ -7,6 +7,7 @@
   import publicPickerCalendar from "$lib/styles/publicPickerCalendar.css?inline";
   import type { Unit } from "$lib/types";
   import { bookingStore, bookingUpdateStore, unitStore } from "$lib/stores";
+  import DeliveryModal from "./DeliveryModal.svelte";
 
   export let unitObject: Unit;
   export let loadingBookingRecap: boolean;
@@ -43,6 +44,9 @@
   let tripStartLabel = "Departure";
   let tripEndLabel = "Return";
 
+  let showDeliveryModal = false;
+  let deliverySet = false;
+
   let pickerGlobal: easepick.Core;
   let calendarBookedDates: Date[][] = [];
 
@@ -65,7 +69,7 @@
     }
 
     buildUnitCalendar();
-    updateTripStartEndLabels();
+    // updateTripStartEndLabels();
     updatePickupDropoff();
     pickupDropoffSelectionHandler();
   }
@@ -187,15 +191,11 @@
   }
 
   function updateTripStartEndLabels() {
-    if (
-      unitObject.information.bullet_points.summary.vehicle_type.includes(
-        "Class"
-      )
-    ) {
+    if (!$bookingStore.delivery_details) {
       tripStartLabel = "Departure";
       tripEndLabel = "Return";
     } else {
-      tripStartLabel = "Delivered By:";
+      tripStartLabel = "Delivery";
       tripEndLabel = "Pick-up";
     }
   }
@@ -393,6 +393,47 @@
 
     pickerGlobal.clear();
   }
+
+  function addDelivery(event: { detail: { [key: string]: any } }) {
+    $bookingStore.delivery_details = {
+      distance: event.detail.distance,
+      address: event.detail.address,
+      price_for_delivery: event.detail.price_for_delivery,
+    };
+
+    if (!$bookingStore.additional_line_items) {
+      $bookingStore.additional_line_items = {};
+    }
+
+    $bookingStore.additional_line_items["Delivery/Pickup Fee"] = {
+      value: parseFloat(event.detail.price_for_delivery),
+      type: "add",
+    };
+
+    showDeliveryModal = false;
+    deliverySet = true;
+    dispatch("selection", {
+      start: new DateTime(selectedTripStart, "MMM-DD-YYYY"),
+      end: new DateTime(selectedTripEnd, "MMM-DD-YYYY"),
+    });
+    updateTripStartEndLabels();
+  }
+
+  function removeDelivery() {
+    if (deliverySet) {
+      delete $bookingStore.delivery_details;
+
+      if ($bookingStore.additional_line_items) {
+        delete $bookingStore.additional_line_items["Delivery/Pickup Fee"];
+      }
+      deliverySet = false;
+    }
+    dispatch("selection", {
+      start: new DateTime(selectedTripStart, "MMM-DD-YYYY"),
+      end: new DateTime(selectedTripEnd, "MMM-DD-YYYY"),
+    });
+    updateTripStartEndLabels();
+  }
 </script>
 
 <svelte:window bind:innerWidth={screenWidth} />
@@ -517,6 +558,33 @@
     </select>
   </div>
 </div>
+
+<div class="flex w-full mt-4 lg:mt-2 justify-center items-center space-x-2">
+  <p class="text-sm">Need this RV delivered?</p>
+  {#if !deliverySet || !$bookingStore.delivery_details}
+    <button
+      on:click={() => (showDeliveryModal = true)}
+      class="bg-primary px-4 py-1 text-white rounded-sm text-sm font-weight-100"
+      >Add Delivery</button
+    >
+  {:else}
+    <button
+      on:click={removeDelivery}
+      class="bg-primary px-4 py-1 text-white rounded-sm text-sm font-weight-100"
+      >Remove Delivery</button
+    >
+  {/if}
+</div>
+
+{#if showDeliveryModal}
+  <DeliveryModal
+    {unitObject}
+    on:cancel={() => (showDeliveryModal = false)}
+    on:add={(event) => {
+      addDelivery(event);
+    }}
+  />
+{/if}
 
 <style>
   #calendar-button {

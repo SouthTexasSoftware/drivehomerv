@@ -348,6 +348,7 @@ export const newUnitModel: Unit = {
       },
       delivery: {
         price_per_mile: "",
+        maximum_distance: "",
         additional_options: {},
       },
       upgrades: {

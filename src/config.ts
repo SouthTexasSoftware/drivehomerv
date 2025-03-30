@@ -39,3 +39,8 @@ export const firebaseAdminConfig = {
   //@ts-ignore
   clientEmail: p.VITE_FIREBASE_ADMIN_CLIENT_EMAIL,
 };
+
+export const googleMapsConfig = {
+  //@ts-ignore
+  key: p.VITE_GOOGLE_MAPS_KEY,
+};

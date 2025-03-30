@@ -301,6 +301,7 @@ interface OptionUpgrades {
 }
 interface OptionDelivery {
   price_per_mile: string;
+  maximum_distance: string;
   additional_options: {
     [option_name: string]: string;
   };
@@ -344,17 +345,27 @@ export interface Booking {
   dropoff_time?: string;
   dropoff_location?: string;
   pickup_dropoff_price_addition?: number;
+  is_delivery?: boolean;
 
   agreement_signed?: boolean;
   agreement_link?: string;
+  //@deprecated
   agreement_notification?: boolean;
+  //@deprecated
   agreement_notification_timestamp?: Timestamp;
+  //@deprecated
   agreement_viewed?: [date: string];
   agreement_details?: {
     name: string;
     date: string;
     accepted: boolean;
     version: number;
+  };
+
+  delivery_details?: {
+    distance: string;
+    address: string;
+    price_for_delivery: string;
   };
 
   event_list?: BookingEvent[];
@@ -475,7 +486,7 @@ export interface Customer {
   email: string;
   address?: null;
   payment_method?: null;
-  terms_agreement?: boolean;
+  terms_at_checkout?: boolean;
   bookings?: string[];
   age_over_25?: boolean;
   stripe_id?: string;

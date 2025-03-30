@@ -4,7 +4,7 @@
   import AgreementVerbiageLatest from "./AgreementVerbiageLatest.svelte";
   import { DateTime } from "@easepick/bundle";
   import { Timestamp, doc, updateDoc } from "firebase/firestore";
-  import { firebaseStore } from "$lib/stores";
+  import { bookingStore, firebaseStore } from "$lib/stores";
 
   export let bookingObject: Booking;
   let scrollContainer: HTMLElement;
@@ -29,7 +29,7 @@
     bind:this={scrollContainer}
     on:scroll={scrollListener}
   >
-    <div class="agreement-title">Drive Home RV, LLC | Rental Agreement</div>
+    <div class="agreement-title">Drive Home RV, LLC</div>
     <!-- contains information from the booking in a header-->
     <div class="booking-details">
       <p>Rental Unit: {bookingObject.unit_name}</p>
@@ -40,14 +40,38 @@
         Pick-up Date/Time: {bookingObject.end}, {bookingObject.dropoff_time}
       </p>
       <p>
-        Renter Name: {bookingObject.customerObject?.first_name}
-        {bookingObject.customerObject?.last_name}
+        Renter Name:
+        {#if bookingObject.customerObject?.first_name}
+          {bookingObject.customerObject?.first_name}
+        {/if}
+        {#if bookingObject.customerObject?.last_name}
+          {bookingObject.customerObject?.last_name}
+        {/if}
       </p>
     </div>
     <!-- and then generic text down below-->
     <AgreementVerbiageLatest />
   </div>
   <div class="divider wide" />
+  {#if bookingObject.customerObject?.terms_at_checkout}
+    <p class="text-black">
+      Terms and Conditions reviewed by {bookingObject.agreement_details?.name} on
+      {bookingObject.agreement_details?.date}
+    </p>
+  {:else}
+    <div class="flex w-full space-x-2 mt-4">
+      <input
+        type="checkbox"
+        bind:checked={$bookingStore.agreement_signed}
+        class="checkbox"
+        name="terms"
+        required
+      />
+      <p>I have reviewed the Terms and Conditions.</p>
+    </div>
+  {/if}
+
+  <!-- 
   <form
     class:active={scrollCompleted}
     method="POST"
@@ -128,7 +152,7 @@
         </button>
       </div>
     </div>
-  </form>
+  </form> -->
 </div>
 
 <style>
@@ -242,17 +266,16 @@
     }
   }
 
-  
   @media (max-width: 700px) {
     .row {
-        flex-direction: column;
+      flex-direction: column;
     }
     .input-wrapper.check {
-        margin: 10px 0;
-        align-items: flex-start;
+      margin: 10px 0;
+      align-items: flex-start;
     }
     .input-wrapper.check input {
-        margin-top: 3px;
+      margin-top: 3px;
     }
-}
+  }
 </style>

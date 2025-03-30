@@ -43,6 +43,24 @@
       parseInt(unitObject.information.rates_and_fees.pricing.base_rental_fee) *
       selectedTripLength;
 
+    let service_fee = parseInt(
+      unitObject.information.rates_and_fees.pricing.service_fee
+    );
+
+    let damage_protection =
+      parseInt(
+        unitObject.information.rates_and_fees.pricing.damage_protection
+      ) * selectedTripLength;
+
+    let sales_tax =
+      (parseInt(unitObject.information.rates_and_fees.pricing.sales_tax) /
+        100) *
+      nightlyRateSum;
+
+    var added_line_items = 0;
+
+    // pickup dropoff gets added into added_line_items if there
+    // this also picks up delivery/pickup charges if theyve been added.
     pickup_dropoff_price_addition = 0;
     if (event.detail.pickup) {
       if (event.detail.pickup.price > 0) {
@@ -68,19 +86,19 @@
       }
     }
 
-    let service_fee = parseInt(
-      unitObject.information.rates_and_fees.pricing.service_fee
-    );
+    if ($bookingStore.additional_line_items) {
+      let additional_line_items = Object.values(
+        $bookingStore.additional_line_items
+      ).forEach((data) => {
+        if (data.type == "add") {
+          added_line_items += data.value;
+        } else {
+          added_line_items -= data.value;
+        }
+      });
+    }
 
-    let damage_protection =
-      parseInt(
-        unitObject.information.rates_and_fees.pricing.damage_protection
-      ) * selectedTripLength;
-
-    let sales_tax =
-      (parseInt(unitObject.information.rates_and_fees.pricing.sales_tax) /
-        100) *
-      nightlyRateSum;
+    console.log($bookingStore.additional_line_items);
 
     totalBookingPrice = parseFloat(
       (
@@ -88,7 +106,7 @@
         service_fee +
         damage_protection +
         sales_tax +
-        pickup_dropoff_price_addition
+        added_line_items
       ).toFixed(2)
     );
 

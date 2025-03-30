@@ -51,7 +51,7 @@
       <svelte:component this={AgreementVersion} />
     {/if}
   </div>
-  <div class="divider wide" />
+  <!-- <div class="divider wide" />
   <form method="POST" name="contact-form" id="contact-form">
     <div class="signature-captured">
       This form was electronically signed on {timeString}.
@@ -72,9 +72,7 @@
         <p class="label check">I have read and agree to all of the above.</p>
       </div>
     </div>
-  </form>
-
-
+  </form> -->
 </div>
 
 <style>
