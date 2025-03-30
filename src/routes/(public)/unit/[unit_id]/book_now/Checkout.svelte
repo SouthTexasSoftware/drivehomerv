@@ -225,10 +225,10 @@
   <div class="agreement-statement">
     {#if $bookingStore.agreement_signed}
       <p>
-        Thank you for signing your <a
+        Thank you for reviewing the <a
           class="agreement-link"
           href="/unit/{unitObject.id}/agreement/{$bookingStore.id}"
-          >Rental Agreement</a
+          >Terms and Conditions</a
         >.
       </p>
     {:else}

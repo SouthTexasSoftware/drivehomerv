@@ -382,13 +382,8 @@
                       stroke-linecap="round"
                     />
                   </svg>
-                  {#if booking.agreement_notification}
-                    <p class="info-text light">Sent</p>
-                  {:else}
-                    <p class="info-text light highlight">In Queue</p>
-                  {/if}
                   {#if booking.agreement_signed}
-                    <p class="info-text light">& Signed</p>
+                    <p class="info-text light">Accepted</p>
                   {/if}
                 </div>
               </div>
@@ -582,13 +577,9 @@
                       stroke-linecap="round"
                     />
                   </svg>
-                  {#if booking.agreement_notification}
-                    <p class="info-text light">Sent</p>
-                  {:else}
-                    <p class="info-text light highlight">In Queue</p>
-                  {/if}
+
                   {#if booking.agreement_signed}
-                    <p class="info-text light">& Signed</p>
+                    <p class="info-text light">Accepted</p>
                   {/if}
                 </div>
               </div>
@@ -784,13 +775,9 @@
                       stroke-linecap="round"
                     />
                   </svg>
-                  {#if booking.agreement_notification}
-                    <p class="info-text light">Sent</p>
-                  {:else}
-                    <p class="info-text light highlight">In Queue</p>
-                  {/if}
+
                   {#if booking.agreement_signed}
-                    <p class="info-text light">& Signed</p>
+                    <p class="info-text light">Accepted</p>
                   {/if}
                 </div>
               </div>
@@ -847,8 +834,9 @@
     background-color: rgb(243, 243, 243);
   }
   button.filter.active {
-    background-color: hsl(var(--b2));
-    border-color: rgb(212, 212, 212);
+    background-color: #ae252351;
+    border-color: #ae252376;
+    color: #931e1c;
   }
   .all-bookings-container {
     padding: 25px;

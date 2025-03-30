@@ -265,14 +265,9 @@
 
     <div class="section agreement">
       <div class="section-label">
-        Rental Agreement
-        {#if bookingObject.agreement_notification}
-          <p class="label-status">Sent</p>
-        {:else}
-          <p class="label-status queue">In Queue</p>
-        {/if}
+        Terms and Conditions
         {#if bookingObject.agreement_signed}
-          <p class="label-status two">Signed</p>
+          <p class="label-status two">Accepted</p>
         {/if}
       </div>
 
@@ -284,7 +279,7 @@
             bookingObject.unit_id +
             "/agreement/" +
             bookingObject.id}
-          target="_blank">Agreement Link</a
+          target="_blank">Terms Link</a
         >
       </p>
       {#if bookingObject.agreement_notification_timestamp && bookingObject.agreement_notification}

@@ -8,7 +8,7 @@
 
   let unitObject: Unit | undefined;
 
-  let mobileHideOptions = false;
+  let mobileHideOptions = true;
 
   beforeUpdate(checkUnitSelected);
 

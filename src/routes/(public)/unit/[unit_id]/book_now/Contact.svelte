@@ -26,6 +26,7 @@
     lastName: false,
     email: false,
     phone: false,
+    terms: false,
   };
   let buttonActive = false;
   let formObject: { [key: string]: any };
@@ -60,6 +61,9 @@
         break;
       case "phone":
         formCompleted.phone = true;
+        break;
+      case "terms":
+        formCompleted.terms = true;
         break;
     }
 
@@ -96,7 +100,7 @@
       last_name: formObject.lastName,
       email: formObject.email,
       phone: formObject.phone,
-      preferred_contact_method: formObject.cm,
+      terms_at_checkout: formObject.terms == "on" ? true : false,
       bookings: [$bookingStore.id],
       contact_form_completed: true,
       stripe_id: "",
@@ -139,7 +143,7 @@
       last_name: formObject.lastName,
       email: formObject.email,
       phone: formObject.phone,
-      preferred_contact_method: formObject.cm,
+      terms_at_checkout: formObject.terms == "on" ? true : false,
       contact_form_completed: true,
       stripe_id: $bookingStore.customerObject?.stripe_id,
       bookings: [$bookingStore.id],
@@ -159,6 +163,21 @@
     if (serverResponse.error) {
       console.error(serverResponse.code);
       // return "error";
+    }
+
+    // LOGGING For Agreement signed
+    let newDate = new DateTime(formObject.date, "YYYY-MM-DD");
+    let formattedDate = newDate.format("MMM-DD-YYYY");
+    if (updatedCustomer.terms_at_checkout) {
+      $bookingStore.agreement_details = {
+        name:
+          $bookingStore.customerObject!.first_name +
+          " " +
+          $bookingStore.customerObject!.first_name,
+        date: new DateTime(new Date()).format("MMM-DD-YYYY"),
+        accepted: true,
+        version: 3,
+      };
     }
 
     bookingStore.update((storeData) => {
@@ -396,14 +415,6 @@
           formObject[key] = value;
         }
 
-        formObject.cm = {};
-        //find the preferred contact methods
-        Object.keys(formObject).forEach((key) => {
-          if (key.includes("cm-")) {
-            formObject.cm[key.slice(3, key.length)] = true;
-          }
-        });
-
         if ($bookingStore.customerObject?.id) {
           // UPDATE STRIPE AND DB INSTEAD OF CREATING NEW
           await updateCustomer();
@@ -468,37 +479,22 @@
           value={$bookingStore.customerObject?.phone || ""}
         />
       </div>
-      <div class="input-wrapper">
-        <p class="label">Preferred Contact Method</p>
-        <div class="contact-methods">
-          <div class="method">
-            <p>Text:</p>
-            <input
-              type="checkbox"
-              name="cm-text"
-              checked={$bookingStore.customerObject?.preferred_contact_method
-                ?.text}
-            />
-          </div>
-          <div class="method">
-            <p>Call:</p>
-            <input
-              type="checkbox"
-              name="cm-call"
-              checked={$bookingStore.customerObject?.preferred_contact_method
-                ?.call}
-            />
-          </div>
-          <div class="method">
-            <p>Email:</p>
-            <input
-              type="checkbox"
-              name="cm-email"
-              checked={$bookingStore.customerObject?.preferred_contact_method
-                ?.email}
-            />
-          </div>
-        </div>
+      <div class="flex w-full space-x-2 mt-4">
+        <input
+          type="checkbox"
+          bind:checked={$bookingStore.agreement_signed}
+          class="checkbox"
+          name="terms"
+          required
+          on:change={() => inputFilled("terms")}
+        />
+        <p>
+          I have reviewed the <a
+            class="font-semibold underline decoration-[#ae2623]"
+            href={`/unit/${unitObject.id}/agreement/${$bookingStore.id}`}
+            >Terms and Conditions</a
+          >.
+        </p>
       </div>
     </form>
     <button type="submit" class="right-arrow" form="contact-form">

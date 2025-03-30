@@ -101,12 +101,12 @@
       ><ReestablishingSession /></SectionWrapper
     >
   {:else if agreementSigned}
-    <SectionWrapper title={"Agreement Signed"}>
+    <SectionWrapper title={"Rental Agreement: Accepted"}>
       <BackToCheckout {bookingObject} />
       <AgreementSigned {bookingObject} />
     </SectionWrapper>
   {:else}
-    <SectionWrapper title={"Rental Agreement"}>
+    <SectionWrapper title={"Terms and Conditions"}>
       <BackToCheckout {bookingObject} />
       <Agreement {bookingObject} />
     </SectionWrapper>
