@@ -9,7 +9,12 @@
     updateDoc,
   } from "firebase/firestore";
   import { cmsStore, firebaseStore, unitStore } from "$lib/stores";
-  import { populateUnitBookings, populateUnitStore } from "$lib/helpers";
+  import {
+    populateUnitBookings,
+    populateUnitStore,
+    validateRequiredFields,
+  } from "$lib/helpers";
+  import { alertStore } from "$lib/stores/alert";
 
   export let unitObject: Unit;
 
@@ -33,6 +38,24 @@
     }
 
     savingChanges = true;
+
+    // validate information on unitObject before proceeding with save
+    // Define required fields
+    const requiredFields = [
+      "cms_only.color_scheme.primary",
+      "cms_only.color_scheme.secondary",
+      "bullet_points.summary.pickup_location",
+      "bullet_points.summary.sleeps",
+      // Add more required fields as needed
+    ];
+
+    const validationErrors = validateRequiredFields(unitObject, requiredFields);
+
+    if (validationErrors.length > 0) {
+      validationErrors.forEach((error) => alertStore.error(error.message));
+      savingChanges = false;
+      return;
+    }
 
     // because photos are in subcollection, we need to check a seperate identifier to see if that is waht was modified
     if ($cmsStore.photosUpdated.deleted) {

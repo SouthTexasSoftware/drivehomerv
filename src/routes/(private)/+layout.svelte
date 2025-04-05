@@ -11,6 +11,8 @@
   import { firebaseStore } from "$lib/stores";
   import { onMount } from "svelte";
   import { dev } from "$app/environment";
+  import Alert from "$lib/components/Alert.svelte";
+  import { alertStore } from "$lib/stores/alert";
 
   onMount(() => {
     loadResources();
@@ -40,6 +42,20 @@
     }
   }
 </script>
+
+<Alert />
+<!-- Test button
+<button
+  class="btn btn-primary"
+  on:click={() => {
+    alertStore.success("Test success message!");
+    alertStore.info("Test info message!");
+    alertStore.warning("Test warning message!");
+    alertStore.error("Test error message!");
+  }}
+>
+  Test Alerts
+</button> -->
 
 <slot />
 

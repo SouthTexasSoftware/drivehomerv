@@ -550,3 +550,53 @@ function countdownTimer(
     stop: stopTimer,
   };
 }
+
+/** Validation for unit information saveChanges function found in [unit_id] > Header > saveChanges */
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export function validateRequiredFields(
+  obj: any,
+  requiredFields: string[]
+): ValidationError[] {
+  const errors: ValidationError[] = [];
+
+  function getNestedValue(object: any, path: string): any {
+    return path.split(".").reduce((current, key) => {
+      return current && current[key] !== undefined ? current[key] : undefined;
+    }, object);
+  }
+
+  requiredFields.forEach((field) => {
+    // console.log(
+    //   `evaluating object information: ${JSON.stringify(obj.information)}`
+    // );
+    // console.log(`looking for field: ${field}`);
+    const value = getNestedValue(obj.information, field);
+    // console.log(`value found: ${value}`);
+
+    // Check if value is undefined, null, or empty string
+    if (value === undefined || value === null || value === "") {
+      errors.push({
+        field: `information.${field}`,
+        message: `Error: "information.${field}" is a required field`,
+      });
+    }
+    // For boolean fields, you might want to accept false as valid
+    // Remove this condition if you want false to be invalid too
+    else if (typeof value === "boolean") {
+      return; // Boolean values are always valid (true or false)
+    }
+    // For objects, check if they're empty
+    else if (typeof value === "object" && Object.keys(value).length === 0) {
+      errors.push({
+        field: `information.${field}`,
+        message: `Error: "information.${field}" cannot be empty`,
+      });
+    }
+  });
+
+  return errors;
+}
