@@ -2,7 +2,7 @@
   import type { Booking } from "lib/types";
 
   export let bookingObject: Booking;
-  console.log(bookingObject);
+  // console.log(bookingObject);
 </script>
 
 <div class="link-container">

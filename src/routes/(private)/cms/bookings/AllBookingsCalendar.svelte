@@ -79,7 +79,7 @@
   });
 
   function navigateMonths(previous: boolean) {
-    console.log("navigate months");
+    // console.log("navigate months");
 
     // Check if the icon is "calendar-prev"
     // or "calendar-next"
@@ -89,7 +89,7 @@
       month = month + 1;
     }
 
-    console.log("new month value == ", month);
+    // console.log("new month value == ", month);
 
     // Check if the month is out of range
     if (month < 0 || month > 11) {
@@ -418,7 +418,7 @@
 
     filterDaysShowingArray($cmsBookingFilterStore);
 
-    console.log(daysShowingArray);
+    // console.log(daysShowingArray);
 
     loadedDays = true;
   }
@@ -464,7 +464,7 @@
   }
 
   function filterUnit(id: string) {
-    console.log("filter unit called");
+    // console.log("filter unit called");
     cmsBookingFilterStore.update((storeData) => {
       storeData.units.forEach((unitEntry) => {
         if (unitEntry.id == id) {

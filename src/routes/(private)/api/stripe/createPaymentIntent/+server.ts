@@ -7,10 +7,10 @@ import type { Booking, Customer } from "lib/types";
 export const POST = (async ({ request }) => {
   const bookingObject = (await request.json()) as Booking;
 
-  console.log(
-    "Server Received a createPaymentIntent call to API : ",
-    bookingObject
-  );
+  // console.log(
+  //   "Server Received a createPaymentIntent call to API : ",
+  //   bookingObject
+  // );
 
   const stripe = new Stripe(stripeConfig.privateKey, {
     apiVersion: "2022-11-15",

@@ -71,7 +71,7 @@
   }
 
   async function generatePaymentIntent(customerId: string) {
-    console.log("requesting new payment intent key");
+    // console.log("requesting new payment intent key");
 
     let requestIntentKey = await fetch("/api/stripe/createPaymentIntent", {
       method: "POST",
@@ -135,7 +135,7 @@
             currentBookingStartDate.isBefore(prevBookingEndDate)
           ) {
             // current booking starts in the middle of another
-            console.log("current booking starts in the middle of another");
+            // console.log("current booking starts in the middle of another");
             return true;
           }
           if (
@@ -143,7 +143,7 @@
             currentBookingEndDate.isBefore(prevBookingEndDate)
           ) {
             // current booking ends in the middle of another
-            console.log("current booking ends in the middle of another");
+            // console.log("current booking ends in the middle of another");
             return true;
           }
           if (
@@ -151,7 +151,7 @@
             currentBookingEndDate.isBefore(prevBookingEndDate)
           ) {
             // current booking lies in the middle of another
-            console.log("current booking lies in the middle of another");
+            // console.log("current booking lies in the middle of another");
             return true;
           }
         }

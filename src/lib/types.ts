@@ -300,8 +300,12 @@ interface OptionUpgrades {
   };
 }
 interface OptionDelivery {
-  price_per_mile: string;
-  maximum_distance: string;
+  tier_1_miles: string;
+  tier_1_fee: string;
+  tier_2_miles: string;
+  tier_2_fee: string;
+  tier_3_miles: string;
+  tier_3_fee: string;
   additional_options: {
     [option_name: string]: string;
   };

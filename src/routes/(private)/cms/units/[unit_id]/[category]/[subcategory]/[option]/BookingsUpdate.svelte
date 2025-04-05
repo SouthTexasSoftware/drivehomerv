@@ -77,7 +77,7 @@
           100) *
         store.nightly_rate_sum;
 
-      console.log("store dynamically updated", store);
+      // console.log("store dynamically updated", store);
       return store;
     });
   }

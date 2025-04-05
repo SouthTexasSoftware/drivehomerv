@@ -43,7 +43,7 @@
 
   function getUnitModelInformation() {
     if ($unitStore.isPopulated == false) {
-      console.log("unit store not populated, rerun in .2 seconds");
+      // console.log("unit store not populated, rerun in .2 seconds");
       setTimeout(getUnitModelInformation, 200);
       return;
     }

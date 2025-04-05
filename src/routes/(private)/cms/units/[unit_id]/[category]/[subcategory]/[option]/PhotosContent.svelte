@@ -114,7 +114,7 @@
   }
 
   function updatePhotosIndexes() {
-    console.log("updating indexes");
+    // console.log("updating indexes");
 
     let photoElementsArray = Array.from(sortableContainer.children);
 
@@ -122,7 +122,7 @@
       for (let photoObj of $photosStore) {
         if (photoObj.id == photoElement.getAttribute("data-id")) {
           photoObj.index = index + 1;
-          console.log("setting new index on ", photoObj);
+          // console.log("setting new index on ", photoObj);
         }
       }
     });

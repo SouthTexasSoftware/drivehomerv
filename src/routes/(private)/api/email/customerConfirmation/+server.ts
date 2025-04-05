@@ -11,7 +11,7 @@ interface RequestData {
 export const POST = (async ({ request }) => {
   const requestData = (await request.json()) as Booking;
 
-  console.log("Server Received an CustomerConfirmation email call to API");
+  // console.log("Server Received an CustomerConfirmation email call to API");
   // console.log(
   //   "Server Received an CustomerConfirmation email call to API",
   //   requestData

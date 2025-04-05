@@ -19,25 +19,25 @@
 
   function loadResources() {
     if (!$firebaseStore) {
-      console.log("Attempting connection to database...");
+      // console.log("Attempting connection to database...");
 
       connectToFirebase().then((val) => {
         if (val) {
-          console.log("Database connected.");
+          // console.log("Database connected.");
           populateUnitStore($firebaseStore).then(() => {
-            console.log("Unit store populated", $unitStore);
+            // console.log("Unit store populated", $unitStore);
           });
 
           if (!dev) {
             let analytics = connectAnalytics();
-            console.log(analytics);
+            // console.log(analytics);
             firebaseStore.update((storeData) => {
               storeData.analytics = analytics;
               return storeData;
             });
           }
         } else {
-          console.log("Database connection failed!");
+          // console.log("Database connection failed!");
           // TODO: retry failed connection
         }
       });

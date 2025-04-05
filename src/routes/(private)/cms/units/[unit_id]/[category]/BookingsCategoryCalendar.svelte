@@ -47,7 +47,7 @@
     "December",
   ];
 
-  $: unitColor = unitObject.information.cms_only.color_scheme.primary || 'grey';
+  $: unitColor = unitObject.information.cms_only.color_scheme.primary || "grey";
 
   // hacky, because original used 4 alternating colors
   $: colorPalette = [
@@ -72,7 +72,7 @@
       month = month + 1;
     }
 
-    console.log("new month value == ", month);
+    // console.log("new month value == ", month);
 
     // Check if the month is out of range
     if (month < 0 || month > 11) {

@@ -8,7 +8,7 @@ interface RequestData {
 export const POST = (async ({ request }) => {
   const requestData = (await request.json()) as RequestData;
 
-  console.log("Cancel Booking from Timer api call: ", requestData);
+  // console.log("Cancel Booking from Timer api call: ", requestData);
 
   let responseJson = {
     error: false,

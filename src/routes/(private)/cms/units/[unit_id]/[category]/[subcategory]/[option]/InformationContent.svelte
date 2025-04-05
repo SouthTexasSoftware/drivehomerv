@@ -86,7 +86,7 @@
     // get value, parse target id, set event change flag
     // save value to unitStore?
     let changedValue = target.value;
-    console.log(changedValue);
+    // console.log(changedValue);
     let elementIdSplit = target.id.split("?");
     let changedOption = elementIdSplit[0];
     let changedProperty = elementIdSplit[1];

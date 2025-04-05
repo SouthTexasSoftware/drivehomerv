@@ -141,7 +141,7 @@
 
             let serverResponse = await sendConfirmationEmail.json();
             if (serverResponse.error) {
-              console.log(serverResponse);
+              // console.log(serverResponse);
               console.error(serverResponse.code);
               return "error";
             }
@@ -163,7 +163,7 @@
             //@ts-ignore
             await setDoc($bookingStore.document_reference, $bookingStore);
           } else {
-            console.log("records show confirmation email already sent");
+            // console.log("records show confirmation email already sent");
           }
           // show thank you page, AFTER we receive confirmation of the email...
           setFlowStateView(3);
@@ -314,7 +314,7 @@
       return;
     }
     if (navigation.type == "link") {
-      console.log("going to another link");
+      // console.log("going to another link");
       if (navigation.to?.url.pathname.includes("agreement")) {
         if ($bookingTimerStore.timer) {
           $bookingTimerStore.timer.reset();

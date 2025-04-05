@@ -14,7 +14,7 @@
       console.error(serverResponse.code);
       // return "error";
     }
-    console.log(serverResponse);
+    // console.log(serverResponse);
   }
 </script>
 

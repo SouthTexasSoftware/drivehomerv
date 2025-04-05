@@ -98,7 +98,7 @@
       });
     }
 
-    console.log($bookingStore.additional_line_items);
+    // console.log($bookingStore.additional_line_items);
 
     totalBookingPrice = parseFloat(
       (
@@ -178,7 +178,7 @@
       let newCustomerId = newUUID();
       $bookingStore.customer = newCustomerId;
     } else {
-      console.log("previous customer ID found");
+      // console.log("previous customer ID found");
     }
 
     // CREATE BOOKING ID and SUBMIT TO FIREBASE

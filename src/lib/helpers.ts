@@ -168,11 +168,11 @@ export async function populateUnitStore(
  *
  */
 export function populateUnitBookings(snapshot: QuerySnapshot, unit: Unit) {
-  console.log("re-populating unit bookings for ", unit.name);
+  // console.log("re-populating unit bookings for ", unit.name);
   let bookings = [];
   let bookingDates = [];
 
-  console.log(snapshot.docs);
+  // console.log(snapshot.docs);
 
   for (let bookingDoc of snapshot.docs) {
     let booking = bookingDoc.data() as Booking;
@@ -347,8 +347,12 @@ export const newUnitModel: Unit = {
         additional_options: {},
       },
       delivery: {
-        price_per_mile: "",
-        maximum_distance: "",
+        tier_1_miles: "",
+        tier_1_fee: "",
+        tier_2_miles: "",
+        tier_2_fee: "",
+        tier_3_miles: "",
+        tier_3_fee: "",
         additional_options: {},
       },
       upgrades: {

@@ -34,7 +34,7 @@ export const POST = (async ({ request }) => {
   //currently an empty request, this is just a trigger
   const requestData = await request.json();
 
-  console.log("Server received a Rental Agreement Cron Job start command");
+  // console.log("Server received a Rental Agreement Cron Job start command");
 
   let responseJson = {
     error: false,
@@ -108,7 +108,7 @@ export const POST = (async ({ request }) => {
         }
       }
     } else {
-      console.log("no bookings found that match query");
+      // console.log("no bookings found that match query");
     }
   } catch (e) {
     console.log(e);

@@ -138,9 +138,9 @@
   function createUpdateListener() {
     // updates calendar if bookings get refreshed externally.
     let unsub = bookingUpdateStore.subscribe((storeData) => {
-      console.log("Calendar rebuild triggered");
+      // console.log("Calendar rebuild triggered");
       if (loadingBookingRecap) {
-        console.log("booking processed through, unsubbing");
+        // console.log("booking processed through, unsubbing");
         unsub();
         return;
       }
@@ -313,7 +313,7 @@
             if (timeOption[1].available) {
               timeOption[1].selected = true;
               pickupSelected = timeOption[0];
-              console.log("new pickup autoselected = ", pickupSelected);
+              // console.log("new pickup autoselected = ", pickupSelected);
               optionSelectedAlready = true;
             }
           });

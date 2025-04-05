@@ -152,7 +152,7 @@
           });
         }
 
-        console.log("store dynamically updated", store);
+        // console.log("store dynamically updated", store);
         return store;
       });
     }
@@ -279,10 +279,10 @@
       type: new_line_item_type as "add" | "subtract",
     };
 
-    console.log(
-      "updated additional line items: ",
-      $bookingStore.additional_line_items
-    );
+    // console.log(
+    //   "updated additional line items: ",
+    //   $bookingStore.additional_line_items
+    // );
     if ($bookingStore.total_price) {
       if (new_line_item_type == "subtract") {
         if ($bookingStore.total_price - new_line_item_amount < 0) {

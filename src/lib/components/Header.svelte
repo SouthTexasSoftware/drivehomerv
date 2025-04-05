@@ -13,7 +13,7 @@
 
   $: if (mobileNavShowing) {
     document.addEventListener("click", closeMobileMenu);
-    console.log(document.body);
+    // console.log(document.body);
     clickListener = true;
     document.addEventListener("scroll", closeMobileMenu);
     scrollListener = true;
@@ -41,7 +41,9 @@
 <svelte:window bind:innerWidth={screenWidth} />
 
 <header>
-  <a id="logo-link" href="/rentals"><img src={companyLogo} alt="Company Logo" /></a>
+  <a id="logo-link" href="/rentals"
+    ><img src={companyLogo} alt="Company Logo" /></a
+  >
 
   <!-- <WinterSpecial/> -->
 

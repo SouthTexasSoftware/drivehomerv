@@ -11,7 +11,7 @@
       "pk_test_51MfwcCH21MZiaJun12tPhH4CVsJwb43haLWeAwnFHS5l3Mn50pBBYJ3c6ez0pD7soycvq685vAoHEztZEWz6sLy700wayewzKl"
     );
 
-    console.log(paymentIntentKey);
+    // console.log(paymentIntentKey);
 
     const appearance = { theme: "stripe" };
     let elements = stripe.elements({

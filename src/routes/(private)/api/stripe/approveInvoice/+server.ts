@@ -10,7 +10,7 @@ interface RequestData {
 export const POST = (async ({ request }) => {
   const requestData = (await request.json()) as RequestData;
 
-  console.log("Server Received an ApproveInvoice call to API : ", requestData);
+  // console.log("Server Received an ApproveInvoice call to API : ", requestData);
 
   const stripe = new Stripe(stripeConfig.privateKey, {
     apiVersion: "2022-11-15",

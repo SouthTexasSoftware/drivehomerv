@@ -41,7 +41,7 @@
       try {
         await deleteObject(bookingStorageRef);
       } catch (e) {
-        console.log("bookings storage object does not exist");
+        // console.log("bookings storage object does not exist");
       }
       if (unitObject.bookings) {
         unitObject.bookings.forEach((booking, index) => {

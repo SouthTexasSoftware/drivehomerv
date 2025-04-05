@@ -6,8 +6,12 @@
     information: {
       rates_and_fees: {
         delivery: {
-          maximum_distance: number;
-          price_per_mile: string; // e.g., "3.49"
+          tier_1_miles: string; // e.g., "10"
+          tier_1_fee: string; // e.g., "149"
+          tier_2_miles: string; // e.g., "25"
+          tier_2_fee: string; // e.g., "249"
+          tier_3_miles: string; // e.g., "50"
+          tier_3_fee: string; // e.g., "349"
         };
       };
     };
@@ -22,11 +26,23 @@
   let exceedsMax: boolean | null = null;
   let priceForDeliveryAndPickup: number | null = null;
 
-  const maxOfferDistance =
-    unitObject.information.rates_and_fees.delivery.maximum_distance;
-  const pricePerMile = parseFloat(
-    unitObject.information.rates_and_fees.delivery.price_per_mile
-  );
+  // Extract tier values and convert to numbers
+  const {
+    tier_1_miles,
+    tier_1_fee,
+    tier_2_miles,
+    tier_2_fee,
+    tier_3_miles,
+    tier_3_fee,
+  } = unitObject.information.rates_and_fees.delivery;
+
+  // Parse strings to numbers
+  const tier1Miles = parseFloat(tier_1_miles);
+  const tier1Fee = parseFloat(tier_1_fee);
+  const tier2Miles = parseFloat(tier_2_miles);
+  const tier2Fee = parseFloat(tier_2_fee);
+  const tier3Miles = parseFloat(tier_3_miles);
+  const tier3Fee = parseFloat(tier_3_fee);
 
   async function getCalculatedDistance() {
     if (!addressInputValue) {
@@ -57,34 +73,41 @@
         const distanceValue = parseFloat(
           distance.split(" ")[0].replace(/,/g, "")
         );
-        exceedsMax = distanceValue > maxOfferDistance;
 
-        if (!exceedsMax) {
-          if (isNaN(distanceValue) || isNaN(pricePerMile)) {
-            console.error("Invalid numbers:", { distanceValue, pricePerMile });
-            priceForDeliveryAndPickup = null;
-          } else {
-            // Double the cost for delivery + pickup
-            priceForDeliveryAndPickup = 2 * distanceValue * pricePerMile;
-          }
+        // Determine tier and set price using parsed numbers
+        if (distanceValue <= tier1Miles) {
+          priceForDeliveryAndPickup = tier1Fee;
+          exceedsMax = false;
+        } else if (distanceValue <= tier2Miles) {
+          priceForDeliveryAndPickup = tier2Fee;
+          exceedsMax = false;
+        } else if (distanceValue <= tier3Miles) {
+          priceForDeliveryAndPickup = tier3Fee;
+          exceedsMax = false;
         } else {
           priceForDeliveryAndPickup = null;
+          exceedsMax = true;
         }
 
-        console.log(
-          "Distance:",
-          distance,
-          "Parsed Distance:",
-          distanceValue,
-          "Max:",
-          maxOfferDistance,
-          "Exceeds:",
-          exceedsMax,
-          "Price/Mile:",
-          pricePerMile,
-          "Price for Delivery/Pickup:",
-          priceForDeliveryAndPickup
-        );
+        // console.log(
+        //   "Distance:",
+        //   distance,
+        //   "Parsed Distance:",
+        //   distanceValue,
+        //   "Tier 1 (miles/fee):",
+        //   tier1Miles,
+        //   tier1Fee,
+        //   "Tier 2 (miles/fee):",
+        //   tier2Miles,
+        //   tier2Fee,
+        //   "Tier 3 (miles/fee):",
+        //   tier3Miles,
+        //   tier3Fee,
+        //   "Exceeds Max:",
+        //   exceedsMax,
+        //   "Price for Delivery/Pickup:",
+        //   priceForDeliveryAndPickup
+        // );
       } else {
         distance = `Error: ${data.error || "Unknown error"}`;
         exceedsMax = null;
@@ -106,7 +129,7 @@
 
   function addDelivery() {
     dispatch("add", {
-      distance,
+      distance, // Fixed typo from .Distance
       address: addressInputValue,
       price_for_delivery: priceForDeliveryAndPickup?.toFixed(2),
     });
@@ -168,7 +191,7 @@
             </div>
             <p class="text-base text-gray-600 mt-2">
               Maximum delivery/pickup distance: <span class="font-bold"
-                >{maxOfferDistance}</span
+                >{tier_3_miles}</span
               > miles
             </p>
             {#if distance}
@@ -184,14 +207,14 @@
                 {#if exceedsMax !== null}
                   {#if exceedsMax}
                     <p class="mt-2 text-sm warning">
-                      Exceeds max delivery distance of {maxOfferDistance} miles
+                      Exceeds max delivery distance of {tier_3_miles} miles
                     </p>
                   {/if}
                   {#if !exceedsMax && priceForDeliveryAndPickup !== null}
                     <p class="mt-2 text-base text-gray-700">
                       Delivery/Pickup Cost: <span
                         class="font-semibold text-[#ae2623]"
-                        >${priceForDeliveryAndPickup.toFixed(2)}</span
+                        >${(priceForDeliveryAndPickup || 0).toFixed(2)}</span
                       >
                     </p>
                   {/if}

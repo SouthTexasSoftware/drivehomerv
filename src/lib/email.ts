@@ -26,7 +26,7 @@ export async function emailHandler(
 ) {
   msg.to = to;
 
-  console.log("attempting email payload = ", payload);
+  // console.log("attempting email payload = ", payload);
   //build 'msg' object based on the type and payload details
   switch (type) {
     case "owner_notification":
@@ -100,7 +100,7 @@ export async function emailHandler(
     try {
       //@ts-ignore
       let sgResponse = await sgMail.send(msg);
-      console.log(sgResponse);
+      // console.log(sgResponse);
     } catch (e) {
       console.error(e);
 
