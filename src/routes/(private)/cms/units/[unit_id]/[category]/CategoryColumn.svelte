@@ -310,7 +310,41 @@
   {/if}
 </div>
 
+{#if $page.params.category == "information"}
+  <div class="stripe-product-id flex mt-auto px-4">STRIPE ID</div>
+  <input
+    class="property-input px-2 mx-4"
+    type="text"
+    bind:value={unitObject.stripe_product_id}
+    on:input={() => {
+      unitObject.cms_edited = true;
+      unitStore.update((data) => {
+        data.units.forEach((unit) => {
+          if (unit.id == unitObject.id) {
+            unit = unitObject;
+          }
+        });
+        return data;
+      });
+    }}
+  />
+{/if}
+
 <style>
+  .property-input {
+    border: 1px solid var(--cms-boxShadow);
+    font-size: 14px;
+    font-family: cms-regular;
+    padding: 6px 15px;
+    border-radius: 4px;
+    margin-top: 0px;
+    outline: none;
+    width: 80%;
+  }
+  .stripe-product-id {
+    font-family: cms-semibold;
+    font-size: 14px;
+  }
   .column-container {
     overflow-y: scroll;
     padding-bottom: 100px;
