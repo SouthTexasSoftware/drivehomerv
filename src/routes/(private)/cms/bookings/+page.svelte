@@ -1,54 +1,53 @@
 <script lang="ts">
-  import { unitStore } from "$lib/stores";
   import { onMount } from "svelte";
-  import UnitCalendar from "./UnitCalendar.svelte";
-  import NewBooking from "../dashboard/NewBooking.svelte";
-  import BookingsTable from "./BookingsTable.svelte";
 
-  let bookingsCollected = false;
-  let newBookingKey = false;
+  import AllBookingsCalendar from "./AllBookingsCalendar.svelte";
+  import AllBookingsCalendarV2 from "./AllBookingsCalendarV2.svelte";
+
+  let loadCalendar = false;
 
   onMount(() => {
     setTimeout(() => {
-      bookingsCollected = true;
-    }, 1000);
+      loadCalendar = true;
+    }, 200);
   });
-
-  function refreshPage() {
-    newBookingKey = !newBookingKey;
-    bookingsCollected = false;
-    setTimeout(() => (bookingsCollected = true), 200);
-  }
 </script>
 
-<div class="bookings-container">
-  {#key newBookingKey}
-    <NewBooking on:refresh={refreshPage} />
-  {/key}
-  {#if bookingsCollected}
-    {#if $unitStore.isPopulated}
-      {#each $unitStore.units as unit}
-        <UnitCalendar unitObj={unit} />
-      {/each}
-    {/if}
-  {:else}
-    <div class="spinner" />
-  {/if}
-</div>
+{#if loadCalendar}
+  <div class="page-container">
+    <AllBookingsCalendarV2 />
+  </div>
+{:else}
+  <div class="loading-container">
+    <div class="spinner"></div>
+    <div class="spinner-label">Starting Engine...</div>
+  </div>
+{/if}
 
 <style>
-  .bookings-container {
-    /* background-color: lightblue; */
-    width: 100%;
-    padding: 25px;
+  .page-container {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: center;
   }
-
+  .loading-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .spinner-label {
+    margin: auto auto auto 220px;
+    font-family: cms-light;
+    font-size: 12px;
+    width: 150px;
+    margin-top: 20px;
+    text-align: center;
+  }
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--b3));
+    border-top: 2px solid hsl(var(--p));
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;
@@ -58,7 +57,7 @@
     transition: all 0.2s;
     width: 100px;
     height: 100px;
-    margin: auto;
+    margin: auto auto 0 250px;
   }
   @keyframes spinning {
     0% {
@@ -66,6 +65,23 @@
     }
     100% {
       transform: rotate(360deg);
+    }
+  }
+  @media (max-width: 1000px) {
+    .page-container {
+      height: 50vh;
+      flex-direction: column;
+      max-width: 100vw;
+    }
+    .loading-container {
+      height: 50vh;
+      width: 100vw;
+    }
+    .spinner {
+      margin: auto auto 15px;
+    }
+    .spinner-label {
+      margin: 5px auto auto;
     }
   }
 </style>

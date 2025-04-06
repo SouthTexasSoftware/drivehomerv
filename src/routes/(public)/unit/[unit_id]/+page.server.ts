@@ -5,7 +5,7 @@ export const actions = {
   default: async ({ request }) => {
     const data = await request.formData();
 
-    console.log(data);
+    // console.log(data);
     let first_name = data.get("first-name");
     let last_name = data.get("last-name");
     let full_name = first_name + " " + last_name;
@@ -35,7 +35,7 @@ export const actions = {
     };
     // organize data and call email Handler to send the notification email out...
 
-    await emailHandler("request", emailPayload);
+    //await emailHandler("request", emailPayload);
   },
 } satisfies Actions;
 

@@ -3,7 +3,7 @@
   import { beforeUpdate, onMount } from "svelte";
   import BookingsOverview from "./BookingsOverview.svelte";
   import { collection, getDocs } from "firebase/firestore";
-  import { firebaseStore } from "$lib/stores";
+  import { bookingStore, firebaseStore } from "$lib/stores";
   import { page } from "$app/stores";
   import { fade } from "svelte/transition";
   import BookingSettingsDropdown from "./BookingSettingsDropdown.svelte";
@@ -11,12 +11,14 @@
   import BookingsPhotos from "./BookingsPhotos.svelte";
   import BookingsAddPhotoDropdown from "./BookingsAddPhotoDropdown.svelte";
   import BookingsUpdate from "./BookingsUpdate.svelte";
+  import BookingBlocking from "./BookingBlocking.svelte";
+  import { goto } from "$app/navigation";
 
   export let unitObject: Unit;
   export let subcategory: string;
   export let option: string;
 
-  let bookingObject: Booking | undefined;
+  let bookingObject: Booking | undefined = undefined;
   let showWrapper = true;
   let customerList: Customer[] = [];
   let settingsDropdownShowing = false;
@@ -24,8 +26,18 @@
   let updatePhotos = false;
   let updateBooking = false;
 
+  // stuff for blocking
+  let showBlocking = false;
+  let blockingObject: Booking | undefined = undefined;
+
   $: bookingObject = unitObject.bookings?.find((booking) => {
     if (booking.id == subcategory) {
+      //check for blocking, which will have no customer
+      if (booking.id.includes("block_")) {
+        blockingObject = booking;
+        return booking;
+      }
+
       // add customer Object?
       if (customerList.length > 0) {
         customerList.forEach((customer) => {
@@ -41,6 +53,15 @@
   beforeUpdate(() => {
     if (!option) {
       showWrapper = false;
+      return;
+    }
+    if (option == "Blocking") {
+      showWrapper = false;
+      showBlocking = true;
+      return;
+    } else {
+      showWrapper = true;
+      showBlocking = false;
     }
     if (customerList.length == 0) {
       fetchCustomerData().then(() => {
@@ -173,20 +194,30 @@
   {#if bookingObject}
     <BookingsUpdate
       {unitObject}
-      {bookingObject}
       on:cancel={() => {
         updateBooking = false;
         showWrapper = true;
         settingsDropdownShowing = false;
       }}
-      on:save={(event) => {
-        bookingObject = event.detail;
+      on:save={async (event) => {
+        customerList = []; // reset customerList so it will repop on refresh
         updateBooking = false;
         showWrapper = true;
         settingsDropdownShowing = false;
       }}
     />
   {/if}
+{/if}
+{#if showBlocking}
+  <!-- Options are basically to delete it? lol -->
+  <div class="bookings-option-container">
+    {#if blockingObject}
+      <div class="container-header">
+        <p class="option-title">Blocking ID: {blockingObject.id}</p>
+      </div>
+      <BookingBlocking {blockingObject} />
+    {/if}
+  </div>
 {/if}
 
 <style>
@@ -244,7 +275,7 @@
   @media (max-width: 500px) {
     .bookings-option-container {
       width: 100%;
-      max-height: 90%;
+      max-height: 84%;
     }
   }
 </style>

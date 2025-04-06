@@ -30,3 +30,17 @@ export const stripeConfig = {
   //@ts-ignore
   publicKey: p.VITE_STRIPE_PUBLIC_KEY,
 };
+
+export const firebaseAdminConfig = {
+  //@ts-ignore
+  projectId: p.VITE_FIREBASE_ADMIN_PROJECT_ID,
+  //@ts-ignore
+  privateKey: p.VITE_FIREBASE_ADMIN_PRIVATE_KEY,
+  //@ts-ignore
+  clientEmail: p.VITE_FIREBASE_ADMIN_CLIENT_EMAIL,
+};
+
+export const googleMapsConfig = {
+  //@ts-ignore
+  key: p.VITE_GOOGLE_MAPS_KEY,
+};

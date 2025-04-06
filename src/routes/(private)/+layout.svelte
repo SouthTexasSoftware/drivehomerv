@@ -11,6 +11,8 @@
   import { firebaseStore } from "$lib/stores";
   import { onMount } from "svelte";
   import { dev } from "$app/environment";
+  import Alert from "$lib/components/Alert.svelte";
+  import { alertStore } from "$lib/stores/alert";
 
   onMount(() => {
     loadResources();
@@ -18,28 +20,42 @@
 
   function loadResources() {
     if (!$firebaseStore) {
-      console.log("Attempting connection to database...");
+      // console.log("Attempting connection to database...");
 
       connectToFirebase().then((val) => {
         if (val) {
-          console.log("Database connected.");
+          // console.log("Database connected.");
           populateUnitStore($firebaseStore, { cms: true });
           if (!dev) {
             let analytics = connectAnalytics();
-            console.log(analytics);
+            // console.log(analytics);
             firebaseStore.update((storeData) => {
               storeData.analytics = analytics;
               return storeData;
             });
           }
         } else {
-          console.log("Database connection failed!");
+          // console.log("Database connection failed!");
           // TODO: retry failed connection
         }
       });
     }
   }
 </script>
+
+<Alert />
+<!-- Test button
+<button
+  class="btn btn-primary"
+  on:click={() => {
+    alertStore.success("Test success message!");
+    alertStore.info("Test info message!");
+    alertStore.warning("Test warning message!");
+    alertStore.error("Test error message!");
+  }}
+>
+  Test Alerts
+</button> -->
 
 <slot />
 

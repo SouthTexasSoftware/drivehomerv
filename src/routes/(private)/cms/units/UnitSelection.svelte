@@ -5,7 +5,7 @@
 
   $: categorySelected = $page.params.category
     ? $page.params.category
-    : "information";
+    : "bookings";
 
   // these are left out because they do not work with bookings..
   $: subcategorySelected = $page.params.subcategory
@@ -35,6 +35,7 @@
       {/each}
     {/if}
   </div>
+  <a href="/cms/units/create" class="create-link">Create New Unit</a>
 </div>
 
 <style>
@@ -58,7 +59,8 @@
   }
   .divider {
     margin: 0 0 20px 20px;
-    width: 25%;
+    width: 50px;
+    height: 2px;
   }
   a {
     font-family: cms-medium;
@@ -80,7 +82,7 @@
     .unit-selection-container {
       height: 51px;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       border: none;
       border-left: 2px solid var(--cms-boxShadow);
       border-top: 1px solid var(--cms-boxShadow);
@@ -90,8 +92,8 @@
       right: 0;
       background-color: transparent;
       overflow: scroll;
-      scroll-snap-type: y mandatory;
-      /* z-index: 10; */
+      scroll-snap-type: x mandatory;
+      z-index: 10;
     }
     h2,
     .divider {
@@ -99,20 +101,21 @@
     }
     .unit-links {
       position: relative;
-      width: 100%;
+      width: auto;
       height: auto;
       /* overflow-y: scroll; */
-      scroll-snap-type: y mandatory;
+      scroll-snap-type: x mandatory;
       background-color: transparent;
       gap: 0;
+      flex-direction: row;
     }
     a {
       font-family: cms-bold;
       color: var(--cms-text);
-      width: 100%;
+      width: 50vw;
       padding-right: 20px;
       font-size: 20px;
-      height: 52px !important;
+      height: 50px !important;
       line-height: 52px;
       padding: 0;
       /* margin-right: 40px; */

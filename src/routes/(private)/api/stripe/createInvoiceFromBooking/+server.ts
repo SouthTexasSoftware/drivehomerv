@@ -18,10 +18,10 @@ interface BookingAndID {
 export const POST = (async ({ request }) => {
   const bookingAndId = (await request.json()) as BookingAndID;
 
-  console.log(
-    "Server Received a CreateBookingPrice call to API : ",
-    bookingAndId
-  );
+  // console.log(
+  //   "Server Received a CreateBookingPrice call to API : ",
+  //   bookingAndId
+  // );
 
   const stripe = new Stripe(stripeConfig.privateKey, {
     apiVersion: "2022-11-15",
@@ -38,7 +38,7 @@ export const POST = (async ({ request }) => {
   let tripInvoiceSplit = true;
   // determine if invoice is 50% or 100%
   let todaysDate = new DateTime();
-  console.log(todaysDate);
+  // console.log(todaysDate);
   let tripStartDate = new DateTime(
     bookingAndId.bookingRequest.start,
     "MMM-DD-YYYY"

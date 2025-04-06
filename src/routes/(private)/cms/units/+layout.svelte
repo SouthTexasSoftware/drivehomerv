@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from "$app/navigation";
   import { unitStore } from "$lib/stores";
   import UnitSelection from "./UnitSelection.svelte";
 </script>

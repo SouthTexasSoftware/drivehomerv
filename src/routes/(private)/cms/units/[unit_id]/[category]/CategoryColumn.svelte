@@ -1,21 +1,17 @@
 <script lang="ts">
-  import { newUnitModel } from "$lib/helpers";
+  import { newUnitModel, populateUnitBookings } from "$lib/helpers";
   import { page } from "$app/stores";
-  import { beforeUpdate, onMount } from "svelte";
-  import type { Booking, Unit } from "$lib/types";
+  import { onMount } from "svelte";
+  import type { Unit } from "$lib/types";
   import { DateTime } from "@easepick/bundle";
-  import { afterNavigate } from "$app/navigation";
-  import { firebaseStore, unitStore } from "$lib/stores";
+  import { afterNavigate, goto } from "$app/navigation";
+  import { cmsStore, firebaseStore, unitStore } from "$lib/stores";
   import { createEventDispatcher } from "svelte";
-  import {
-    collection,
-    getDocs,
-    onSnapshot,
-    query,
-    where,
-  } from "firebase/firestore";
+  import { collection, onSnapshot } from "firebase/firestore";
 
   export let unitObject: Unit;
+
+  let screenWidth: number;
 
   let subcategoryList: string[] = [];
   let subcategoryLabels: string[] = [];
@@ -31,9 +27,6 @@
     if (!unitObject.sessionOnly) {
       unitObject.sessionOnly = {};
       unitObject.sessionOnly.pastBookingsLoaded = false;
-      attachBookingsListener();
-    } else if (!unitObject.sessionOnly.bookingsListener) {
-      attachBookingsListener();
     }
   });
 
@@ -44,13 +37,13 @@
     if (!unitObject.sessionOnly) {
       unitObject.sessionOnly = {};
       unitObject.sessionOnly.pastBookingsLoaded = false;
-      attachBookingsListener();
     }
+    unitStore.subscribe(getUnitModelInformation);
   });
 
   function getUnitModelInformation() {
     if ($unitStore.isPopulated == false) {
-      console.log("unit store not populated, rerun in .2 seconds");
+      // console.log("unit store not populated, rerun in .2 seconds");
       setTimeout(getUnitModelInformation, 200);
       return;
     }
@@ -97,7 +90,14 @@
               let endDay = endDateTime.getDate();
               let endDayString = ordinal_suffix_of(endDay);
 
+              let blockingPrefix = "";
+              //for blockings only
+              if (booking.status == "block") {
+                blockingPrefix = "*Block*";
+              }
+
               let fullString =
+                blockingPrefix +
                 startMonth +
                 " " +
                 startDayString +
@@ -131,7 +131,20 @@
     }
   }
 
-  function getOptions(key: string) {
+  // Blocking Example UUID
+  //block_kY3auZFpt0S8Kq
+
+  /**
+   * called onClick - spits out the proper 'options' that are under the subcategory label i.e. 'bullet points' would spit out summary, Rv Details, Drivable Features, etc
+   * @param key subcategory label shown in the column i.e. 'Bullet Points' 'Paragraphs' or for bookings, it is a booking_id or 'noBookingIdFound'
+   * @return list of options to select
+   */
+  function getOptions(key: string): string[] {
+    //check if blocking based on key
+    if (key.includes("block_")) {
+      return ["Blocking"];
+    }
+
     // check if in bookings category.. then just build standard options
     if ($page.params.category == "bookings") {
       return ["Overview", "Photos", "Documents"];
@@ -172,26 +185,30 @@
     if (loadingPastBookings) return;
     loadingPastBookings = true;
 
-    let bookingsCollection = collection(
+    let totalBookingsCollectionForUnit = collection(
       $firebaseStore.db,
       "units",
       unitObject.id,
       "bookings"
     );
-    let todaysDate = new DateTime();
-    let todaysUnixTimestamp = Math.ceil(todaysDate.getTime() / 1000);
-    let pastBookingsQuery = query(
-      bookingsCollection,
-      where("unix_end", "<=", todaysUnixTimestamp)
-    );
 
-    let pastBookings = await getDocs(pastBookingsQuery);
+    // find bookingListener within cmsStore, and update to be all bookings.
+    cmsStore.update((store) => {
+      store.bookingListeners.forEach((listenerObj) => {
+        if (listenerObj.unit_id == unitObject.id) {
+          listenerObj.listener();
 
-    for (let booking of pastBookings.docs) {
-      unitObject.bookings?.push(booking.data() as Booking);
-    }
+          listenerObj.listener = onSnapshot(
+            totalBookingsCollectionForUnit,
+            (querySnapshot) => {
+              populateUnitBookings(querySnapshot, unitObject);
+            }
+          );
+        }
+      });
 
-    getUnitModelInformation();
+      return store;
+    });
 
     if (!unitObject.sessionOnly) {
       unitObject.sessionOnly = {};
@@ -200,55 +217,36 @@
       unitObject.sessionOnly.pastBookingsLoaded = true;
     }
 
-    unitObject.sessionOnly.bookingsListener();
-    attachBookingsListener();
-
     loadingPastBookings = false;
   }
-
-  async function attachBookingsListener() {
-    let unitsBookingCollectionRef = collection(
-      $firebaseStore.db,
-      "units",
-      unitObject.id,
-      "bookings"
-    );
-
-    let todaysDate = new DateTime();
-    let todaysUnixTimestamp = Math.ceil(todaysDate.getTime() / 1000);
-
-    let collectionQuery = query(
-      unitsBookingCollectionRef,
-      where("unix_end", ">=", todaysUnixTimestamp)
-    );
-
-    if (unitObject.sessionOnly?.pastBookingsLoaded) {
-      collectionQuery = query(unitsBookingCollectionRef);
-    }
-
-    const unsubscribe = onSnapshot(collectionQuery, (querySnapshot) => {
-      let updatedBookingsArray: Booking[] = [];
-      querySnapshot.forEach((doc) => {
-        updatedBookingsArray.push(doc.data() as Booking);
-      });
-      unitObject.bookings = updatedBookingsArray;
-      getUnitModelInformation();
-    });
-    if (unitObject.sessionOnly) {
-      unitObject.sessionOnly.bookingsListener = unsubscribe;
-    } else {
-      unitObject.sessionOnly = {};
-      unitObject.sessionOnly.bookingsListener = unsubscribe;
-    }
-  }
 </script>
+
+<svelte:window bind:innerWidth={screenWidth} />
 
 <div class="column-container">
   {#each subcategoryLabels as subcategory, index}
     <button
       class="subcategory-title"
-      on:click={() =>
-        (showingSubcategory[subcategory] = !showingSubcategory[subcategory])}
+      on:click={() => {
+        showingSubcategory[subcategory] = !showingSubcategory[subcategory];
+        if (screenWidth < 700) {
+          return;
+        }
+        // for autoclicking first option in desktop view
+        if (showingSubcategory[subcategory]) {
+          let optionsWithin = getOptions(subcategoryList[index]);
+          goto(
+            "/cms/units/" +
+              $page.params.unit_id +
+              "/" +
+              $page.params.category +
+              "/" +
+              subcategoryList[index] +
+              "/" +
+              optionsWithin[0]
+          );
+        }
+      }}
     >
       <p class:active={$page.params.subcategory == subcategoryList[index]}>
         {subcategory.toUpperCase()}
@@ -374,6 +372,7 @@
       width: 100%;
       background-color: #fafafa;
       border: 1px solid hsl(var(--b2));
+      height: 100%;
     }
   }
 

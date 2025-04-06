@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { beforeNavigate } from "$app/navigation";
   import { page, updated } from "$app/stores";
-  import { firebaseStore } from "$lib/stores";
+  import { bookingStore, firebaseStore } from "$lib/stores";
   import type { Booking, Customer, Unit } from "$lib/types";
-  import { DateTime } from "@easepick/bundle";
-  import { arrayUnion, collection, doc, updateDoc } from "firebase/firestore";
+  import { getMonthString, getDayString } from "$lib/helpers";
+  import { Timestamp, collection, setDoc } from "firebase/firestore";
   import { beforeUpdate } from "svelte";
   import { fade } from "svelte/transition";
 
@@ -16,12 +15,12 @@
   let saving = false;
   let saved = false;
 
-  let generateInvoiceErrorMessage = "Default Error";
-  let generateInvoiceError = false;
-  let generatingInvoice = false;
+  let generatingPaymentLink = false;
 
   let tripStartLabel = "Departure";
   let tripEndLabel = "Return";
+  let createdString: string | undefined;
+  let updatedString: string | undefined;
 
   let bookingsSubcollectionRef = collection(
     $firebaseStore.db,
@@ -30,12 +29,9 @@
     "bookings"
   );
 
-  beforeNavigate(() => {
-    generateInvoiceError = false;
-  });
-
   beforeUpdate(() => {
     updateTripStartEndLabels();
+    formatDates();
   });
 
   function updateTripStartEndLabels() {
@@ -52,37 +48,31 @@
     }
   }
 
-  // format the date string stored in booking to a nice string
-  function getMonthString(dateString: string | undefined) {
-    if (!dateString || dateString == "undefined") {
-      return "None";
+  /**
+   * Silly function because sometimes the Timestamp.toDate() method doesn't play nicely.
+   */
+  function formatDates() {
+    let createdTimestamp = bookingObject?.created;
+
+    if (createdTimestamp) {
+      let newTimestamp = new Timestamp(
+        createdTimestamp.seconds,
+        createdTimestamp.nanoseconds
+      );
+
+      createdString = newTimestamp.toDate().toDateString();
     }
-    let dateTimeObject = new DateTime(dateString, "MMM-DD-YYYY");
 
-    let dayString = dateTimeObject.toLocaleString("en-us", {
-      weekday: "long",
-    });
-    let monthString = dateTimeObject.toLocaleString("en-us", {
-      month: "long",
-    });
+    let updatedTimestamp = bookingObject?.updated;
 
-    let dayNumber = dateTimeObject.getDate();
-    let dayNumberFormatted = ordinal_suffix_of(dayNumber);
+    if (updatedTimestamp) {
+      let newTimestamp = new Timestamp(
+        updatedTimestamp.seconds,
+        updatedTimestamp.nanoseconds
+      );
 
-    return monthString + " " + dayNumberFormatted;
-  }
-
-  function getDayString(dateString: string | undefined) {
-    if (!dateString || dateString == "undefined") {
-      return "None";
+      updatedString = newTimestamp.toDate().toDateString();
     }
-    let dateTimeObject = new DateTime(dateString, "MMM-DD-YYYY");
-
-    let dayString = dateTimeObject.toLocaleString("en-us", {
-      weekday: "long",
-    });
-
-    return dayString;
   }
 
   function getTimeString(time: string | undefined) {
@@ -98,223 +88,80 @@
     return string;
   }
 
-  async function updateBookingStatus(evt: Event) {
-    saving = true;
-
-    if (evt) {
-      //@ts-ignore
-      let newStatus = evt.target.value;
-
-      //@ts-ignore
-      bookingObject.status = newStatus;
-
-      let updateFirebaseInvoices = false;
-      if (newStatus == "approved") {
-        // check that bookingObject has been setup in Stripe
-        if (bookingObject?.stripe_invoices) {
-          // TODO: check that invoice hasn't already been sent?
-
-          //***  SEND INVOICE FOR MANUAL PAYMENT...  ***
-          let approveInvoice = await fetch("/api/stripe/approveInvoice", {
-            method: "POST",
-            body: JSON.stringify({
-              // TODO: this kind of sucks
-              invoiceID: bookingObject?.stripe_invoices[0].id,
-            }),
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-
-          let invoiceResponse = await approveInvoice.json();
-          if (invoiceResponse.error) {
-            throw new Error(invoiceResponse.error);
-          } else {
-            // read the returned invoice object and update our database?
-
-            bookingObject.stripe_invoices[0].status =
-              invoiceResponse.invoiceObject.status;
-
-            updateFirebaseInvoices = true;
-          }
-        }
-      }
-
-      if (updateFirebaseInvoices) {
-        await updateDoc(doc(bookingsSubcollectionRef, bookingObject?.id), {
-          status: newStatus,
-          stripe_invoices: bookingObject?.stripe_invoices,
-        });
-      } else {
-        await updateDoc(doc(bookingsSubcollectionRef, bookingObject?.id), {
-          status: newStatus,
-        });
-      }
-      saving = false;
-      saved = true;
-      setTimeout(() => {
-        saved = false;
-      }, 2000);
-    }
-  }
-
-  function triggerPriceInputTimer() {
-    if (timerOn) {
-      return;
-    }
-    timerOn = true;
-    setTimeout(() => {
-      updateBookingPrice(priceInputElement);
-      timerOn = false;
-    }, 5000);
-  }
-
-  async function updateBookingPrice(evt: HTMLInputElement) {
-    saving = true;
-
-    let newPrice = evt.value;
-
-    await updateDoc(doc(bookingsSubcollectionRef, bookingObject?.id), {
-      total_price: newPrice,
-    });
-
-    //@ts-ignore
-    bookingObject.total_price = newPrice;
-
-    saving = false;
-    saved = true;
-    setTimeout(() => {
-      saved = false;
-    }, 2000);
-  }
-
-  async function generateStripeInvoice() {
-    generatingInvoice = true;
-    generateInvoiceValidation();
-    if (generateInvoiceError) {
-      generatingInvoice = false;
-      return;
-    }
-
-    console.log(bookingObject?.customerObject);
-
-    //***  CREATE CUSTOMER IN STRIPE  ***
-    let createStripeCustomer = await fetch("/api/stripe/createCustomer", {
-      method: "POST",
-      body: JSON.stringify(bookingObject?.customerObject),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    let customerResponse = await createStripeCustomer.json();
-
-    if (customerResponse.error) {
-      throw new Error(customerResponse.error);
-    } else {
-      //@ts-ignore
-      bookingObject.customerObject.stripe_id = customerResponse.stripe_id;
-    }
-
-    //***  CREATE INVOICE FROM BOOKING IN STRIPE  ***
-    let createStripeInvoice = await fetch(
-      "/api/stripe/createInvoiceFromBooking",
-      {
-        method: "POST",
-        body: JSON.stringify({
-          bookingRequest: bookingObject,
-          customerId: bookingObject?.customerObject?.stripe_id,
-          stripe_product_id: unitObject.stripe_product_id,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    let invoiceReponse = await createStripeInvoice.json();
-
-    if (invoiceReponse.error) {
-      throw new Error(invoiceReponse.error);
-    } else {
-      //@ts-ignore
-      bookingObject.stripe_invoiceItem_id_list =
-        invoiceReponse.invoice_items_list;
-      //@ts-ignore
-      bookingObject.stripe_price_id_list = invoiceReponse.price_id_list;
-      //@ts-ignore
-      bookingObject.stripe_invoices = invoiceReponse.invoices;
-
-      await updateDoc(doc(bookingsSubcollectionRef, bookingObject?.id), {
-        stripe_price_id_list: arrayUnion(...invoiceReponse.price_id_list),
-        stripe_invoiceItem_id_list: arrayUnion(
-          ...invoiceReponse.invoice_items_list
-        ),
-        stripe_invoices: arrayUnion(...invoiceReponse.invoices),
-      });
-    }
-
-    generatingInvoice = false;
-    return;
-  }
-
-  function generateInvoiceValidation() {
-    generateInvoiceError = false;
-
-    // lots of checks to see if all the information necessary has been provided.
-
-    if (!bookingObject?.customerObject) {
-      generateInvoiceErrorMessage = "No Customer Created";
-      generateInvoiceError = true;
-      return;
-    }
-
-    if (
-      !bookingObject.customerObject.email ||
-      !bookingObject.customerObject.first_name ||
-      !bookingObject.customerObject.last_name ||
-      !bookingObject.customerObject.phone
-    ) {
-      generateInvoiceErrorMessage = "Customer Details Needed";
-      generateInvoiceError = true;
-      return;
-    }
-
-    if (!bookingObject?.total_price) {
-      generateInvoiceErrorMessage = "Price Required";
-      generateInvoiceError = true;
-      return;
-    }
-
-    // check that the booking is not in the past?
-  }
-
-  /**
-   * Adds the appropriate ending to a dates number '22nd or 28th' etc
-   * @param i Number to format
-   */
-  function ordinal_suffix_of(i: number) {
-    var j = i % 10,
-      k = i % 100;
-    if (j == 1 && k != 11) {
-      return i + "st";
-    }
-    if (j == 2 && k != 12) {
-      return i + "nd";
-    }
-    if (j == 3 && k != 13) {
-      return i + "rd";
-    }
-    return i + "th";
-  }
-
   function formatPhoneNumber(phoneNumberString: string) {
     var cleaned = ("" + phoneNumberString).replace(/\D/g, "");
     var match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
     if (match) {
       return "(" + match[1] + ") " + match[2] + "-" + match[3];
     }
-    return null;
+    return phoneNumberString;
+  }
+
+  // used when a booking is created manually.
+  // will: call createPaymentIntent to api, and generate the client secret and paymentIntent id;
+  // attach paymentIntent to booking and update our DB
+  // attach payment_link to booking to show in CMS
+  async function generatePaymentLink() {
+    if (generatingPaymentLink) return;
+    generatingPaymentLink = true;
+
+    // booking is created already attach the object to the store
+    if (bookingObject) {
+      bookingStore.set(bookingObject);
+    } else {
+      return;
+    }
+    // stripe customer will be created prior too
+    let requestIntentKey = await fetch("/api/stripe/createPaymentIntent", {
+      method: "POST",
+      body: JSON.stringify($bookingStore),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    let serverResponse = await requestIntentKey.json();
+    if (serverResponse.error) {
+      console.error(serverResponse.code);
+      return "error";
+    }
+
+    // format = $page.url.origin + "/unit/" + unit_id + "book_now" + ?payment_intent=___ + &payment_intent_client_secret=___
+    let generatedLink =
+      $page.url.origin +
+      "/unit/" +
+      $bookingStore.unit_id +
+      "/book_now?payment_intent=" +
+      serverResponse.payment_intent.id +
+      "&payment_intent_client_secret=" +
+      serverResponse.payment_intent.client_secret;
+
+    bookingStore.update((storeData) => {
+      //@ts-ignore
+      storeData.payment_intent = serverResponse.payment_intent;
+      storeData.payment_link = generatedLink;
+
+      return storeData;
+    });
+
+    $bookingStore.updated = Timestamp.now();
+
+    //@ts-ignore
+    await setDoc($bookingStore.document_reference, $bookingStore);
+
+    generatingPaymentLink = false;
+  }
+
+  //helper because svelte won't do it inline
+  function timeStamptoDateAndTime(timestamp: Timestamp) {
+    let newTimestamp = new Timestamp(timestamp.seconds, timestamp.nanoseconds);
+
+    let formattedString =
+      newTimestamp.toDate().toDateString() +
+      " " +
+      newTimestamp.toDate().toLocaleTimeString();
+
+    return formattedString;
   }
 </script>
 
@@ -352,88 +199,151 @@
 
     <div class="double-row">
       <div class="section">
-        <div class="section-label">Total Price</div>
-
-        {#if bookingObject.total_price}
-          <p>{bookingObject.total_price}</p>
-        {:else}
-          <p>Not Added</p>
-        {/if}
+        <div class="section-label">
+          Created
+          {#if bookingObject.created_by}
+            <p class="label-status mini">{bookingObject.created_by}</p>
+          {/if}
+        </div>
+        <p class="small-date">
+          {#if bookingObject.created}
+            {createdString}
+          {/if}
+        </p>
       </div>
       <div class="section">
-        <div class="section-label">Passengers</div>
-
-        {#if bookingObject.passengers}
-          <p>{bookingObject.passengers}</p>
-        {:else}
-          <p>Not Added</p>
-        {/if}
+        <div class="section-label">Updated</div>
+        <p class="small-date">
+          {#if bookingObject.updated}
+            {updatedString}
+          {/if}
+        </p>
       </div>
     </div>
     <div class="section">
-      <div class="section-label">Booking Status</div>
-      <select
-        name="booking-status"
-        id="booking-status"
-        on:change={(e) => updateBookingStatus(e)}
-      >
-        <option
-          value="requested"
-          selected={bookingObject?.status == "requested"}>Requested</option
-        >
-        <option value="approved" selected={bookingObject?.status == "approved"}
-          >Approved</option
-        >
-        <option
-          value="inProgress"
-          selected={bookingObject?.status == "inProgress"}>In Progress</option
-        >
-        <option
-          value="completed"
-          selected={bookingObject?.status == "completed"}>Completed</option
-        >
-        <option
-          value="manualEntry"
-          selected={bookingObject?.status == "manualEntry"}
-          >Manually Added</option
-        >
-      </select>
-    </div>
-    <div class="section last">
       <div class="section-label">
-        Stripe Status
-        {#if bookingObject.customerObject?.stripe_id}
-          <a
-            class="stripe-product"
-            href="https://dashboard.stripe.com/customers/{bookingObject
-              .customerObject?.stripe_id}"
-            target="_blank">CUSTOMER</a
+        Payment
+        {#if bookingObject.payment_intent}
+          {#if bookingObject.payment_intent.status == "succeeded"}
+            <p class="label-status">Paid</p>
+          {:else}
+            <a href={bookingObject.payment_link} class="label-status pending"
+              >Link To Pay</a
+            >
+          {/if}
+        {:else}
+          <button on:click={generatePaymentLink} class="label-status generate">
+            {#if generatingPaymentLink}
+              <div class="spinner white" />
+            {:else}
+              Generate payment link
+            {/if}</button
           >
         {/if}
       </div>
-      {#if bookingObject.stripe_invoices}
-        {#each bookingObject.stripe_invoices as invoiceObj}
+      <p>
+        {#if bookingObject.customerObject?.stripe_id}
           <a
-            target="_blank"
-            class="stripe-invoice"
-            href="https://dashboard.stripe.com/invoices/{invoiceObj.id}"
+            class="stripe-link"
+            href="https://dashboard.stripe.com/customers/{bookingObject
+              .customerObject?.stripe_id}"
+            target="_blank">STRIPE CUSTOMER</a
           >
-            ${invoiceObj.amount} invoice
-          </a>
-        {/each}
-      {:else}
-        <button class="stripe" on:click={generateStripeInvoice}>
-          {#if generatingInvoice}
-            <div class="spinner white" />
-          {:else}
-            Generate Invoice
-          {/if}
-          {#if generateInvoiceError}
-            <span class="generate-error">{generateInvoiceErrorMessage}</span>
-          {/if}
-        </button>
+        {/if}
+      </p>
+      <p>
+        {#if bookingObject.payment_intent}
+          <a
+            class="stripe-link"
+            href="https://dashboard.stripe.com/payments/{bookingObject
+              .payment_intent.id}"
+            target="_blank">STRIPE PAYMENT OBJECT</a
+          >
+        {/if}
+      </p>
+    </div>
+
+    <div class="section agreement">
+      <div class="section-label">
+        Terms and Conditions
+        {#if bookingObject.agreement_signed}
+          <p class="label-status two">Accepted</p>
+        {/if}
+      </div>
+
+      <p>
+        <a
+          class="agreement-link"
+          href={$page.url.origin +
+            "/unit/" +
+            bookingObject.unit_id +
+            "/agreement/" +
+            bookingObject.id}
+          target="_blank">Terms Link</a
+        >
+      </p>
+      {#if bookingObject.agreement_notification_timestamp && bookingObject.agreement_notification}
+        <p class="small-date indent">
+          Notification Sent: {timeStamptoDateAndTime(
+            bookingObject.agreement_notification_timestamp
+          )}
+        </p>
+      {/if}
+      {#if bookingObject.agreement_viewed}
+        <p class="small-date indent">
+          Last Viewed: {bookingObject.agreement_viewed[0]}
+        </p>
       {/if}
     </div>
+
+    <p class="section-label individual">Pricing Table</p>
+    <div class="pricing-table">
+      {#if bookingObject.total_price}
+        <div class="line-item">
+          <p>
+            ${bookingObject.price_per_night} x {bookingObject.trip_length} nights
+          </p>
+          <p>${bookingObject.nightly_rate_sum}</p>
+        </div>
+        <div class="line-item">
+          <p>Service Fee</p>
+          <p>${bookingObject.service_fee}</p>
+        </div>
+        <div class="line-item">
+          <p>Dmg Prot. & Assistance</p>
+          <p>${bookingObject.damage_protection || "null"}</p>
+        </div>
+        <div class="line-item">
+          <p>Sales Tax</p>
+          <p>${bookingObject.sales_tax || bookingObject.taxes_and_fees}</p>
+        </div>
+        {#if bookingObject.additional_line_items}
+          {#each Object.keys(bookingObject.additional_line_items) as item_name}
+            <div class="line-item">
+              <p>{item_name}</p>
+              <p>
+                {#if bookingObject.additional_line_items[item_name].type == "subtract"}
+                  -
+                {/if}
+                ${bookingObject.additional_line_items[item_name].value}
+              </p>
+            </div>
+          {/each}
+        {/if}
+
+        <div class="line-item-total-bar"></div>
+        <div class="line-item total">
+          <p>Total</p>
+          <p>${bookingObject.total_price}</p>
+        </div>
+      {:else}
+        <div class="line-item">
+          <p>Not</p>
+          <p>Added</p>
+        </div>
+      {/if}
+    </div>
+
     <div class="id-container">
       Booking ID: <span class="booking-id">{bookingObject.id}</span>
     </div>
@@ -513,31 +423,116 @@
     align-items: flex-start;
     padding: 15px;
   }
-  .section.last {
-    margin-bottom: 50%;
-  }
+
   .section-label {
     font-family: cms-semibold;
     align-self: flex-start;
     font-size: 14px;
     display: flex;
+    margin-left: 0 !important;
+    position: relative;
+  }
+  .section-label.individual {
+    padding-left: 15px;
+    margin-top: 15px;
+  }
+  .label-status {
+    position: absolute;
+    left: 110%;
+    top: -5px;
+    background-color: hsl(var(--su));
+    color: hsl(var(--b1));
+    font-family: cms-semibold;
+    font-size: 12px;
+    padding: 0px 13px;
+    border-radius: 15px;
+    text-align: center;
+  }
+  .label-status.two {
+    left: 155%;
+  }
+  .label-status.mini {
+    font-size: 10px;
+    background-color: #dfdfdf;
+  }
+  .label-status.pending {
+    background-color: hsl(var(--wa));
+    width: 150px;
+    text-align: center;
+  }
+  .label-status.generate {
+    background-color: hsl(var(--er));
+    width: 180px;
+    text-align: center;
+    height: 18px;
+  }
+  .label-status.queue {
+    background-color: hsl(var(--wa));
+    width: 90px;
+  }
+  .small-date {
+    font-size: 13px;
+  }
+  .small-date.indent {
+    margin-top: 5px;
+    margin-left: 16px;
   }
   .double-row {
     display: flex;
     width: 100%;
   }
+
   .double-row .section {
     width: 50%;
   }
-  .stripe-product {
-    font-family: font-bold;
+  .pricing-table {
+    margin: 0 auto;
+    min-width: 80%;
+    width: 60%;
+    margin-top: 15px;
+    margin-bottom: 100px;
+  }
+  .line-item {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 20px;
+    position: relative;
+  }
+  .line-item p {
+    font-size: 16px;
+  }
+  .line-item-total-bar {
+    width: 100%;
+    padding: 0 20px;
+    height: 1px;
+    background-color: var(--cms-boxShadow);
+  }
+  .line-item.total p {
+    font-family: cms-semibold;
+  }
+  .stripe-link {
+    font-family: cms-semibold;
     border-radius: 4px;
     background-color: #625afa;
     color: white;
-    font-size: 10px;
-    padding: 0px 10px;
-    margin-left: 7px;
+    font-size: 13px;
+    padding: 3px 10px;
+    margin-left: 15px;
     height: 15px;
+  }
+  .agreement-link {
+    font-family: cms-semibold;
+    border-radius: 4px;
+    background-color: hsl(var(--p));
+    color: white;
+    font-size: 13px;
+    padding: 3px 10px;
+    margin-left: 15px;
+  }
+  .total-price {
+    color: hsl(var(--p));
+    font-family: cms-semibold;
   }
   .stripe-invoice {
     border-radius: 4px;
@@ -621,6 +616,8 @@
   .spinner.white {
     border-top: 2px solid hsl(var(--b2));
     margin: 0 auto;
+    width: 10px;
+    height: 10px;
   }
   @keyframes spinning {
     0% {

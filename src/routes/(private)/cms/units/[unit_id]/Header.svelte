@@ -1,9 +1,20 @@
 <script lang="ts">
   import type { Unit } from "$lib/types";
   import { fade } from "svelte/transition";
-  import { setDoc, doc, getDoc } from "firebase/firestore";
-  import { firebaseStore, unitStore } from "$lib/stores";
-  import { populateUnitStore } from "$lib/helpers";
+  import {
+    setDoc,
+    doc,
+    getDoc,
+    deleteDoc,
+    updateDoc,
+  } from "firebase/firestore";
+  import { cmsStore, firebaseStore, unitStore } from "$lib/stores";
+  import {
+    populateUnitBookings,
+    populateUnitStore,
+    validateRequiredFields,
+  } from "$lib/helpers";
+  import { alertStore } from "$lib/stores/alert";
 
   export let unitObject: Unit;
 
@@ -27,16 +38,106 @@
     }
 
     savingChanges = true;
-    unitObject.cms_edited = false;
+
+    // validate information on unitObject before proceeding with save
+    const requiredFields = [
+      "bullet_points.summary.pickup_location",
+      "bullet_points.summary.sleeps",
+      "bullet_points.summary.year_built",
+      "bullet_points.summary.vehicle_type",
+      "bullet_points.summary.length",
+
+      "paragraphs.description.content",
+
+      "rates_and_fees.pricing.base_rental_fee",
+      "rates_and_fees.pricing.sales_tax",
+      "rates_and_fees.pricing.damage_protection",
+      "rates_and_fees.pricing.minimum_nights",
+
+      "rates_and_fees.delivery.tier_1_miles",
+      "rates_and_fees.delivery.tier_1_fee",
+      "rates_and_fees.delivery.tier_2_miles",
+      "rates_and_fees.delivery.tier_2_fee",
+      "rates_and_fees.delivery.tier_3_miles",
+      "rates_and_fees.delivery.tier_3_fee",
+
+      "cms_only.color_scheme.primary",
+      // Add more required fields as needed
+    ];
+    // VALIDATION ONLY REQUIRED IF UNIT IS PUBLIC FACING
+    if (unitObject.publicly_visible) {
+      const validationErrors = validateRequiredFields(
+        unitObject,
+        requiredFields
+      );
+
+      if (validationErrors.length > 0) {
+        validationErrors.forEach((error) => alertStore.error(error.message));
+        savingChanges = false;
+        return;
+      }
+    }
+    // because photos are in subcollection, we need to check a seperate identifier to see if that is waht was modified
+    if ($cmsStore.photosUpdated.deleted) {
+      // delete doc using string? and then delete from object..
+      let deletedPhoto = doc(
+        $firebaseStore.db,
+        "units",
+        unitObject.id,
+        "photos",
+        $cmsStore.photosUpdated.deleted
+      );
+      await deleteDoc(deletedPhoto);
+    }
+
+    if ($cmsStore.photosUpdated.unit_id) {
+      for (let photoDoc of $cmsStore.photosUpdated.new_array) {
+        let updatedPhotoRef = doc(
+          $firebaseStore.db,
+          "units",
+          unitObject.id,
+          "photos",
+          photoDoc.id
+        );
+        await updateDoc(updatedPhotoRef, {
+          index: photoDoc.index,
+        });
+      }
+    }
+
+    $cmsStore.photosUpdated = Object.assign({});
+
+    //@ts-ignore
+    for (let booking of unitObject.bookings) {
+      if (booking.document_reference) {
+        delete booking.document_reference;
+      }
+    }
 
     // remove the booking lines that are added at page load?
-    let tempUnit = unitObject;
+    let tempUnit = structuredClone(unitObject);
+    tempUnit.cms_edited = false;
+    delete tempUnit.photos;
     delete tempUnit.bookings;
     delete tempUnit.bookingDates;
     delete tempUnit.sessionOnly;
 
     await setDoc(doc($firebaseStore.db, "units", tempUnit.id), tempUnit);
 
+    // repopulate the deleted items?
+    //@ts-ignore
+    for (let booking of unitObject.bookings) {
+      booking.document_reference = doc(
+        $firebaseStore.db,
+        "units",
+        unitObject.id,
+        "bookings",
+        booking.id
+      );
+    }
+    // delay the fade until after DB operations.
+
+    unitObject.cms_edited = false;
     savingChanges = false;
   }
 </script>
@@ -166,7 +267,13 @@
   }
   @media (max-width: 500px) {
     .header-container {
-      display: none;
+      display: flex;
+      position: absolute;
+      top: 0px;
+      z-index: 100;
+      background-color: hsl(var(--b1));
+      border-bottom: 1px solid hsl(var(--p));
+      padding: 10px 35px;
     }
   }
 </style>

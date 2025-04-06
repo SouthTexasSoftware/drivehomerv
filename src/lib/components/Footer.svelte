@@ -123,11 +123,8 @@
   </section>
   <section class="lower-footer">
     <img src={companyLogo} alt="Company Logo" />
-    <p>
-      All Rights Reserved. DriveHome RV Inc. Copyright 2023. <a href="/cms"
-        >CMS</a
-      >
-    </p>
+    <p>All Rights Reserved. DriveHome RV Inc. Copyright 2023.</p>
+    <p><a href="/cms">CMS</a></p>
   </section>
 </footer>
 
@@ -179,6 +176,14 @@
     width: 200px;
   }
   @media (max-width: 500px) {
+    .lower-footer {
+      width: 80%;
+      margin: 0 auto;
+      margin-bottom: 40px;
+    }
+    .lower-footer p {
+      text-align: center;
+    }
   }
 
   @media (min-width: 500px) and (max-width: 1050px) {

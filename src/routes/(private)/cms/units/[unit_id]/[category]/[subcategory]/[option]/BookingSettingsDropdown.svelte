@@ -33,7 +33,6 @@
 
     if (bookingObject) {
       // delete everything.. firebase and storage
-      await deleteDoc(doc(bookingsSubcollectionRef, bookingObject.id));
 
       let bookingStoragePath =
         "units/" + $page.params.unit_id + "/bookings/" + bookingObject.id;
@@ -42,7 +41,7 @@
       try {
         await deleteObject(bookingStorageRef);
       } catch (e) {
-        console.log("bookings storage object does not exist");
+        // console.log("bookings storage object does not exist");
       }
       if (unitObject.bookings) {
         unitObject.bookings.forEach((booking, index) => {
@@ -50,9 +49,12 @@
           if (booking.id == bookingObject.id) {
             // remove from array at 'index'
             unitObject.bookings?.splice(index, 1);
+            return;
           }
         });
       }
+
+      await deleteDoc(doc(bookingsSubcollectionRef, bookingObject.id));
 
       await goto("/cms/units/" + $page.params.unit_id + "/bookings");
     }

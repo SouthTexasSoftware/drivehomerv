@@ -22,7 +22,7 @@
     name="add-photos"
     id="add-photos"
     use:enhance={async ({ data, cancel }) => {
-      console.log(data);
+      // console.log(data);
       if (addingPhotos) {
         cancel();
         return;

@@ -55,7 +55,7 @@
     }
     if (bookingObject?.photos) {
       if (bookingObject?.photos.length > 0) {
-        console.log(bookingObject);
+        // console.log(bookingObject);
         bookingPhotos = bookingObject.photos;
         loading = false;
         return;
@@ -129,7 +129,7 @@
       let storageRef = ref($firebaseStore.storage, photoDocument.file_path);
       await deleteObject(storageRef);
     } catch (e) {
-      console.log("error deleting storage file --- ", e);
+      // console.log("error deleting storage file --- ", e);
     }
 
     bookingObject.photos.forEach((photo, index) => {

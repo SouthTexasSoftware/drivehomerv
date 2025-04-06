@@ -117,10 +117,12 @@
   .divider {
     width: 100%;
     margin: 0;
+    height: 2px;
   }
   .divider.small {
     margin: 0 auto;
     width: 50%;
+    height: 2px;
   }
   .cms-link {
     margin: 25px 0;
@@ -135,13 +137,14 @@
   }
   .cms-link.home {
     margin: 5px 0;
+    fill: transparent !important;
   }
   .cms-link.active svg path {
     fill: hsl(var(--p));
   }
   .cms-link.home.active svg path {
     stroke: hsl(var(--p));
-    fill: transparent;
+    fill: transparent !important;
   }
   .cms-link.active {
     background-color: var(--cms-highlightPrimary);

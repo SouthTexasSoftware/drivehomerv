@@ -4,6 +4,7 @@ import type {
   Firestore,
   Timestamp,
   CollectionReference,
+  DocumentReference,
 } from "firebase/firestore";
 import type { FirebaseStorage } from "firebase/storage";
 import type { DateTime } from "@easepick/datetime";
@@ -45,7 +46,7 @@ export interface Unit {
   bookings?: Booking[];
   bookingDates?: { start: Date; end: Date }[];
   prices?: CollectionReference;
-  min_booking_days: number; //TODO: should be NIGHTS
+  min_booking_days: number;
   feature_sleeps?: string;
   feature_vehicle_class?: string;
   feature_year_built?: string;
@@ -58,8 +59,14 @@ export interface Unit {
     paragraphs: InformationParagraphs;
     rules_and_policies: InformationRulesPolicies;
     rates_and_fees: InformationRatesFees;
+    cms_only: {
+      color_scheme: {
+        primary: string;
+        secondary: string;
+      };
+    };
   };
-  photos: PhotoDocument[];
+  photos?: PhotoDocument[];
   documents?: FileDocument[];
   stripe_product_id?: string;
 
@@ -73,6 +80,7 @@ export interface PhotoDocument {
   file_size: number; // in KiloBytes
   resolution?: string;
   index: number;
+  index_string?: string;
   date_added: Timestamp;
   file_path: string;
   downloadURL: string;
@@ -262,46 +270,54 @@ interface InformationRatesFees {
 }
 
 interface OptionPricing {
-  base_rental_fee: number;
-  taxes_and_insurance: number;
-  service_fee: number;
-  mileage_overage: number;
-  generator_usage: number;
-  weekly_discount: number;
-  monthly_discount: number;
-  minimum_nights: number;
-  security_deposit: number;
-  cleaning_and_restocking: number;
-  kitchen_utensils: number;
-  late_dropoff_fee: number;
+  base_rental_fee: string;
+  // @deprecated
+  taxes_and_fees?: string;
+  sales_tax: string;
+  damage_protection: string;
+  service_fee: string;
+  mileage_overage: string;
+  generator_usage: string;
+  weekly_discount: string;
+  monthly_discount: string;
+  minimum_nights: string;
+  security_deposit: string;
+  cleaning_and_restocking: string;
+  kitchen_utensils: string;
+  late_dropoff_fee: string;
   additional_options: {
-    [option_name: string]: number;
+    [option_name: string]: string;
   };
 }
 
 interface OptionUpgrades {
-  dumping: number;
-  marshmellow_kit: number;
-  folding_chairs_and_table: number;
-  propane_refill: number;
+  dumping: string;
+  marshmellow_kit: string;
+  folding_chairs_and_table: string;
+  propane_refill: string;
   additional_options: {
-    [option_name: string]: number;
+    [option_name: string]: string;
   };
 }
 interface OptionDelivery {
-  price_per_mile: number;
+  tier_1_miles: string;
+  tier_1_fee: string;
+  tier_2_miles: string;
+  tier_2_fee: string;
+  tier_3_miles: string;
+  tier_3_fee: string;
   additional_options: {
-    [option_name: string]: number;
+    [option_name: string]: string;
   };
 }
 
-// TODO: add pickup, dropoff time and location
-// TODO: add booking referrer
 export interface Booking {
   id: string;
+  document_reference?: DocumentReference;
   customer?: string;
   customerObject?: Customer;
   unit_id?: string;
+  stripe_product_id?: string;
   unit_name?: string;
   start: string; //MMM-DD-YYYY
   end: string; //MMM-DD-YYYY
@@ -311,7 +327,21 @@ export interface Booking {
   unix_start?: number;
   unix_end?: number; // for ease of comparison
   total_price?: number;
+  additional_line_items?: {
+    [itemName: string]: { value: number; type: "add" | "subtract" };
+  };
+  original_price?: number;
+  price_per_night?: number;
+  trip_length?: number;
+  nightly_rate_sum?: number;
+  service_fee?: number;
+  // @deprecated
+  taxes_and_fees?: number;
+  damage_protection?: number;
+  damage_protection_per_night?: number;
+  sales_tax?: number; //8% sales tax charged on rentals (RV or equipment) fees, and charges not taxed.
   created?: Timestamp;
+  created_by?: string;
   updated?: Timestamp;
   status: string;
   pickup_time?: string;
@@ -319,11 +349,42 @@ export interface Booking {
   dropoff_time?: string;
   dropoff_location?: string;
   pickup_dropoff_price_addition?: number;
-  payment_status?: PaymentStatus;
-  agreement_status?: AgreementStatus;
+  is_delivery?: boolean;
+
+  agreement_signed?: boolean;
+  agreement_link?: string;
+  //@deprecated
+  agreement_notification?: boolean;
+  //@deprecated
+  agreement_notification_timestamp?: Timestamp;
+  //@deprecated
+  agreement_viewed?: [date: string];
+  agreement_details?: {
+    name: string;
+    date: string;
+    accepted: boolean;
+    version: number;
+  };
+
+  delivery_details?: {
+    distance: string;
+    address: string;
+    price_for_delivery: string;
+  };
+
   event_list?: BookingEvent[];
-  photos: PhotoDocument[];
-  documents: FileDocument[];
+  photos?: PhotoDocument[];
+  documents?: FileDocument[];
+  unit_img_link?: string;
+  notes?: string;
+
+  confirmed: boolean;
+  in_checkout: boolean;
+  confirmation_email_sent?: boolean;
+  receipt_date_string?: string; //MMM-DD-YYYY
+  payment_intent?: { [key: string]: string };
+  payment_status?: PaymentStatus;
+  payment_link?: string;
 
   stripe_price_id_list?: [string];
   stripe_invoiceItem_id_list?: [string];
@@ -334,6 +395,11 @@ export interface Booking {
       amount: number;
     }
   ];
+
+  unit_color_scheme?: {
+    primary: string;
+    secondary: string;
+  };
 }
 
 interface BookingEvent {
@@ -354,17 +420,22 @@ enum BookingStatus {
   manualEntry,
 }
 
+export interface BookingDisplayFilter {
+  past: boolean;
+  ongoing: boolean;
+  upcoming: boolean;
+  units: { name: string; id: string; visible: boolean; color: string }[];
+}
+
 enum PaymentStatus {
-  quoted,
-  invoiced,
-  paid_deposit,
-  paid_in_full,
+  generate_payment_link,
+  link_to_pay,
+  paid,
 }
 enum AgreementStatus {
-  drafted,
+  queued,
   sent,
   accepted,
-  denied,
 }
 
 export interface Fee {
@@ -419,8 +490,15 @@ export interface Customer {
   email: string;
   address?: null;
   payment_method?: null;
-  terms_agreement?: boolean;
+  terms_at_checkout?: boolean;
   bookings?: string[];
   age_over_25?: boolean;
   stripe_id?: string;
+  preferred_contact_method?: {
+    text?: boolean;
+    call?: boolean;
+    email?: boolean;
+  };
+  contact_form_completed?: boolean;
+  paymentIntent?: string;
 }

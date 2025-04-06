@@ -11,6 +11,7 @@
   import { firebaseStore, unitStore } from "$lib/stores";
   import { onMount } from "svelte";
   import { dev } from "$app/environment";
+  import WinterSpecial from "$lib/components/WinterSpecial.svelte";
 
   onMount(() => {
     loadResources();
@@ -18,25 +19,25 @@
 
   function loadResources() {
     if (!$firebaseStore) {
-      console.log("Attempting connection to database...");
+      // console.log("Attempting connection to database...");
 
       connectToFirebase().then((val) => {
         if (val) {
-          console.log("Database connected.");
+          // console.log("Database connected.");
           populateUnitStore($firebaseStore).then(() => {
-            console.log("Unit store populated", $unitStore);
+            // console.log("Unit store populated", $unitStore);
           });
 
           if (!dev) {
             let analytics = connectAnalytics();
-            console.log(analytics);
+            // console.log(analytics);
             firebaseStore.update((storeData) => {
               storeData.analytics = analytics;
               return storeData;
             });
           }
         } else {
-          console.log("Database connection failed!");
+          // console.log("Database connection failed!");
           // TODO: retry failed connection
         }
       });
@@ -53,6 +54,25 @@
 <NavigationLoader />
 
 <div class="background-stripe" />
+
+<chat-widget
+  location-id="yib8fiHoKhd688afHwys"
+  style="--chat-widget-primary-color: #AE2623FF; --chat-widget-active-color:#AE2623FF ;--chat-widget-bubble-color: #AE2623FF ;"
+  use-email-field="true"
+  agency-name="RappLiteMedia"
+  agency-website="rapplitemedia.com"
+  locale="en-us"
+  primary-color="#AE2623FF"
+>
+</chat-widget>
+
+<svelte:head>
+  <script
+    src="https://widgets.leadconnectorhq.com/loader.js"
+    data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js"
+  >
+  </script>
+</svelte:head>
 
 <style>
   #page-content {

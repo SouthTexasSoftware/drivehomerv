@@ -3,6 +3,7 @@
   import type { Unit } from "$lib/types";
   import { onMount } from "svelte";
   import { afterNavigate } from "$app/navigation";
+  import { bookingUpdateStore, cmsStore, unitStore } from "$lib/stores";
 
   export let unitObject: Unit;
 
@@ -46,15 +47,20 @@
     "December",
   ];
 
-  // retro colors with %50 opacity
-  const colorPalette = [
-    "rgba(218, 102, 27, 0.5)",
-    "rgb(224, 112, 120, 0.5)",
-    "rgb(94, 194, 191, 0.5)",
-    "rgb(242, 196, 47, 0.5)",
+  $: unitColor = unitObject.information.cms_only.color_scheme.primary || "grey";
+
+  // hacky, because original used 4 alternating colors
+  $: colorPalette = [
+    unitObject.information.cms_only.color_scheme.primary,
+    unitObject.information.cms_only.color_scheme.primary,
+    unitObject.information.cms_only.color_scheme.primary,
+    unitObject.information.cms_only.color_scheme.primary,
   ];
 
-  onMount(generateCalendar);
+  onMount(() => {
+    bookingUpdateStore.subscribe(generateCalendar);
+  });
+
   afterNavigate(generateCalendar);
 
   function navigateMonths(previous: boolean) {
@@ -66,7 +72,7 @@
       month = month + 1;
     }
 
-    console.log("new month value == ", month);
+    // console.log("new month value == ", month);
 
     // Check if the month is out of range
     if (month < 0 || month > 11) {
@@ -95,6 +101,7 @@
     loadedDays = false;
 
     if (!unitObject) return;
+    if (!monthYearElement) return;
 
     // adding 'Date' object to each booking
     let bookingsArray = unitObject.bookings?.map((booking) => {

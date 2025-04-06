@@ -6,6 +6,32 @@
   <h4>Find Your Drive Home</h4>
   <div class="underline-bar" />
 
+  <RentalsCalendar on:selection />
+
+  <div class="row">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 32 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle
+        cx="16"
+        cy="16"
+        r="15.5"
+        fill="#AE2623"
+        fill-opacity="0.29"
+        stroke="#AE2623"
+      />
+      <path
+        d="M20.3075 12.74C20.3075 13.22 20.2075 13.6933 20.0075 14.16C19.8075 14.6133 19.5475 15.06 19.2275 15.5C18.9208 15.9267 18.5675 16.3467 18.1675 16.76C17.7675 17.16 17.3675 17.5533 16.9675 17.94C16.7542 18.14 16.5142 18.38 16.2475 18.66C15.9808 18.94 15.7275 19.22 15.4875 19.5C15.2475 19.78 15.0408 20.0533 14.8675 20.32C14.6942 20.5733 14.6008 20.7867 14.5875 20.96H20.7475V23H11.9275C11.9142 22.8933 11.9075 22.7667 11.9075 22.62C11.9075 22.46 11.9075 22.34 11.9075 22.26C11.9075 21.62 12.0075 21.0333 12.2075 20.5C12.4208 19.9533 12.6942 19.4467 13.0275 18.98C13.3608 18.5133 13.7342 18.0733 14.1475 17.66C14.5608 17.2467 14.9742 16.84 15.3875 16.44C15.7075 16.1333 16.0142 15.8333 16.3075 15.54C16.6008 15.2467 16.8542 14.96 17.0675 14.68C17.2942 14.3867 17.4742 14.0933 17.6075 13.8C17.7408 13.4933 17.8075 13.18 17.8075 12.86C17.8075 12.1667 17.6075 11.6733 17.2075 11.38C16.8075 11.0867 16.3208 10.94 15.7475 10.94C15.3742 10.94 15.0275 10.9933 14.7075 11.1C14.3875 11.2067 14.1008 11.3333 13.8475 11.48C13.6075 11.6267 13.3942 11.78 13.2075 11.94C13.0208 12.0867 12.8808 12.2067 12.7875 12.3L11.5875 10.6C12.1475 10.0667 12.8008 9.64 13.5475 9.32C14.3075 8.98667 15.1208 8.82 15.9875 8.82C17.4675 8.82 18.5542 9.17333 19.2475 9.88C19.9542 10.5733 20.3075 11.5267 20.3075 12.74Z"
+        fill="#AE2623"
+      />
+    </svg>
+    <strong class="available-statement">Browse what's available at:</strong>
+  </div>
+
   <div class="flex-row">
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -23,8 +49,6 @@
   </div>
 
   <p class="indent">Modena Pickup Location</p>
-
-  <RentalsCalendar on:selection />
 </div>
 
 <style>
@@ -49,12 +73,17 @@
     background-color: hsl(var(--b2));
     height: 1px;
     width: 60%;
-    margin: 0 auto 25px;
+    margin: 0 auto 15px;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    margin-top: 15px;
   }
   .flex-row {
     display: flex;
     align-items: center;
-    margin-left: 10px;
+    margin-left: 40px;
   }
   .bold {
     font-size: 18px;
@@ -64,12 +93,17 @@
   .indent {
     font-family: "font-light";
     font-size: 14px;
-    margin-left: 35px;
+    margin-left: 65px;
+  }
+  .available-statement {
+    font-size: 20px;
+    margin-left: 10px;
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: 700px) {
     .selector-container {
       margin: 15px 0;
+      width: 90vw;
     }
   }
 </style>

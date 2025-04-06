@@ -1,129 +1,222 @@
 <script lang="ts">
   import type { Booking, Customer, Unit } from "$lib/types";
   import PopupCalendarInputNoBookings from "$lib/components/PopupCalendarInputNoBookings.svelte";
-  import { afterUpdate, createEventDispatcher } from "svelte";
+  import { afterUpdate, createEventDispatcher, onMount } from "svelte";
   import { Timestamp, doc, serverTimestamp, setDoc } from "firebase/firestore";
   import { DateTime } from "@easepick/bundle";
-  import { firebaseStore } from "$lib/stores";
-  import BookingsPhotos from "./BookingsPhotos.svelte";
+  import { bookingStore, firebaseStore } from "$lib/stores";
+  import { page } from "$app/stores";
 
   export let unitObject: Unit;
-  export let bookingObject: Booking;
 
   let savingBooking = false;
   let firstNameInput: HTMLInputElement;
   let lastNameInput: HTMLInputElement;
   let emailInput: HTMLInputElement;
   let phoneInput: HTMLInputElement;
-  let passengersInput: HTMLInputElement;
-  let priceInput: HTMLInputElement;
-  let datesValidationError = false;
-  let newBookingData: Booking | undefined;
-  let initialDateObject = {
-    start: bookingObject.start,
-    end: bookingObject.end,
-  };
-  const pickupOptions = [" 1 pm", " 2 pm", " 3 pm", " 4 pm", " 5 pm", " 6 pm"];
-  const dropoffOptions = ["10 am", "11 am", "12 pm", " 1 pm", " 2 pm", " 3 pm"];
 
   let dispatch = createEventDispatcher();
 
-  afterUpdate(() => {
-    newBookingData = {
-      id: bookingObject.id,
-      start: bookingObject.start,
-      end: bookingObject.end,
-      status: bookingObject.status,
-      created: bookingObject.created,
-      photos: bookingObject.photos,
-      documents: bookingObject.documents,
-      unix_start: bookingObject.unix_start,
-      unix_end: bookingObject.unix_end,
-      passengers: bookingObject.passengers,
-      total_price: bookingObject.total_price,
-      unit_name: unitObject.name,
-      unit_id: unitObject.id,
-      customer: bookingObject.customer,
-      pickup_time: bookingObject.pickup_time,
-      dropoff_time: bookingObject.dropoff_time,
-    };
-    updateBookingDates({
-      start: newBookingData.start,
-      end: newBookingData.end,
-    });
+  let datesValidationError = false;
+  let customerValidationError = false;
+
+  let pickup_dropoff_price_addition = 0;
+  let selectedTripLength: number = 0;
+
+  $: nightlyRateSum =
+    parseInt(unitObject.information.rates_and_fees.pricing.base_rental_fee) *
+    selectedTripLength;
+  $: additionalFeesTotal = sumOfFees(selectedTripLength); // must pass in the dynamic value to rerun
+  $: totalBookingPrice = nightlyRateSum + additionalFeesTotal;
+
+  // load booking data from unitObject?
+  let filteredBookings = unitObject.bookings?.filter((booking) => {
+    if (booking.id == $page.params.subcategory) {
+      return booking;
+    }
   });
 
+  delete filteredBookings![0].document_reference;
+  let bookingCopy = structuredClone(filteredBookings![0]);
+
+  //@ts-ignore
+  bookingStore.set(bookingCopy);
+  updateBookingDates({ start: $bookingStore.start, end: $bookingStore.end });
+
+  onMount(() => {
+    //@ts-ignore
+    firstNameInput.value = $bookingStore.customerObject?.first_name;
+    //@ts-ignore
+    lastNameInput.value = $bookingStore.customerObject?.last_name;
+    //@ts-ignore
+    emailInput.value = $bookingStore.customerObject?.email;
+    //@ts-ignore
+    phoneInput.value = $bookingStore.customerObject?.phone;
+  });
+
+  // listener/dynamic update when the calendar get's changed
+  $: {
+    bookingStore.update((store) => {
+      store.total_price = totalBookingPrice;
+      store.price_per_night = parseInt(
+        unitObject.information.rates_and_fees.pricing.base_rental_fee
+      );
+      (store.nightly_rate_sum = nightlyRateSum),
+        (store.service_fee = parseInt(
+          unitObject.information.rates_and_fees.pricing.service_fee
+        ));
+      store.damage_protection_per_night = parseInt(
+        unitObject.information.rates_and_fees.pricing.damage_protection
+      );
+      store.damage_protection =
+        parseInt(
+          unitObject.information.rates_and_fees.pricing.damage_protection
+        ) * selectedTripLength;
+      store.sales_tax =
+        (parseInt(unitObject.information.rates_and_fees.pricing.sales_tax) /
+          100) *
+        store.nightly_rate_sum;
+
+      // console.log("store dynamically updated", store);
+      return store;
+    });
+  }
+
   function updateBookingDates(detail: { start: string; end: string }) {
-    if (newBookingData) {
-      newBookingData.start = detail.start;
-      newBookingData.end = detail.end;
+    if ($bookingStore) {
+      $bookingStore.start = detail.start;
+      $bookingStore.end = detail.end;
 
       let startDate = new DateTime(detail.start, "MMM-DD-YYYY");
       let endDate = new DateTime(detail.end, "MMM-DD-YYYY");
 
-      newBookingData.unix_start = Math.ceil(startDate.getTime() / 1000);
-      newBookingData.unix_end = Math.ceil(endDate.getTime() / 1000);
+      $bookingStore.unix_start = Math.ceil(startDate.getTime() / 1000);
+      $bookingStore.unix_end = Math.ceil(endDate.getTime() / 1000);
+
+      let differenceInTime = endDate.getTime() - startDate.getTime();
+      let differenceInDays = differenceInTime / (1000 * 3600 * 24);
+
+      selectedTripLength = differenceInDays;
+      $bookingStore.trip_length = selectedTripLength;
     }
   }
 
   function updateBookingPickupDropoff(detail: { key: string; value: string }) {
-    //@ts-ignore
-    newBookingData[detail.key] = detail.value;
+    if (detail.key == "pickup_time") {
+      $bookingStore.pickup_time = detail.value;
+    }
+    if (detail.key == "dropoff_time") {
+      $bookingStore.dropoff_time = detail.value;
+    }
   }
 
-  async function saveBooking() {
+  function sumOfFees(tripLength: number) {
+    let sum = 0;
+    let service_fee = 0;
+    let sales_tax = 0;
+    let damage_protection = 0;
+
+    if (tripLength != 0) {
+      service_fee = parseInt(
+        unitObject.information.rates_and_fees.pricing.service_fee
+      );
+
+      sales_tax =
+        (parseInt(unitObject.information.rates_and_fees.pricing.sales_tax) /
+          100) *
+        $bookingStore.nightly_rate_sum!;
+
+      damage_protection =
+        parseInt(
+          unitObject.information.rates_and_fees.pricing.damage_protection
+        ) * tripLength;
+    }
+
+    sum = service_fee + sales_tax + damage_protection;
+
+    return sum;
+  }
+
+  // create customer / and save booking... attach customerObject to booking
+  // create customer in stripe as well..
+
+  async function updateBooking() {
     if (savingBooking) return;
     savingBooking = true;
     datesValidationError = false;
+    customerValidationError = false;
 
-    if (newBookingData) {
-      if (!newBookingData.unix_start || !newBookingData.unix_end) {
-        datesValidationError = true;
-        savingBooking = false;
-        return;
-      }
-
-      let updatedCustomer: Customer = {
-        id: newUUID(),
-        first_name: firstNameInput.value,
-        last_name: lastNameInput.value,
-        email: emailInput.value,
-        phone: phoneInput.value,
-        bookings: [newBookingData.id],
-      };
-      if (bookingObject.customer) {
-        updatedCustomer.id = bookingObject.customer;
-      }
-
-      // add missing data, including the above customer id
-      newBookingData.total_price = parseInt(priceInput.value);
-      newBookingData.passengers = passengersInput.value;
-      newBookingData.customer = updatedCustomer.id;
-
-      let bookingDocRef = doc(
-        $firebaseStore.db,
-        "units",
-        unitObject.id,
-        "bookings",
-        newBookingData.id
-      );
-
-      await setDoc(bookingDocRef, newBookingData);
-
-      let newCustomerDocRef = doc(
-        $firebaseStore.db,
-        "customers",
-        updatedCustomer.id
-      );
-
-      await setDoc(newCustomerDocRef, updatedCustomer);
-
-      newBookingData.customerObject = updatedCustomer;
-      bookingObject = structuredClone(newBookingData);
+    if ($bookingStore.start == "" || $bookingStore.end == "") {
+      datesValidationError = true;
+      savingBooking = false;
+      return;
     }
 
+    if (
+      firstNameInput.value == "" ||
+      lastNameInput.value == "" ||
+      emailInput.value == ""
+    ) {
+      customerValidationError = true;
+      savingBooking = false;
+      return;
+    }
+
+    //create a 'customerObject'
+    let updatedCustomer = {
+      id: $bookingStore.customer,
+      email: emailInput.value,
+      first_name: firstNameInput.value,
+      last_name: lastNameInput.value,
+      phone: phoneInput.value,
+      stripe_id: $bookingStore.customerObject?.stripe_id,
+    } as Customer;
+
+    // send to stripe to establish a stripe_id
+    let updateStripeCustomer = await fetch("/api/stripe/updateCustomer", {
+      method: "POST",
+      body: JSON.stringify(updatedCustomer),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    let serverResponse = await updateStripeCustomer.json();
+    if (serverResponse.error) {
+      console.error(serverResponse.code);
+      // return "error";
+    }
+
+    // update booking
+    bookingStore.update((store) => {
+      store.customerObject = updatedCustomer;
+      return store;
+    });
+
+    // add customer to our DB
+    let newCustomerDocRef = doc(
+      $firebaseStore.db,
+      "customers",
+      updatedCustomer.id
+    );
+    await setDoc(newCustomerDocRef, updatedCustomer);
+
+    // add booking to our DB
+    //@ts-ignore
+    let bookingDocRef = doc(
+      $firebaseStore.db,
+      "units",
+      $bookingStore.unit_id,
+      "bookings",
+      $bookingStore.id
+    );
+
+    $bookingStore.updated = serverTimestamp() as Timestamp;
+    $bookingStore.document_reference = bookingDocRef;
+
+    await setDoc(bookingDocRef, $bookingStore);
+
     savingBooking = false;
-    dispatch("save", bookingObject);
+    dispatch("save", $bookingStore);
   }
 
   function newUUID(): string {
@@ -138,9 +231,9 @@
   }
 </script>
 
-<div class="new-booking-option-container">
+<div class="update-booking-option-container">
   <div class="container-header">
-    <p class="option-title">Update Booking {bookingObject.id}</p>
+    <p class="option-title">Update Booking ID:{$bookingStore.id}</p>
     <button
       class="cancel-creation"
       on:click={() => {
@@ -177,7 +270,8 @@
     </div>
     <div class="section">
       <PopupCalendarInputNoBookings
-        {initialDateObject}
+        selectedTripStart={$bookingStore.start}
+        selectedTripEnd={$bookingStore.end}
         on:selection={(event) => {
           updateBookingDates(event.detail);
         }}
@@ -198,13 +292,24 @@
             updateBookingPickupDropoff({ key: key, value: value });
           }}
         >
-          {#each pickupOptions as pickupLabel}
-            {#if bookingObject.pickup_time == pickupLabel}
-              <option selected value={pickupLabel}>{pickupLabel}</option>
-            {:else}
-              <option value={pickupLabel}>{pickupLabel}</option>
-            {/if}
-          {/each}
+          <option value=" 1 pm" selected={$bookingStore.pickup_time == " 1 pm"}
+            >1 pm</option
+          >
+          <option value=" 2 pm" selected={$bookingStore.pickup_time == " 2 pm"}
+            >2 pm</option
+          >
+          <option value=" 3 pm" selected={$bookingStore.pickup_time == " 3 pm"}
+            >3 pm</option
+          >
+          <option value=" 4 pm" selected={$bookingStore.pickup_time == " 4 pm"}
+            >4 pm</option
+          >
+          <option value=" 5 pm" selected={$bookingStore.pickup_time == " 5 pm"}
+            >5 pm</option
+          >
+          <option value=" 6 pm" selected={$bookingStore.pickup_time == " 6 pm"}
+            >6 pm</option
+          >
         </select>
       </div>
       <div class="section">
@@ -218,87 +323,118 @@
             updateBookingPickupDropoff({ key: key, value: value });
           }}
         >
-          {#each dropoffOptions as dropoffLabel}
-            {#if bookingObject.dropoff_time == dropoffLabel}
-              <option selected value={dropoffLabel}>{dropoffLabel}</option>
-            {:else}
-              <option value={dropoffLabel}>{dropoffLabel}</option>
-            {/if}
-          {/each}
+          <option value="10 am" selected={$bookingStore.dropoff_time == "10 am"}
+            >10 am</option
+          >
+          <option value="11 am" selected={$bookingStore.dropoff_time == "11 am"}
+            >11 am</option
+          >
+          <option value="12 pm" selected={$bookingStore.dropoff_time == "12 pm"}
+            >12 pm</option
+          >
+          <option value=" 1 pm" selected={$bookingStore.dropoff_time == " 1 pm"}
+            >1 pm</option
+          >
+          <option value=" 2 pm" selected={$bookingStore.dropoff_time == " 2 pm"}
+            >2 pm</option
+          >
+          <option value=" 3 pm" selected={$bookingStore.dropoff_time == " 3 pm"}
+            >3 pm</option
+          >
         </select>
       </div>
     </div>
-    <div class="double-row">
-      <div class="section">
-        <div class="section-label">Total Price</div>
-        <input
-          type="number"
-          class="price"
-          name="price"
-          value={bookingObject.total_price}
-          bind:this={priceInput}
-        />
-      </div>
-      <div class="section">
-        <div class="section-label">Passengers</div>
-        <input
-          type="number"
-          class="price"
-          name="passengers"
-          value={bookingObject.passengers}
-          bind:this={passengersInput}
-        />
-      </div>
+    <p class="section-label individual">Pricing Table</p>
+    <div class="pricing-table">
+      {#if $bookingStore.total_price}
+        <div class="line-item">
+          <p>
+            ${$bookingStore.price_per_night} x {$bookingStore.trip_length} nights
+          </p>
+          <p>${$bookingStore.nightly_rate_sum}</p>
+        </div>
+        <div class="line-item">
+          <p>Service Fee</p>
+          <p>${$bookingStore.service_fee}</p>
+        </div>
+        <div class="line-item">
+          <p>Dmg Prot. & Assistance</p>
+          <p>${$bookingStore.damage_protection || "null"}</p>
+        </div>
+        <div class="line-item">
+          <p>Sales Tax</p>
+          <p>${$bookingStore.sales_tax || $bookingStore.taxes_and_fees}</p>
+        </div>
+        {#if $bookingStore.additional_line_items}
+          {#each Object.keys($bookingStore.additional_line_items) as item_name}
+            <div class="line-item">
+              <p>{item_name}</p>
+              <p>
+                {#if $bookingStore.additional_line_items[item_name].type == "subtract"}
+                  -
+                {/if}
+                ${$bookingStore.additional_line_items[item_name].value}
+              </p>
+            </div>
+          {/each}
+        {/if}
+
+        <div class="line-item-total-bar"></div>
+        <div class="line-item total">
+          <p>Total</p>
+          <p>${$bookingStore.total_price}</p>
+        </div>
+      {:else}
+        <div class="line-item">
+          <p>Not</p>
+          <p>Added</p>
+        </div>
+      {/if}
     </div>
+
     <div class="section">
       <div class="section-label">Customer Info</div>
+      {#if customerValidationError}
+        <p class="validation-error customer">Customer Details Required</p>
+      {/if}
       <input
         type="text"
-        placeholder="First Name"
+        placeholder="First Name*"
         name="first-name"
-        value={bookingObject.customerObject?.first_name
-          ? bookingObject.customerObject?.first_name
-          : ""}
         bind:this={firstNameInput}
+        required
       />
       <input
         class="margin-top"
         type="text"
-        placeholder="Last Name"
+        placeholder="Last Name*"
         name="last-name"
-        value={bookingObject.customerObject?.last_name
-          ? bookingObject.customerObject?.last_name
-          : ""}
         bind:this={lastNameInput}
+        required
       />
       <input
         class="margin-top"
         type="email"
-        placeholder="Email"
+        placeholder="Email*"
         name="email"
-        value={bookingObject.customerObject?.email
-          ? bookingObject.customerObject?.email
-          : ""}
         bind:this={emailInput}
+        required
       />
       <input
         class="margin-top"
         type="tel"
         placeholder="Phone"
         name="phone"
-        value={bookingObject.customerObject?.phone
-          ? bookingObject.customerObject?.phone
-          : ""}
         bind:this={phoneInput}
       />
     </div>
     <div class="bar" />
     <div class="section">
-      <button id="save-button" on:click={saveBooking}>
+      <button id="save-button" on:click={updateBooking}>
         {#if savingBooking}
           <div class="spinner" />
         {:else}
-          SAVE
+          UPDATE
         {/if}
       </button>
     </div>
@@ -306,16 +442,17 @@
 </div>
 
 <style>
-  .new-booking-option-container {
+  .update-booking-option-container {
     background-color: hsl(var(--b1));
-    position: relative;
+    margin: 25px;
+    margin-bottom: 25px;
     border-radius: 4px;
     box-shadow: 0 1px 3px var(--cms-boxShadow);
+    width: 100%;
     display: flex;
     flex-direction: column;
     width: 450px;
-    height: 90%;
-    margin: 25px;
+    max-height: 90%;
     margin-bottom: auto;
   }
   .container-header {
@@ -354,6 +491,9 @@
     left: 67px;
     top: 16px;
   }
+  .validation-error.customer {
+    left: 125px;
+  }
   .section {
     display: flex;
     flex-direction: column;
@@ -364,21 +504,53 @@
   .section p {
     font-family: cms-regular;
   }
-  .section.last {
-    margin-bottom: 50%;
-  }
+
   .section-label {
     font-family: cms-semibold;
     align-self: flex-start;
     font-size: 14px;
     display: flex;
   }
+  .section-label.individual {
+    padding-left: 15px;
+    margin-top: 15px;
+  }
+
   .double-row {
     display: flex;
     width: 100%;
   }
   .double-row .section {
     width: 50%;
+  }
+  .double-row .section {
+    width: 50%;
+  }
+  .pricing-table {
+    margin: 0 auto;
+    min-width: 80%;
+    width: 60%;
+    margin-top: 15px;
+    margin-bottom: 100px;
+  }
+  .line-item {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 20px;
+    position: relative;
+  }
+  .line-item p {
+    font-size: 16px;
+  }
+  .line-item-total-bar {
+    width: 100%;
+    padding: 0 20px;
+    height: 1px;
+    background-color: var(--cms-boxShadow);
+  }
+  .line-item.total p {
+    font-family: cms-semibold;
   }
   select {
     padding: 10px;
@@ -400,9 +572,7 @@
     outline: none;
     width: 250px;
   }
-  input.price {
-    width: 100px;
-  }
+
   input.margin-top {
     margin-top: 20px;
   }
@@ -450,8 +620,11 @@
     }
   }
   @media (max-width: 500px) {
-    .new-booking-option-container {
-      width: 100%;
+    .update-booking-option-container {
+      position: absolute;
+      left: 0;
+      width: 90vw;
+      max-height: 74%;
     }
     select,
     input {

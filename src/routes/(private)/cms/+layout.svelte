@@ -14,10 +14,10 @@
       setTimeout(authListener, 200);
       return;
     }
-    console.log($firebaseStore.auth.currentUser);
+    // console.log($firebaseStore.auth.currentUser);
     onAuthStateChanged($firebaseStore.auth, async (user) => {
       if (user) {
-        console.log("User signed in");
+        // console.log("User signed in");
         userLoggedIn = true;
       } else {
         await goto("/owner_login");

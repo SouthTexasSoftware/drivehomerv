@@ -7,10 +7,10 @@ import type { Customer } from "lib/types";
 export const POST = (async ({ request }) => {
   const customerObject = (await request.json()) as Customer;
 
-  console.log(
-    "Server Received a CreateCustomer call to API : ",
-    customerObject
-  );
+  // console.log(
+  //   "Server Received a CreateCustomer call to API : ",
+  //   customerObject
+  // );
 
   const stripe = new Stripe(stripeConfig.privateKey, {
     apiVersion: "2022-11-15",
