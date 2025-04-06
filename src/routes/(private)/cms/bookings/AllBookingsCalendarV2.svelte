@@ -62,8 +62,8 @@
     "December",
   ];
 
-  onMount(generateCalendar);
-  afterNavigate(generateCalendar);
+  onMount(generateWeek);
+  afterNavigate(generateWeek);
 
   cmsBookingFilterStore.subscribe(async (storeData) => {
     if (storeData) {
@@ -78,109 +78,74 @@
     }
   });
 
-  function navigateMonths(previous: boolean) {
-    // console.log("navigate months");
+  // Navigate by weeks instead of months
+  function navigateWeeks(previous: boolean) {
+    // Adjust the date by 7 days (1 week)
+    const currentDate = new Date(date);
+    const daysToAdjust = previous ? -7 : 7;
+    currentDate.setDate(currentDate.getDate() + daysToAdjust);
 
-    // Check if the icon is "calendar-prev"
-    // or "calendar-next"
-    if (previous) {
-      month = month - 1;
-    } else {
-      month = month + 1;
-    }
+    // Update year, month, and date based on the new date
+    year = currentDate.getFullYear();
+    month = currentDate.getMonth();
+    date = currentDate;
 
-    // console.log("new month value == ", month);
-
-    // Check if the month is out of range
-    if (month < 0 || month > 11) {
-      // Set the date to the first day of the
-      // month with the new year
-      date = new Date(year, month, new Date().getDate());
-
-      // Set the year to the new year
-      year = date.getFullYear();
-
-      // Set the month to the new month
-      month = date.getMonth();
-    } else {
-      // Set the date to the current date
-      date = new Date();
-    }
-
-    // Call the generate function to
-    // update the calendar display
-    generateCalendar();
+    // Generate the new week
+    generateWeek();
   }
 
-  function generateCalendar() {
-    //@ts-ignore
+  // Generate a week's worth of days
+  function generateWeek() {
     daysFullArray = [];
     daysShowingArray = [];
     loadedDays = false;
 
     if (!monthYearElement) return;
 
-    // Get the first day of the month
-    let dayone = new Date(year, month, 1).getDay(); // day of the week
+    // Get the start of the week (Sunday) based on the current date
+    const currentDate = new Date(date);
+    const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(currentDate.getDate() - dayOfWeek); // Move to Sunday
 
-    // Get the last date of the month
-    let lastdate = new Date(year, month + 1, 0).getDate();
+    // Define today for comparison
+    const today = new DateTime();
 
-    // Get the day of the last date of the month
-    let dayend = new Date(year, month, lastdate).getDay();
+    // Generate 7 days starting from the start of the week
+    for (let i = 0; i < 7; i++) {
+      const dateReviewing = new Date(startOfWeek);
+      dateReviewing.setDate(startOfWeek.getDate() + i);
+      const dateTimeReviewing = new DateTime(dateReviewing);
 
-    // Get the last date of the previous month
-    let monthlastdate = new Date(year, month, 0).getDate();
+      // Check if this day is today
+      const isToday =
+        dateReviewing.getDate() === new Date().getDate() &&
+        dateReviewing.getMonth() === new Date().getMonth() &&
+        dateReviewing.getFullYear() === new Date().getFullYear();
 
-    /**
-     * for each day, we need to loop all units
-     * each unit will either be in a booking, have a pickup, have a dropoff, or none
-     * each 'day' per unit will need to be filled somehow, even if the fill is transparent
-     * this will create an even 'stack' of items to be display in each day container
-     * */
-
-    // PREVIOUS MONTH DAYS IN FIRST WEEK
-    for (let i = dayone; i > 0; i--) {
-      let dateReviewing = new Date(year, month - 1, monthlastdate - i + 1);
-      let dateTimeReviewing = new DateTime(dateReviewing);
-
-      //placeholder for what we push onto the calendar array for today
-      let dayObject = {
-        value: monthlastdate - i + 1,
-        isToday: false,
+      // Create day object
+      const dayObject = {
+        value: dateReviewing.getDate(),
+        isToday,
         unitEntries: [],
       } as DayIcon;
 
+      // Populate unit entries for this day
       $unitStore.units.forEach((unit) => {
-        // for each unit, create a bookingPiece
-        let unitBookingPiece = {
+        const unitBookingPiece = {
           color: unit.information.cms_only.color_scheme.primary,
           unit_id: unit.id,
-          pickup: {
-            bool: false,
-            id: "",
-          },
-          dropoff: {
-            bool: false,
-            id: "",
-          },
-          inBooking: {
-            bool: false,
-            id: "",
-          },
-          filter: {
-            past: false,
-            ongoing: false,
-            upcoming: false,
-          },
+          pickup: { bool: false, id: "" },
+          dropoff: { bool: false, id: "" },
+          inBooking: { bool: false, id: "" },
+          filter: { past: false, ongoing: false, upcoming: false },
         };
 
-        // change the default values above if bookings are found
         unit.bookings?.forEach((booking) => {
-          let startDate = new DateTime(booking.start, "MMM-DD-YYYY");
-          let endDate = new DateTime(booking.end, "MMM-DD-YYYY");
+          const startDate = new DateTime(booking.start, "MMM-DD-YYYY");
+          const endDate = new DateTime(booking.end, "MMM-DD-YYYY");
 
-          // if booking does not include the day we're evaluuating, gtfooo
+          // Skip if the day is outside the booking range
           if (
             dateTimeReviewing.isBefore(startDate) ||
             dateTimeReviewing.isAfter(endDate)
@@ -188,8 +153,7 @@
             return;
           }
 
-          // compares the booking status to the currently analyzed day, and marks flags for what could be happening
-          //i.e. booking matches this day, booking ends this day, booking starts this day
+          // Set booking flags
           if (
             startDate.isBefore(dateTimeReviewing) &&
             endDate.isAfter(dateTimeReviewing)
@@ -206,7 +170,7 @@
             unitBookingPiece.dropoff.id = booking.id;
           }
 
-          // set the filter flags that can be used to quickly alter the showing array in the future
+          // Set filter flags
           if (today.isAfter(startDate) && today.isBefore(endDate)) {
             unitBookingPiece.filter.ongoing = true;
           }
@@ -221,205 +185,25 @@
           }
         });
 
-        // push the unitBookingPiece into the dayObject regardless if it is default or not.
         dayObject.unitEntries.push(unitBookingPiece);
       });
 
       daysFullArray.push(dayObject);
     }
 
-    // CURRENT MONTH DAYS
-    for (let i = 1; i <= lastdate; i++) {
-      // Check if the current date is today
-      let isToday =
-        i === date.getDate() &&
-        month === new Date().getMonth() &&
-        year === new Date().getFullYear()
-          ? true
-          : false;
+    // Update the month/year display (e.g., "Apr 5 - Apr 11, 2025")
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    const startMonth = months[startOfWeek.getMonth()];
+    const endMonth = months[endOfWeek.getMonth()];
+    const yearDisplay =
+      startOfWeek.getFullYear() === endOfWeek.getFullYear()
+        ? startOfWeek.getFullYear()
+        : `${startOfWeek.getFullYear()} - ${endOfWeek.getFullYear()}`;
+    monthYearElement.innerText = `${startMonth} ${startOfWeek.getDate()} - ${endMonth} ${endOfWeek.getDate()}, ${yearDisplay}`;
 
-      let dateReviewing = new Date(year, month, i);
-      let dateTimeReviewing = new DateTime(dateReviewing);
-
-      let dayObject = {
-        value: i,
-        isToday: isToday,
-        unitEntries: [],
-      } as DayIcon;
-
-      $unitStore.units.forEach((unit) => {
-        // for each unit, create a bookingPiece
-        let unitBookingPiece = {
-          color: unit.information.cms_only.color_scheme.primary,
-          unit_id: unit.id,
-          pickup: {
-            bool: false,
-            id: "",
-          },
-          dropoff: {
-            bool: false,
-            id: "",
-          },
-          inBooking: {
-            bool: false,
-            id: "",
-          },
-          filter: {
-            past: false,
-            ongoing: false,
-            upcoming: false,
-          },
-        };
-
-        // change the default values above if bookings are found
-        unit.bookings?.forEach((booking) => {
-          let startDate = new DateTime(booking.start, "MMM-DD-YYYY");
-          let endDate = new DateTime(booking.end, "MMM-DD-YYYY");
-
-          // if booking does not include the day we're evaluuating, gtfooo
-          if (
-            dateTimeReviewing.isBefore(startDate) ||
-            dateTimeReviewing.isAfter(endDate)
-          ) {
-            return;
-          }
-
-          // compares the booking status to the currently analyzed day, and marks flags for what could be happening
-          //i.e. booking matches this day, booking ends this day, booking starts this day
-          if (
-            startDate.isBefore(dateTimeReviewing) &&
-            endDate.isAfter(dateTimeReviewing)
-          ) {
-            unitBookingPiece.inBooking.bool = true;
-            unitBookingPiece.inBooking.id = booking.id;
-          }
-          if (startDate.isSame(dateTimeReviewing)) {
-            unitBookingPiece.pickup.bool = true;
-            unitBookingPiece.pickup.id = booking.id;
-          }
-          if (endDate.isSame(dateTimeReviewing)) {
-            unitBookingPiece.dropoff.bool = true;
-            unitBookingPiece.dropoff.id = booking.id;
-          }
-
-          // set the filter flags that can be used to quickly alter the showing array in the future
-          if (today.isAfter(startDate) && today.isBefore(endDate)) {
-            unitBookingPiece.filter.ongoing = true;
-          }
-          if (today.isSame(startDate) || today.isSame(endDate)) {
-            unitBookingPiece.filter.ongoing = true;
-          }
-          if (today.isAfter(endDate)) {
-            unitBookingPiece.filter.past = true;
-          }
-          if (today.isBefore(startDate)) {
-            unitBookingPiece.filter.upcoming = true;
-          }
-        });
-
-        // push the unitBookingPiece into the dayObject regardless if it is default or not.
-        dayObject.unitEntries.push(unitBookingPiece);
-      });
-
-      daysFullArray.push(dayObject);
-    }
-
-    // NEXT MONTH DAYS IN LAST WEEK
-    for (let i = dayend; i < 6; i++) {
-      let dateReviewing = new Date(year, month + 1, i - dayend + 1);
-      let dateTimeReviewing = new DateTime(dateReviewing);
-
-      let dayObject = {
-        value: i - dayend + 1,
-        isToday: false,
-        unitEntries: [],
-      } as DayIcon;
-
-      $unitStore.units.forEach((unit) => {
-        // for each unit, create a bookingPiece
-        let unitBookingPiece = {
-          color: unit.information.cms_only.color_scheme.primary,
-          unit_id: unit.id,
-          pickup: {
-            bool: false,
-            id: "",
-          },
-          dropoff: {
-            bool: false,
-            id: "",
-          },
-          inBooking: {
-            bool: false,
-            id: "",
-          },
-          filter: {
-            past: false,
-            ongoing: false,
-            upcoming: false,
-          },
-        };
-
-        // change the default values above if bookings are found
-        unit.bookings?.forEach((booking) => {
-          let startDate = new DateTime(booking.start, "MMM-DD-YYYY");
-          let endDate = new DateTime(booking.end, "MMM-DD-YYYY");
-
-          // if booking does not include the day we're evaluuating, gtfooo
-          if (
-            dateTimeReviewing.isBefore(startDate) ||
-            dateTimeReviewing.isAfter(endDate)
-          ) {
-            return;
-          }
-
-          // compares the booking status to the currently analyzed day, and marks flags for what could be happening
-          //i.e. booking matches this day, booking ends this day, booking starts this day
-          if (
-            startDate.isBefore(dateTimeReviewing) &&
-            endDate.isAfter(dateTimeReviewing)
-          ) {
-            unitBookingPiece.inBooking.bool = true;
-            unitBookingPiece.inBooking.id = booking.id;
-          }
-          if (startDate.isSame(dateTimeReviewing)) {
-            unitBookingPiece.pickup.bool = true;
-            unitBookingPiece.pickup.id = booking.id;
-          }
-          if (endDate.isSame(dateTimeReviewing)) {
-            unitBookingPiece.dropoff.bool = true;
-            unitBookingPiece.dropoff.id = booking.id;
-          }
-
-          // set the filter flags that can be used to quickly alter the showing array in the future
-          if (today.isAfter(startDate) && today.isBefore(endDate)) {
-            unitBookingPiece.filter.ongoing = true;
-          }
-          if (today.isSame(startDate) || today.isSame(endDate)) {
-            unitBookingPiece.filter.ongoing = true;
-          }
-          if (today.isAfter(endDate)) {
-            unitBookingPiece.filter.past = true;
-          }
-          if (today.isBefore(startDate)) {
-            unitBookingPiece.filter.upcoming = true;
-          }
-        });
-
-        // push the unitBookingPiece into the dayObject regardless if it is default or not.
-        dayObject.unitEntries.push(unitBookingPiece);
-      });
-
-      daysFullArray.push(dayObject);
-    }
-
-    // Update the text of the current date element
-    // with the formatted current month and year
-    monthYearElement.innerText = `${months[month]} ${year}`;
-
+    // Apply filters and mark as loaded
     filterDaysShowingArray($cmsBookingFilterStore);
-
-    // console.log(daysShowingArray);
-
     loadedDays = true;
   }
 
@@ -514,7 +298,7 @@
         on:click={() => {
           loadedDays = false;
           setTimeout(() => {
-            navigateMonths(true);
+            navigateWeeks(true);
           }, 100);
         }}
       >
@@ -540,7 +324,7 @@
         on:click={() => {
           loadedDays = false;
           setTimeout(() => {
-            navigateMonths(false);
+            navigateWeeks(false);
           }, 100);
         }}
       >
@@ -615,7 +399,7 @@
       </ul>
     {:else}
       <div class="spinner"></div>
-      <div class="spinner-label">Building Month...</div>
+      <div class="spinner-label">Building Week...</div>
     {/if}
   </div>
 </section>
@@ -623,11 +407,11 @@
 <style>
   .bookings-calendar-container {
     background: #fff;
-    width: 600px;
+    width: 800px;
     border-radius: 10px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-    margin: auto;
-    height: 650px;
+    margin: 30px auto auto;
+    height: 300px;
   }
 
   .unit-toggles {
@@ -686,6 +470,7 @@
 
   .calendar-body {
     padding: 20px;
+    padding-top: 0px;
   }
 
   .calendar-body ul {
@@ -697,6 +482,8 @@
 
   .calendar-body .calendar-dates {
     margin-bottom: 20px;
+    height: 220px;
+    position: relative;
   }
 
   .calendar-body li {
@@ -718,11 +505,11 @@
   .calendar-body .calendar-dates li {
     z-index: 1;
     cursor: pointer;
-    height: 80px;
+    height: 80%;
     position: relative;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: start;
     border-top: 1px solid hsl(var(--b2));
   }
 
@@ -743,13 +530,13 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     row-gap: 1px;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 1px;
+    padding-bottom: 1px;
   }
   /* inherit by all 'pieces' that could contain a booking */
   .unit-booking-row {
     opacity: 100%;
-    height: 5px;
+    height: 15px;
   }
   .unit-booking-row.in-booking {
     /* fill entire row i.e. take up all the columns */
@@ -793,7 +580,7 @@
     width: 50px;
     height: 50px;
     margin: auto;
-    margin-top: 200px;
+    margin-top: 50px;
   }
   .spinner-label {
     margin: auto;

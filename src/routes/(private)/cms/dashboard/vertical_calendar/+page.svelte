@@ -185,7 +185,7 @@
     </div>
     {#each units as unit}
       <div
-        class="header-cell sticky top-0 z-20 bg-primary text-white font-bold flex items-center justify-center"
+        class="header-cell sticky top-0 z-20 bg-primary text-white font-bold flex items-center justify-start overflow-x-auto whitespace-nowrap"
       >
         {unit}
       </div>

@@ -55,7 +55,7 @@
 
 <div class="background-stripe" />
 
-<!-- <chat-widget
+<chat-widget
   location-id="yib8fiHoKhd688afHwys"
   style="--chat-widget-primary-color: #AE2623FF; --chat-widget-active-color:#AE2623FF ;--chat-widget-bubble-color: #AE2623FF ;"
   use-email-field="true"
@@ -72,7 +72,7 @@
     data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js"
   >
   </script>
-</svelte:head> -->
+</svelte:head>
 
 <style>
   #page-content {

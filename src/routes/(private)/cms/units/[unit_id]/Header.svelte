@@ -40,23 +40,43 @@
     savingChanges = true;
 
     // validate information on unitObject before proceeding with save
-    // Define required fields
     const requiredFields = [
-      "cms_only.color_scheme.primary",
-      "cms_only.color_scheme.secondary",
       "bullet_points.summary.pickup_location",
       "bullet_points.summary.sleeps",
+      "bullet_points.summary.year_built",
+      "bullet_points.summary.vehicle_type",
+      "bullet_points.summary.length",
+
+      "paragraphs.description.content",
+
+      "rates_and_fees.pricing.base_rental_fee",
+      "rates_and_fees.pricing.sales_tax",
+      "rates_and_fees.pricing.damage_protection",
+      "rates_and_fees.pricing.minimum_nights",
+
+      "rates_and_fees.delivery.tier_1_miles",
+      "rates_and_fees.delivery.tier_1_fee",
+      "rates_and_fees.delivery.tier_2_miles",
+      "rates_and_fees.delivery.tier_2_fee",
+      "rates_and_fees.delivery.tier_3_miles",
+      "rates_and_fees.delivery.tier_3_fee",
+
+      "cms_only.color_scheme.primary",
       // Add more required fields as needed
     ];
+    // VALIDATION ONLY REQUIRED IF UNIT IS PUBLIC FACING
+    if (unitObject.publicly_visible) {
+      const validationErrors = validateRequiredFields(
+        unitObject,
+        requiredFields
+      );
 
-    const validationErrors = validateRequiredFields(unitObject, requiredFields);
-
-    if (validationErrors.length > 0) {
-      validationErrors.forEach((error) => alertStore.error(error.message));
-      savingChanges = false;
-      return;
+      if (validationErrors.length > 0) {
+        validationErrors.forEach((error) => alertStore.error(error.message));
+        savingChanges = false;
+        return;
+      }
     }
-
     // because photos are in subcollection, we need to check a seperate identifier to see if that is waht was modified
     if ($cmsStore.photosUpdated.deleted) {
       // delete doc using string? and then delete from object..

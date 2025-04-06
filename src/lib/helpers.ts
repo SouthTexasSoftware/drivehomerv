@@ -183,9 +183,11 @@ export function populateUnitBookings(snapshot: QuerySnapshot, unit: Unit) {
     };
 
     bookings.push(booking);
-    if (booking.confirmed || booking.in_checkout) {
-      bookingDates.push(bookingDateObjects);
-    }
+    // TODO: improve this validation step ??
+    // if (booking.confirmed || booking.in_checkout) {
+    //   bookingDates.push(bookingDateObjects);
+    // }
+    bookingDates.push(bookingDateObjects);
   }
 
   unit.bookings = bookings;

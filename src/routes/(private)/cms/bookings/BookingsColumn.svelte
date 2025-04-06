@@ -71,6 +71,8 @@
           secondary: unit.information.cms_only.color_scheme.secondary || "gray",
         };
 
+        booking.unit_name = unit.name;
+
         if (today.isAfter(bookingStart) && today.isBefore(bookingEnd)) {
           ongoingBookings.push(booking);
         }
@@ -859,7 +861,7 @@
     color: hsl(var(--p));
   }
   .booking-card {
-    border: 1px solid hsl(var(--b2));
+    border: 3px solid hsl(var(--b2));
     border-radius: 10px;
     padding: 5px;
     display: flex;

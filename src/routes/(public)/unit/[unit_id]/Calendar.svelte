@@ -75,6 +75,8 @@
   }
 
   function buildUnitCalendar() {
+    // console.log(JSON.stringify(unitObject.bookingDates));
+
     unitObject.bookingDates?.forEach((datesObject) => {
       let tempArray = [datesObject.start, datesObject.end];
       calendarBookedDates.push(tempArray);

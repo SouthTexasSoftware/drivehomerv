@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
 
   import AllBookingsCalendar from "./AllBookingsCalendar.svelte";
+  import AllBookingsCalendarV2 from "./AllBookingsCalendarV2.svelte";
 
   let loadCalendar = false;
 
@@ -14,7 +15,7 @@
 
 {#if loadCalendar}
   <div class="page-container">
-    <AllBookingsCalendar />
+    <AllBookingsCalendarV2 />
   </div>
 {:else}
   <div class="loading-container">
@@ -83,5 +84,4 @@
       margin: 5px auto auto;
     }
   }
-
 </style>
