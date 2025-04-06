@@ -67,6 +67,7 @@
   .options-column {
     flex-direction: column;
     width: 300px;
+    height: 100%;
     justify-content: flex-end;
     border-right: 1px solid var(--cms-boxShadow);
     overflow-y: scroll;
