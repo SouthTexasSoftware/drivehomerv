@@ -129,7 +129,7 @@ export const POST = (async ({ request }) => {
 // organize payload and call emailHandler
 async function sendAgreementEmail(booking: Booking) {
   let agreementLink =
-    "https://drivehomerv-hs3z-git-preview-southtexassoftwares-projects.vercel.app/unit/" +
+    "https://booking.drivehomerv.com/unit/" +
     booking.unit_id +
     "/agreement/" +
     booking.id;
@@ -171,7 +171,8 @@ async function sendOwnerEmail(successList: string[], failList: string[]) {
     body_two: "Emails Sent: " + successList.length.toString(),
     body_three: "Emails Failed: " + failList.length.toString(),
     body_four: "You can find the latest booking information at the link below.",
-    link: "https://drivehomerv-hs3z-git-preview-southtexassoftwares-projects.vercel.app/cms/bookings",
+    link: "https://booking.drivehomerv.com/cms/bookings",
+    //link: "https://drivehomerv-hs3z-git-preview-southtexassoftwares-projects.vercel.app/cms/bookings",
   };
 
   try {

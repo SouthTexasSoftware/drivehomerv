@@ -18,6 +18,8 @@ export const POST = (async ({ request }) => {
   //   requestData
   // );
 
+  //for preview links: drivehomerv-hs3z-git-preview-southtexassoftwares-projects.vercel.app
+
   let responseJson = {
     error: false,
     code: "",
@@ -35,7 +37,7 @@ export const POST = (async ({ request }) => {
         ".",
       body_two: "Please use the link below to review.",
       link:
-        "https://drivehomerv-hs3z-git-preview-southtexassoftwares-projects.vercel.app/cms/units/" +
+        "https://booking.drivehomerv.com/cms/units/" +
         requestData.unit_id +
         "/bookings/" +
         requestData.id +

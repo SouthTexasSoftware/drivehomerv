@@ -52,9 +52,6 @@ list of things required to build new unit object and throw no errors!  all under
       formObject.description;
     newUnitObject.information.rates_and_fees.pricing.base_rental_fee =
       formObject.base_rental_fee;
-    // @depracated
-    newUnitObject.information.rates_and_fees.pricing.taxes_and_fees =
-      formObject.taxes_and_fees;
     newUnitObject.information.rates_and_fees.pricing.damage_protection =
       formObject.damage_protection;
     newUnitObject.information.rates_and_fees.pricing.sales_tax =
