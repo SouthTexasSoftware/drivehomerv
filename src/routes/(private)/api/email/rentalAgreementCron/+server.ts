@@ -4,7 +4,10 @@ import { emailHandler } from "$lib/email";
 import type { Booking, Unit } from "$lib/types";
 import easepick from "@easepick/bundle";
 const { DateTime } = easepick;
-import { firebaseAdminConfig } from "../../../../../config";
+import { FIREBASE_ADMIN_PROJECT_ID } from "$env/static/private";
+import { FIREBASE_ADMIN_PRIVATE_KEY } from "$env/static/private";
+import { FIREBASE_ADMIN_CLIENT_EMAIL } from "$env/static/private";
+
 import {
   getApp,
   initializeApp,
@@ -58,9 +61,9 @@ export const POST = (async ({ request }) => {
     try {
       serverFirebase = initializeApp({
         credential: cert({
-          projectId: firebaseAdminConfig.projectId,
-          clientEmail: firebaseAdminConfig.clientEmail,
-          privateKey: firebaseAdminConfig.privateKey?.replace(/\\n/g, "\n"),
+          projectId: FIREBASE_ADMIN_PROJECT_ID,
+          clientEmail: FIREBASE_ADMIN_CLIENT_EMAIL,
+          privateKey: FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         }),
       });
     } catch (e) {

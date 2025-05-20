@@ -1,7 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import Stripe from "stripe";
-import { stripeConfig } from "../../../../../config";
+import { STR_PRIVATE_KEY } from "$env/static/private";
 
 interface RequestData {
   invoiceID: string;
@@ -12,7 +12,7 @@ export const POST = (async ({ request }) => {
 
   // console.log("Server Received an ApproveInvoice call to API : ", requestData);
 
-  const stripe = new Stripe(stripeConfig.privateKey, {
+  const stripe = new Stripe(STR_PRIVATE_KEY, {
     apiVersion: "2022-11-15",
   });
 

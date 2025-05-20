@@ -1,6 +1,6 @@
 import sgMail from "@sendgrid/mail";
 import { dev } from "$app/environment";
-import { sendgridConfig } from "../config";
+import { SG_API_KEY } from "$env/static/private";
 
 const confirmationTemplateId = "d-d9d1191bbaf84a578f35ee147cb6db57";
 const ownerNotificationTemplateId = "d-4d6e684b748e479e9c5132abf0929f11";
@@ -96,7 +96,7 @@ export async function emailHandler(
     );
     console.log(msg);
   } else {
-    sgMail.setApiKey(sendgridConfig.apiKey);
+    sgMail.setApiKey(SG_API_KEY);
     try {
       //@ts-ignore
       let sgResponse = await sgMail.send(msg);
