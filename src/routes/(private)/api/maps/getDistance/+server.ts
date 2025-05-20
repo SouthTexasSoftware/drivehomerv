@@ -2,7 +2,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
 import axios from "axios";
-import { googleMapsConfig } from "../../../../../config";
+import { GOOG_MAPS_KEY } from "$env/static/private";
 
 // Define the expected request body shape
 interface DistanceRequestBody {
@@ -18,7 +18,7 @@ interface DistanceResponse {
   details?: string;
 }
 
-const GOOGLE_MAPS_API_KEY = googleMapsConfig.key;
+const GOOGLE_MAPS_API_KEY = GOOG_MAPS_KEY;
 
 export const POST: RequestHandler = async ({ request }) => {
   try {

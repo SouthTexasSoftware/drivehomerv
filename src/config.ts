@@ -18,29 +18,3 @@ export const firebaseClientConfig = {
   //@ts-ignore
   measurementId: p.VITE_FIREBASE_MEASUREMENTID,
 };
-
-export const sendgridConfig = {
-  //@ts-ignore
-  apiKey: p.VITE_SENDGRID_API_KEY,
-};
-
-export const stripeConfig = {
-  //@ts-ignore
-  privateKey: p.VITE_STRIPE_PRIVATE_KEY,
-  //@ts-ignore
-  publicKey: p.VITE_STRIPE_PUBLIC_KEY,
-};
-
-export const firebaseAdminConfig = {
-  //@ts-ignore
-  projectId: p.VITE_FIREBASE_ADMIN_PROJECT_ID,
-  //@ts-ignore
-  privateKey: p.VITE_FIREBASE_ADMIN_PRIVATE_KEY,
-  //@ts-ignore
-  clientEmail: p.VITE_FIREBASE_ADMIN_CLIENT_EMAIL,
-};
-
-export const googleMapsConfig = {
-  //@ts-ignore
-  key: p.VITE_GOOGLE_MAPS_KEY,
-};

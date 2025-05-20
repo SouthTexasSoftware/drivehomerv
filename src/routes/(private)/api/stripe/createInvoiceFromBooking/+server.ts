@@ -2,7 +2,7 @@ import { json, error } from "@sveltejs/kit";
 //@ts-ignore
 import type { RequestHandler } from "./$types";
 import Stripe from "stripe";
-import { stripeConfig } from "../../../../../config";
+import { STR_PRIVATE_KEY } from "$env/static/private";
 import type { Booking } from "lib/types";
 import datetime from "@easepick/datetime";
 
@@ -23,7 +23,7 @@ export const POST = (async ({ request }) => {
   //   bookingAndId
   // );
 
-  const stripe = new Stripe(stripeConfig.privateKey, {
+  const stripe = new Stripe(STR_PRIVATE_KEY, {
     apiVersion: "2022-11-15",
   });
 

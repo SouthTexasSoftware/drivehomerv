@@ -1,7 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import Stripe from "stripe";
-import { stripeConfig } from "../../../../../config";
+import { STR_PRIVATE_KEY } from "$env/static/private";
 import type { Customer } from "lib/types";
 
 export const POST = (async ({ request }) => {
@@ -12,7 +12,7 @@ export const POST = (async ({ request }) => {
     customerObject
   );
 
-  const stripe = new Stripe(stripeConfig.privateKey, {
+  const stripe = new Stripe(STR_PRIVATE_KEY, {
     apiVersion: "2022-11-15",
   });
 
