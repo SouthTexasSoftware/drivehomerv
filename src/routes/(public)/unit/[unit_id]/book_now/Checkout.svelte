@@ -9,6 +9,7 @@
   import { get } from "svelte/store";
   import { fly } from "svelte/transition";
   import { DateTime } from "@easepick/bundle";
+  import { PUBLIC_STR_KEY } from "$env/static/public";
 
   export let unitObject: Unit;
   let paymentIntentLoading = true;
@@ -45,9 +46,7 @@
     }
 
     //@ts-ignore
-    stripe = new window.Stripe(
-      "pk_test_51MfwcCH21MZiaJun12tPhH4CVsJwb43haLWeAwnFHS5l3Mn50pBBYJ3c6ez0pD7soycvq685vAoHEztZEWz6sLy700wayewzKl"
-    );
+    stripe = new window.Stripe(PUBLIC_STR_KEY);
 
     const appearance = {
       theme: "stripe",
