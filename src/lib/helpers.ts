@@ -10,6 +10,7 @@ import {
   query,
   where,
   onSnapshot,
+  Timestamp,
 } from "@firebase/firestore";
 import { get } from "svelte/store";
 import type {
@@ -18,11 +19,13 @@ import type {
   PhotoDocument,
   Booking,
   FileDocument,
+  Customer,
 } from "./types";
 import {
   bookingTimerStore,
   bookingUpdateStore,
   cmsStore,
+  customerStore,
   firebaseStore,
   unitStore,
 } from "./stores";
@@ -159,6 +162,81 @@ export async function populateUnitStore(
       console.warn(error);
     }
   }
+}
+
+/**
+ * Database query that supports pagination
+ * @params fbStore Is the copy of firebaseStore already created
+ */
+import {
+  orderBy,
+  limit,
+  startAfter,
+  QueryDocumentSnapshot,
+} from "firebase/firestore";
+export async function populateCustomerStore(fbStore: FirebaseStore) {
+  if (typeof window !== "undefined") {
+    try {
+      // Get current queryOptions from customerStore
+      const store = get(customerStore);
+      const {
+        limit: limitCount,
+        loadAll,
+        paginationCursor,
+      } = store.queryOptions;
+
+      // Build the query, sorting by 'created' in descending order
+      let customerQuery = query(
+        collection(fbStore.db, "customers"),
+        orderBy("created", "desc")
+      );
+
+      // Apply limit unless loadAll is true
+      if (!loadAll) {
+        customerQuery = query(customerQuery, limit(limitCount));
+      }
+
+      // Apply pagination if paginationCursor is provided
+      if (paginationCursor) {
+        customerQuery = query(customerQuery, startAfter(paginationCursor));
+      }
+
+      const customerCollectionDocs = await getDocs(customerQuery);
+
+      let initialCustomers: Customer[] = [];
+      let lastCustomerCursor: QueryDocumentSnapshot | null = null;
+
+      // Process query results, ensuring document ID is included
+      customerCollectionDocs.forEach((doc) => {
+        initialCustomers.push({ ...doc.data(), id: doc.id } as Customer);
+        lastCustomerCursor = doc;
+      });
+
+      customerStore.update((data) => {
+        // Deduplicate customers by id
+        const existingIds = new Set(
+          data.customers.map((customer) => customer.id)
+        );
+        const newCustomers = initialCustomers.filter(
+          (customer) => !existingIds.has(customer.id)
+        );
+
+        // Append new customers for pagination, or replace if not paginating
+        data.customers = paginationCursor
+          ? [...data.customers, ...newCustomers]
+          : newCustomers;
+        data.isPopulated = true;
+        data.queryOptions.paginationCursor = lastCustomerCursor;
+        return data;
+      });
+
+      return;
+    } catch (error) {
+      console.error("Error in populateCustomerStore:", error);
+      return;
+    }
+  }
+  return;
 }
 
 /**
@@ -601,4 +679,34 @@ export function validateRequiredFields(
   });
 
   return errors;
+}
+
+// Format Timestamp to readable string, handle undefined
+export function formatFirebaseTimestamp(
+  timestamp: Timestamp | number | undefined,
+  dateOnly: boolean = false
+): string {
+  if (!timestamp) {
+    return "N/A"; // Fallback for undefined
+  }
+
+  const date =
+    timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
+
+  const options: Intl.DateTimeFormatOptions = dateOnly
+    ? {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }
+    : {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      };
+
+  return date.toLocaleString("en-US", options);
 }

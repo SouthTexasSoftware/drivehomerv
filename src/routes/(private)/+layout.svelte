@@ -7,6 +7,7 @@
     connectToFirebase,
     populateUnitStore,
     connectAnalytics,
+    populateCustomerStore,
   } from "$lib/helpers";
   import { firebaseStore } from "$lib/stores";
   import { onMount } from "svelte";
@@ -26,6 +27,9 @@
         if (val) {
           // console.log("Database connected.");
           populateUnitStore($firebaseStore, { cms: true });
+
+          populateCustomerStore($firebaseStore);
+
           if (!dev) {
             let analytics = connectAnalytics();
             // console.log(analytics);
