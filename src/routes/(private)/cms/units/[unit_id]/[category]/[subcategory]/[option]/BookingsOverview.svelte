@@ -189,7 +189,11 @@
     <div class="section">
       <div class="section-label">Customer</div>
       {#if bookingObject?.customerObject}
-        <p>{getCustomerName(bookingObject.customerObject)}</p>
+        <a
+          href="/cms/customers/{bookingObject.customerObject.id}"
+          class="font-[cms-semibold] text-[hsl(var(--p))] text-lg"
+          >{getCustomerName(bookingObject.customerObject)}</a
+        >
         <p>{formatPhoneNumber(bookingObject.customerObject.phone)}</p>
         <p>{bookingObject.customerObject.email}</p>
       {:else}
