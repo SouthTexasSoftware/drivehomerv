@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import { unitStore, firebaseStore } from "$lib/stores";
+  import { unitStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import {
     Timestamp,
     arrayUnion,

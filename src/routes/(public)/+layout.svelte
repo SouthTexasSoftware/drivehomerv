@@ -3,15 +3,15 @@
   import Header from "$lib/components/Header.svelte";
   import NavigationLoader from "$lib/components/NavigationLoader.svelte";
   import "$lib/global.css";
-  import {
-    connectToFirebase,
-    populateUnitStore,
-    connectAnalytics,
-  } from "$lib/helpers";
-  import { firebaseStore, unitStore } from "$lib/stores";
+  import { populateUnitStore, connectAnalytics } from "$lib/helpers";
+
   import { onMount } from "svelte";
   import { dev } from "$app/environment";
   import WinterSpecial from "$lib/components/WinterSpecial.svelte";
+  import {
+    connectToFirebase,
+    firebaseStore,
+  } from "$lib/new_stores/firebaseStore";
 
   onMount(() => {
     loadResources();
@@ -24,15 +24,16 @@
       connectToFirebase().then((val) => {
         if (val) {
           // console.log("Database connected.");
-          populateUnitStore($firebaseStore).then(() => {
-            // console.log("Unit store populated", $unitStore);
-          });
-
+          if ($firebaseStore) {
+            populateUnitStore($firebaseStore).then(() => {
+              // console.log("Unit store populated", $unitStore);
+            });
+          }
           if (!dev) {
             let analytics = connectAnalytics();
             // console.log(analytics);
             firebaseStore.update((storeData) => {
-              storeData.analytics = analytics;
+              storeData!.analytics = analytics;
               return storeData;
             });
           }

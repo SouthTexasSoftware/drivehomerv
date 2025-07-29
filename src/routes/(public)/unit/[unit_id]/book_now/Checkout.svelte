@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Unit } from "$lib/types";
-  import { bookingStore, firebaseStore } from "$lib/stores";
+  import { bookingStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import ArrowIcon from "./zIconArrow.svelte";
   import { enhance } from "$app/forms";
   import { createEventDispatcher, onMount } from "svelte";
@@ -12,6 +13,7 @@
   import { PUBLIC_STR_KEY } from "$env/static/public";
 
   export let unitObject: Unit;
+  export let stripeLoaded;
   let paymentIntentLoading = true;
   let stripe: any;
   let elements: any;
@@ -27,9 +29,18 @@
       top: 0,
       behavior: "smooth",
     });
+    // Subscribe to stripeLoaded store
+    const unsubscribe = stripeLoaded.subscribe((loaded: boolean) => {
+      if (loaded) {
+        initializeStripe();
+      } else {
+        console.log("Waiting for Stripe.js to load...");
+      }
+    });
   });
 
   async function initializeStripe() {
+    console.log("Thanks for getting to Checkout!");
     let client_secret = "error";
 
     if ($bookingStore.payment_intent) {
@@ -46,31 +57,32 @@
     }
 
     //@ts-ignore
-    stripe = new window.Stripe(PUBLIC_STR_KEY);
+    if (window.Stripe) {
+      stripe = window.Stripe;
+      const appearance = {
+        theme: "stripe",
+        variables: {
+          colorPrimary: "#ae2623",
+        },
+      };
+      elements = stripe.elements({
+        appearance,
+        clientSecret: client_secret,
+      });
 
-    const appearance = {
-      theme: "stripe",
-      variables: {
-        colorPrimary: "#ae2623",
-      },
-    };
-    elements = stripe.elements({
-      appearance,
-      clientSecret: client_secret,
-    });
+      const paymentElementOptions = {
+        layout: "tabs",
+      };
 
-    const paymentElementOptions = {
-      layout: "tabs",
-    };
+      paymentIntentLoading = false;
 
-    paymentIntentLoading = false;
-
-    const paymentElement = elements.create("payment", paymentElementOptions);
-    paymentElement.mount("#payment-element");
+      const paymentElement = elements.create("payment", paymentElementOptions);
+      paymentElement.mount("#payment-element");
+    }
   }
 
   async function generatePaymentIntent(customerId: string) {
-    // console.log("requesting new payment intent key");
+    console.log("requesting new payment intent key");
 
     let requestIntentKey = await fetch("/api/stripe/createPaymentIntent", {
       method: "POST",
@@ -160,9 +172,11 @@
   }
 </script>
 
+<!--  
 <svelte:head>
   <script src="https://js.stripe.com/v3/" on:load={initializeStripe}></script>
 </svelte:head>
+-->
 
 <div class="checkout-container">
   {#if paymentIntentLoading}

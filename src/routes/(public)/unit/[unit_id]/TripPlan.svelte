@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { bookingStore, firebaseStore } from "$lib/stores";
+  import { bookingStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import type { Unit, Booking } from "$lib/types";
   import Calendar from "./Calendar.svelte";
   import TempFeatureList from "./TempFeatureList.svelte";

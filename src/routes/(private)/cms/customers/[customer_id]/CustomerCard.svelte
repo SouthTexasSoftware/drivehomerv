@@ -1,7 +1,8 @@
 <script lang="ts">
   import { afterNavigate } from "$app/navigation";
   import { formatFirebaseTimestamp } from "$lib/helpers";
-  import { firebaseStore, unitStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
+  import { unitStore } from "$lib/stores";
   import type { Booking, Customer } from "$lib/types";
   import {
     collection,

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { unitStore, firebaseStore } from "$lib/stores";
+  import { unitStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { enhance } from "$app/forms";
   import type { Unit } from "$lib/types";
   import { Timestamp, arrayUnion, doc, updateDoc } from "firebase/firestore";

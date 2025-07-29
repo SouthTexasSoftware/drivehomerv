@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onAuthStateChanged } from "firebase/auth";
-  import { firebaseStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
   import MenuDrawer from "./MenuDrawer.svelte";

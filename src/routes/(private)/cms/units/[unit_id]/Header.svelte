@@ -8,7 +8,8 @@
     deleteDoc,
     updateDoc,
   } from "firebase/firestore";
-  import { cmsStore, firebaseStore, unitStore } from "$lib/stores";
+  import { cmsStore, unitStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import {
     populateUnitBookings,
     populateUnitStore,

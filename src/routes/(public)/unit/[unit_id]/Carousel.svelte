@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Photo, Unit } from "$lib/types";
-  import { firebaseStore, unitStore } from "$lib/stores";
+  import { unitStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { ref, getDownloadURL } from "firebase/storage";
   import { beforeUpdate, onMount } from "svelte";
   import { fade } from "svelte/transition";

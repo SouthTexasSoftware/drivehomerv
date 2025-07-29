@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page, updated } from "$app/stores";
-  import { bookingStore, firebaseStore } from "$lib/stores";
+  import { bookingStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import type { Booking, Customer, Unit } from "$lib/types";
   import { getMonthString, getDayString } from "$lib/helpers";
   import { Timestamp, collection, setDoc } from "firebase/firestore";

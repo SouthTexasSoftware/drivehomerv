@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { firebaseStore, unitStore } from "$lib/stores";
+  import { unitStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
   import { page } from "$app/stores";
   import {

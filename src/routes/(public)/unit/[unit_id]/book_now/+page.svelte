@@ -1,11 +1,7 @@
 <script lang="ts">
   import { navigating, page } from "$app/stores";
-  import {
-    bookingStore,
-    bookingTimerStore,
-    firebaseStore,
-    unitStore,
-  } from "$lib/stores";
+  import { bookingStore, bookingTimerStore, unitStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import type { Booking, Customer, Unit } from "$lib/types";
   import { onMount } from "svelte";
   import { beforeNavigate, goto } from "$app/navigation";
@@ -27,6 +23,8 @@
   } from "firebase/firestore";
   import { DateTime } from "@easepick/bundle";
   import { setBookingTimer } from "$lib/helpers";
+  import { PUBLIC_STR_KEY } from "$env/static/public";
+  import { writable } from "svelte/store";
 
   let unitObject: Unit | undefined = undefined;
   let unitLoadingCounter = 0;
@@ -55,6 +53,9 @@
 
   let tripStartLabel = "Departure";
   let tripEndLabel = "Return";
+
+  // Store to track Stripe loading status
+  export const stripeLoaded = writable<boolean>(false);
 
   //intercept a redirect and hit pause for now.
   async function checkForRedirect(): Promise<boolean> {
@@ -188,6 +189,25 @@
   }
 
   onMount(async () => {
+    // Check if Stripe is already loaded
+    if (window.Stripe) {
+      $stripeLoaded = true;
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://js.stripe.com/v3/";
+      script.async = true;
+      script.onload = () => {
+        console.log("Stripe.js loaded successfully");
+        window.Stripe = window.Stripe(PUBLIC_STR_KEY); // Initialize Stripe globally
+        $stripeLoaded = true;
+      };
+      script.onerror = () => {
+        console.error("Failed to load Stripe.js");
+        $stripeLoaded = false;
+      };
+      document.head.appendChild(script);
+    }
+
     if (await checkForRedirect()) return;
 
     if (!$bookingStore) {
@@ -375,6 +395,7 @@
         {timerStatement}
         ><Checkout
           {unitObject}
+          {stripeLoaded}
           on:back={() => setFlowStateView(1)}
           on:paymentStart={() => {
             confirmingPaymentNavigation = true;

@@ -3,7 +3,8 @@
   import { beforeUpdate, onMount } from "svelte";
   import BookingsOverview from "./BookingsOverview.svelte";
   import { collection, getDocs } from "firebase/firestore";
-  import { bookingStore, firebaseStore } from "$lib/stores";
+  import { bookingStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { page } from "$app/stores";
   import { fade } from "svelte/transition";
   import BookingSettingsDropdown from "./BookingSettingsDropdown.svelte";

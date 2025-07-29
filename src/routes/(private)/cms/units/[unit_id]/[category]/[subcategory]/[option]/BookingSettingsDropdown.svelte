@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import { firebaseStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import type { Booking, Unit } from "$lib/types";
   import { collection, deleteDoc, doc } from "firebase/firestore";
   import { deleteObject, ref } from "firebase/storage";

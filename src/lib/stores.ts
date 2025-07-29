@@ -11,8 +11,6 @@ import type {
 } from "./types";
 import { doc, getDoc, type Unsubscribe } from "firebase/firestore";
 
-export const firebaseStore = writable<FirebaseStore>(undefined);
-
 export const unitStore = writable<UnitStore>({
   units: [],
   isPopulated: false,

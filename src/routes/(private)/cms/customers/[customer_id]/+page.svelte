@@ -3,7 +3,8 @@
   import type { Customer } from "$lib/types";
   import CustomerCard from "./CustomerCard.svelte";
   import { beforeUpdate, onMount } from "svelte";
-  import { customerStore, firebaseStore } from "$lib/stores";
+  import { customerStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import PageDataLoading from "$lib/components/PageDataLoading.svelte";
   import { afterNavigate } from "$app/navigation";
   import { Timestamp } from "firebase/firestore";
@@ -40,7 +41,7 @@
   });
 </script>
 
-<div class="p-[25px] w-full flex flex-col border-b-1 ">
+<div class="p-[25px] w-full flex flex-col border-b-1">
   <h1 class="font-[cms-bold] text-3xl pt-16 pb-6">Customer Details</h1>
   {#if loading}
     <p class="font-[cms-light]">Loading...</p>

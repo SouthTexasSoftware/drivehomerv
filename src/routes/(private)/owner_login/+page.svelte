@@ -1,7 +1,7 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
-  import { firebaseStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { signInWithEmailAndPassword } from "firebase/auth";
   import { fade } from "svelte/transition";
 

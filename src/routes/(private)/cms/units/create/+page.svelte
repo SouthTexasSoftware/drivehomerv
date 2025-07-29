@@ -2,7 +2,7 @@
   import { enhance } from "$app/forms";
   import { collection, doc, setDoc } from "firebase/firestore";
   import { newUnitModel, populateUnitStore } from "$lib/helpers";
-  import { firebaseStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
 
   let formSubmitting = false;
 

@@ -26,9 +26,9 @@ import {
   bookingUpdateStore,
   cmsStore,
   customerStore,
-  firebaseStore,
   unitStore,
 } from "./stores";
+import { firebaseStore } from "./new_stores/firebaseStore";
 import { DateTime } from "@easepick/bundle";
 import { getAnalytics } from "firebase/analytics";
 
@@ -37,43 +37,43 @@ import { getAnalytics } from "firebase/analytics";
  * Asynchronous call to establish connection with Firebase
  * @returns boolean
  */
-export async function connectToFirebase() {
-  if (typeof window != undefined) {
-    try {
-      const appModule = await import("firebase/app");
-      const firestoreModule = await import("firebase/firestore");
-      const storageModule = await import("firebase/storage");
-      const authModule = await import("firebase/auth");
+// export async function connectToFirebase() {
+//   if (typeof window != undefined) {
+//     try {
+//       const appModule = await import("firebase/app");
+//       const firestoreModule = await import("firebase/firestore");
+//       const storageModule = await import("firebase/storage");
+//       const authModule = await import("firebase/auth");
 
-      // ** PUBLIC VARIABLES **
+//       // ** PUBLIC VARIABLES **
 
-      // Initialize Firebase
-      const app = appModule.initializeApp(
-        firebaseClientConfig,
-        "drive-home-rv"
-      );
-      const auth = authModule.getAuth(app);
-      const db = firestoreModule.initializeFirestore(app, {
-        localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager(),
-        }),
-      });
-      const storage = storageModule.getStorage(app);
+//       // Initialize Firebase
+//       const app = appModule.initializeApp(
+//         firebaseClientConfig,
+//         "drive-home-rv"
+//       );
+//       const auth = authModule.getAuth(app);
+//       const db = firestoreModule.initializeFirestore(app, {
+//         localCache: persistentLocalCache({
+//           tabManager: persistentMultipleTabManager(),
+//         }),
+//       });
+//       const storage = storageModule.getStorage(app);
 
-      firebaseStore.set({
-        app: app,
-        auth: auth,
-        db: db,
-        storage: storage,
-      });
+//       firebaseStore.set({
+//         app: app,
+//         auth: auth,
+//         db: db,
+//         storage: storage,
+//       });
 
-      return true;
-    } catch (e) {
-      console.log(e);
-      return false;
-    }
-  }
-}
+//       return true;
+//     } catch (e) {
+//       console.log(e);
+//       return false;
+//     }
+//   }
+// }
 
 /**
  * Database query that updates the unitStore with latest information
@@ -174,6 +174,7 @@ import {
   startAfter,
   QueryDocumentSnapshot,
 } from "firebase/firestore";
+
 export async function populateCustomerStore(fbStore: FirebaseStore) {
   if (typeof window !== "undefined") {
     try {
@@ -293,7 +294,10 @@ export function populateUnitBookings(snapshot: QuerySnapshot, unit: Unit) {
 export function connectAnalytics() {
   if (get(firebaseStore)) {
     let fb = get(firebaseStore);
-    const analytics = getAnalytics(fb.app);
+    let analytics = undefined;
+    if (fb) {
+      analytics = getAnalytics(fb.app);
+    }
 
     return analytics;
   }
@@ -683,15 +687,26 @@ export function validateRequiredFields(
 
 // Format Timestamp to readable string, handle undefined
 export function formatFirebaseTimestamp(
-  timestamp: Timestamp | number | undefined,
+  timestamp: Timestamp | number | Date | string | undefined,
   dateOnly: boolean = false
 ): string {
   if (!timestamp) {
-    return "N/A"; // Fallback for undefined
+    return "N/A";
   }
 
-  const date =
-    timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
+  let date: Date;
+  if (timestamp instanceof Timestamp) {
+    date = timestamp.toDate();
+  } else if (timestamp instanceof Date) {
+    date = timestamp;
+  } else if (typeof timestamp === "string") {
+    date = new Date(timestamp);
+    if (isNaN(date.getTime())) {
+      return "Invalid Date";
+    }
+  } else {
+    date = new Date(timestamp);
+  }
 
   const options: Intl.DateTimeFormatOptions = dateOnly
     ? {

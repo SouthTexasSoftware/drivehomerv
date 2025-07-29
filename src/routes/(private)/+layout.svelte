@@ -4,12 +4,14 @@
   import NavigationLoader from "$lib/components/NavigationLoader.svelte";
   import "$lib/global.css";
   import {
-    connectToFirebase,
     populateUnitStore,
     connectAnalytics,
     populateCustomerStore,
   } from "$lib/helpers";
-  import { firebaseStore } from "$lib/stores";
+  import {
+    connectToFirebase,
+    firebaseStore,
+  } from "$lib/new_stores/firebaseStore";
   import { onMount } from "svelte";
   import { dev } from "$app/environment";
   import Alert from "$lib/components/Alert.svelte";
@@ -26,15 +28,16 @@
       connectToFirebase().then((val) => {
         if (val) {
           // console.log("Database connected.");
-          populateUnitStore($firebaseStore, { cms: true });
+          if ($firebaseStore) {
+            populateUnitStore($firebaseStore, { cms: true });
 
-          populateCustomerStore($firebaseStore);
-
+            populateCustomerStore($firebaseStore);
+          }
           if (!dev) {
             let analytics = connectAnalytics();
             // console.log(analytics);
             firebaseStore.update((storeData) => {
-              storeData.analytics = analytics;
+              storeData!.analytics = analytics;
               return storeData;
             });
           }

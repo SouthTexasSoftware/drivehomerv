@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import { firebaseStore, unitStore } from "$lib/stores";
+  import { unitStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { createEventDispatcher } from "svelte";
   import type { SubmitFunction } from "@sveltejs/kit";
   import { collection, doc, setDoc, updateDoc } from "firebase/firestore";

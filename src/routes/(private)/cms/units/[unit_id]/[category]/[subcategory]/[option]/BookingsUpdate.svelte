@@ -4,7 +4,8 @@
   import { afterUpdate, createEventDispatcher, onMount } from "svelte";
   import { Timestamp, doc, serverTimestamp, setDoc } from "firebase/firestore";
   import { DateTime } from "@easepick/bundle";
-  import { bookingStore, firebaseStore } from "$lib/stores";
+  import { bookingStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { page } from "$app/stores";
 
   export let unitObject: Unit;

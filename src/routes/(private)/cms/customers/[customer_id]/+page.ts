@@ -1,5 +1,6 @@
 import type { PageLoad } from "./$types";
-import { customerStore, firebaseStore } from "$lib/stores";
+import { customerStore } from "$lib/stores";
+import { firebaseStore } from "$lib/new_stores/firebaseStore";
 import { get } from "svelte/store";
 
 export const load: PageLoad = async ({ params }) => {
