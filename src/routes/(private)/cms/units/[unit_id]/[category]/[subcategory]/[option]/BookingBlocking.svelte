@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import { deleteDoc, doc } from "firebase/firestore";
-  import { firebaseStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { goto } from "$app/navigation";
 
   export let blockingObject: any;

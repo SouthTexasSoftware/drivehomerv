@@ -11,7 +11,8 @@
     getDocs,
     updateDoc,
   } from "firebase/firestore";
-  import { firebaseStore, unitStore } from "$lib/stores";
+  import { unitStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { page, updated } from "$app/stores";
   import { deleteObject, ref } from "firebase/storage";
   //@ts-ignore

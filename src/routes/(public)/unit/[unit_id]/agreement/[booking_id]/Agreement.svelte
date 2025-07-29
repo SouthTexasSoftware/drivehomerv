@@ -4,7 +4,8 @@
   import AgreementVerbiageLatest from "./AgreementVerbiageLatest.svelte";
   import { DateTime } from "@easepick/bundle";
   import { Timestamp, doc, updateDoc } from "firebase/firestore";
-  import { bookingStore, firebaseStore } from "$lib/stores";
+  import { bookingStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
 
   export let bookingObject: Booking;
   let scrollContainer: HTMLElement;

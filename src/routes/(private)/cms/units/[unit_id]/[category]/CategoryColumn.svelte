@@ -5,7 +5,8 @@
   import type { Unit } from "$lib/types";
   import { DateTime } from "@easepick/bundle";
   import { afterNavigate, goto } from "$app/navigation";
-  import { cmsStore, firebaseStore, unitStore } from "$lib/stores";
+  import { cmsStore, unitStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { createEventDispatcher } from "svelte";
   import { collection, onSnapshot } from "firebase/firestore";
 

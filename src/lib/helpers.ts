@@ -10,6 +10,7 @@ import {
   query,
   where,
   onSnapshot,
+  Timestamp,
 } from "@firebase/firestore";
 import { get } from "svelte/store";
 import type {
@@ -18,14 +19,16 @@ import type {
   PhotoDocument,
   Booking,
   FileDocument,
+  Customer,
 } from "./types";
 import {
   bookingTimerStore,
   bookingUpdateStore,
   cmsStore,
-  firebaseStore,
+  customerStore,
   unitStore,
 } from "./stores";
+import { firebaseStore } from "./new_stores/firebaseStore";
 import { DateTime } from "@easepick/bundle";
 import { getAnalytics } from "firebase/analytics";
 
@@ -34,43 +37,43 @@ import { getAnalytics } from "firebase/analytics";
  * Asynchronous call to establish connection with Firebase
  * @returns boolean
  */
-export async function connectToFirebase() {
-  if (typeof window != undefined) {
-    try {
-      const appModule = await import("firebase/app");
-      const firestoreModule = await import("firebase/firestore");
-      const storageModule = await import("firebase/storage");
-      const authModule = await import("firebase/auth");
+// export async function connectToFirebase() {
+//   if (typeof window != undefined) {
+//     try {
+//       const appModule = await import("firebase/app");
+//       const firestoreModule = await import("firebase/firestore");
+//       const storageModule = await import("firebase/storage");
+//       const authModule = await import("firebase/auth");
 
-      // ** PUBLIC VARIABLES **
+//       // ** PUBLIC VARIABLES **
 
-      // Initialize Firebase
-      const app = appModule.initializeApp(
-        firebaseClientConfig,
-        "drive-home-rv"
-      );
-      const auth = authModule.getAuth(app);
-      const db = firestoreModule.initializeFirestore(app, {
-        localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager(),
-        }),
-      });
-      const storage = storageModule.getStorage(app);
+//       // Initialize Firebase
+//       const app = appModule.initializeApp(
+//         firebaseClientConfig,
+//         "drive-home-rv"
+//       );
+//       const auth = authModule.getAuth(app);
+//       const db = firestoreModule.initializeFirestore(app, {
+//         localCache: persistentLocalCache({
+//           tabManager: persistentMultipleTabManager(),
+//         }),
+//       });
+//       const storage = storageModule.getStorage(app);
 
-      firebaseStore.set({
-        app: app,
-        auth: auth,
-        db: db,
-        storage: storage,
-      });
+//       firebaseStore.set({
+//         app: app,
+//         auth: auth,
+//         db: db,
+//         storage: storage,
+//       });
 
-      return true;
-    } catch (e) {
-      console.log(e);
-      return false;
-    }
-  }
-}
+//       return true;
+//     } catch (e) {
+//       console.log(e);
+//       return false;
+//     }
+//   }
+// }
 
 /**
  * Database query that updates the unitStore with latest information
@@ -162,6 +165,82 @@ export async function populateUnitStore(
 }
 
 /**
+ * Database query that supports pagination
+ * @params fbStore Is the copy of firebaseStore already created
+ */
+import {
+  orderBy,
+  limit,
+  startAfter,
+  QueryDocumentSnapshot,
+} from "firebase/firestore";
+
+export async function populateCustomerStore(fbStore: FirebaseStore) {
+  if (typeof window !== "undefined") {
+    try {
+      // Get current queryOptions from customerStore
+      const store = get(customerStore);
+      const {
+        limit: limitCount,
+        loadAll,
+        paginationCursor,
+      } = store.queryOptions;
+
+      // Build the query, sorting by 'created' in descending order
+      let customerQuery = query(
+        collection(fbStore.db, "customers"),
+        orderBy("created", "desc")
+      );
+
+      // Apply limit unless loadAll is true
+      if (!loadAll) {
+        customerQuery = query(customerQuery, limit(limitCount));
+      }
+
+      // Apply pagination if paginationCursor is provided
+      if (paginationCursor) {
+        customerQuery = query(customerQuery, startAfter(paginationCursor));
+      }
+
+      const customerCollectionDocs = await getDocs(customerQuery);
+
+      let initialCustomers: Customer[] = [];
+      let lastCustomerCursor: QueryDocumentSnapshot | null = null;
+
+      // Process query results, ensuring document ID is included
+      customerCollectionDocs.forEach((doc) => {
+        initialCustomers.push({ ...doc.data(), id: doc.id } as Customer);
+        lastCustomerCursor = doc;
+      });
+
+      customerStore.update((data) => {
+        // Deduplicate customers by id
+        const existingIds = new Set(
+          data.customers.map((customer) => customer.id)
+        );
+        const newCustomers = initialCustomers.filter(
+          (customer) => !existingIds.has(customer.id)
+        );
+
+        // Append new customers for pagination, or replace if not paginating
+        data.customers = paginationCursor
+          ? [...data.customers, ...newCustomers]
+          : newCustomers;
+        data.isPopulated = true;
+        data.queryOptions.paginationCursor = lastCustomerCursor;
+        return data;
+      });
+
+      return;
+    } catch (error) {
+      console.error("Error in populateCustomerStore:", error);
+      return;
+    }
+  }
+  return;
+}
+
+/**
  * Helper function to process the data returned from a QuerySnapshot and modify the passing in Unit
  * @param snapshot - QuerySnapshot of a Booking collection of documents | initially is set to only unixEnd > today (not past bookings)
  * @param unit - Unit associated with snapshot
@@ -215,7 +294,10 @@ export function populateUnitBookings(snapshot: QuerySnapshot, unit: Unit) {
 export function connectAnalytics() {
   if (get(firebaseStore)) {
     let fb = get(firebaseStore);
-    const analytics = getAnalytics(fb.app);
+    let analytics = undefined;
+    if (fb) {
+      analytics = getAnalytics(fb.app);
+    }
 
     return analytics;
   }
@@ -601,4 +683,45 @@ export function validateRequiredFields(
   });
 
   return errors;
+}
+
+// Format Timestamp to readable string, handle undefined
+export function formatFirebaseTimestamp(
+  timestamp: Timestamp | number | Date | string | undefined,
+  dateOnly: boolean = false
+): string {
+  if (!timestamp) {
+    return "N/A";
+  }
+
+  let date: Date;
+  if (timestamp instanceof Timestamp) {
+    date = timestamp.toDate();
+  } else if (timestamp instanceof Date) {
+    date = timestamp;
+  } else if (typeof timestamp === "string") {
+    date = new Date(timestamp);
+    if (isNaN(date.getTime())) {
+      return "Invalid Date";
+    }
+  } else {
+    date = new Date(timestamp);
+  }
+
+  const options: Intl.DateTimeFormatOptions = dateOnly
+    ? {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }
+    : {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      };
+
+  return date.toLocaleString("en-US", options);
 }

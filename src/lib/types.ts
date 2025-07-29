@@ -5,6 +5,7 @@ import type {
   Timestamp,
   CollectionReference,
   DocumentReference,
+  QueryDocumentSnapshot,
 } from "firebase/firestore";
 import type { FirebaseStorage } from "firebase/storage";
 import type { DateTime } from "@easepick/datetime";
@@ -16,6 +17,22 @@ export interface FirebaseStore {
   db: Firestore;
   storage: FirebaseStorage;
   analytics?: Analytics;
+}
+
+export interface CustomerStore {
+  customers: Customer[];
+  getCustomer(
+    customerId: string,
+    fbStore: FirebaseStore
+  ): Promise<Customer | undefined>;
+  isPopulated: boolean;
+  queryOptions: CustomerQueryOptions;
+}
+
+export interface CustomerQueryOptions {
+  limit: number;
+  loadAll: boolean;
+  paginationCursor: QueryDocumentSnapshot | null;
 }
 
 export interface UnitStore {

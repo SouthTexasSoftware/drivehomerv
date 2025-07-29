@@ -6,10 +6,10 @@ import type {
   Unit,
   PhotoDocument,
   BookingDisplayFilter,
+  CustomerStore,
+  Customer,
 } from "./types";
-import type { Unsubscribe } from "firebase/firestore";
-
-export const firebaseStore = writable<FirebaseStore>(undefined);
+import { doc, getDoc, type Unsubscribe } from "firebase/firestore";
 
 export const unitStore = writable<UnitStore>({
   units: [],
@@ -22,6 +22,52 @@ export const unitStore = writable<UnitStore>({
       }
     });
     return foundUnit;
+  },
+});
+
+export const customerStore = writable<CustomerStore>({
+  customers: [],
+  isPopulated: false,
+  queryOptions: {
+    limit: 10,
+    loadAll: false,
+    paginationCursor: null,
+  },
+  async getCustomer(
+    customerId: string,
+    fbStore: FirebaseStore
+  ): Promise<Customer | undefined> {
+    // Check if customer exists in store
+    let foundCustomer: Customer | undefined = this.customers.find(
+      (customer) => customer.id === customerId
+    );
+
+    // If not found, query Firebase
+    if (!foundCustomer && typeof window !== "undefined") {
+      try {
+        const customerDocRef = doc(fbStore.db, "customers", customerId);
+        const customerDoc = await getDoc(customerDocRef);
+
+        if (customerDoc.exists()) {
+          foundCustomer = customerDoc.data() as Customer;
+          // Check for duplicates before adding
+          if (
+            !this.customers.some(
+              (customer) => customer.id === foundCustomer!.id
+            )
+          ) {
+            this.customers = [...this.customers, foundCustomer];
+            // Update the store
+            customerStore.set(this);
+          }
+        }
+      } catch (error) {
+        console.warn(`Error fetching customer with ID ${customerId}`);
+        console.warn(error);
+      }
+    }
+
+    return foundCustomer;
   },
 });
 

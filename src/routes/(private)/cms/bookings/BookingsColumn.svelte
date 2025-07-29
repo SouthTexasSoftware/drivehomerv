@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { cmsStore, firebaseStore, unitStore } from "$lib/stores";
+  import { cmsStore, unitStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { DateTime } from "@easepick/bundle";
   import { collection, onSnapshot } from "firebase/firestore";
   import { populateUnitBookings } from "$lib/helpers";

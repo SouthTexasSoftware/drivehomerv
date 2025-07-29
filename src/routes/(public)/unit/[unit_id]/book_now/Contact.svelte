@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Customer, Unit } from "$lib/types";
-  import { bookingStore, firebaseStore } from "$lib/stores";
+  import { bookingStore } from "$lib/stores";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { getMonthString, getDayString } from "$lib/helpers";
   import ArrowIcon from "./zIconArrow.svelte";
   import { enhance } from "$app/forms";
