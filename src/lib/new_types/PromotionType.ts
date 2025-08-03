@@ -14,6 +14,7 @@ export type PromotionType = {
   usageLimit?: number;
   usageCount: number;
   minimumPurchase?: number;
+  minimumNights?: number;
   applicableUnits?: string[];
   promotionUsage?: PromotionUsage[];
   maxDiscount?: number;
@@ -22,9 +23,8 @@ export type PromotionType = {
   updatedAt?: Timestamp | string;
 };
 
-
 export interface PromotionUsage {
-  customerId:string;
-  bookingId:string;
+  customerId: string;
+  bookingId: string;
   usedTimestamp: Timestamp | string;
 }
