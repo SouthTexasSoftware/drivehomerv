@@ -302,7 +302,8 @@
 
     const promotionResult = await promotionManager.validate(
       inputValue,
-      unitObject.id
+      unitObject.id,
+      $bookingStore.total_price
     );
 
     validatingPromotion = false;
