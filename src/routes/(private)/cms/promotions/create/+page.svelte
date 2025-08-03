@@ -68,6 +68,7 @@
       minimumPurchase: undefined,
       applicableUnits: undefined,
       maxDiscount: undefined,
+      minimumNights: undefined,
     };
     goto("/cms/promotions");
   }
@@ -206,6 +207,22 @@
                   class="mt-1 p-2 rounded border border-gray-300"
                 />
               </label>
+              <label class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  bind:checked={formData.isActive}
+                  class="h-5 w-5"
+                />
+                <span class="font-[cms-semibold] text-md">Active</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  bind:checked={formData.stackable}
+                  class="h-5 w-5"
+                />
+                <span class="font-[cms-semibold] text-md">Stackable</span>
+              </label>
             </div>
             <div class="flex flex-col gap-4" id="right column">
               <label class="flex flex-col">
@@ -242,21 +259,13 @@
                   class="mt-1 p-2 rounded border border-gray-300"
                 />
               </label>
-              <label class="flex items-center gap-2">
+              <label class="flex flex-col">
+                <span class="font-[cms-semibold] text-sm">Minimum Nights</span>
                 <input
-                  type="checkbox"
-                  bind:checked={formData.isActive}
-                  class="h-4 w-4"
+                  type="number"
+                  bind:value={formData.minimumNights}
+                  class="mt-1 p-2 rounded border border-gray-300"
                 />
-                <span class="font-[cms-semibold] text-sm">Active</span>
-              </label>
-              <label class="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  bind:checked={formData.stackable}
-                  class="h-4 w-4"
-                />
-                <span class="font-[cms-semibold] text-sm">Stackable</span>
               </label>
             </div>
           </div>

@@ -303,7 +303,8 @@
     const promotionResult = await promotionManager.validate(
       inputValue,
       unitObject.id,
-      $bookingStore.total_price
+      $bookingStore.total_price,
+      $bookingStore.trip_length
     );
 
     validatingPromotion = false;

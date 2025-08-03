@@ -145,6 +145,9 @@
                 <th class="font-[cms-semibold] text-sm p-2 text-left"
                   >For Units</th
                 >
+                <th class="font-[cms-semibold] text-sm p-2 text-left"
+                  >Min. Nights</th
+                >
                 <th class="font-[cms-semibold] text-sm p-2 text-left">Active</th
                 >
                 <th class="font-[cms-semibold] text-sm p-2 text-left"
@@ -183,6 +186,9 @@
                   </td>
                   <td class="font-[cms-regular] text-sm p-2">
                     {formatApplicableUnits(promotion.applicableUnits)}
+                  </td>
+                  <td class="font-[cms-regular] text-sm p-2">
+                    {promotion.minimumNights ? promotion.minimumNights : "N/A"}
                   </td>
                   <td class="font-[cms-regular] text-sm p-2">
                     <p

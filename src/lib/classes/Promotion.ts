@@ -110,6 +110,7 @@ export class Promotion {
     code: string,
     unitId?: string,
     orderTotal?: number,
+    bookedNights?: number,
     customerId?: string
   ): Promise<PromotionType | null> {
     try {
@@ -165,6 +166,18 @@ export class Promotion {
         return null;
       }
 
+      // Check minimum days requirement
+      if (
+        promotion.minimumNights &&
+        bookedNights !== undefined &&
+        bookedNights < promotion.minimumNights
+      ) {
+        console.warn(
+          `Promotion ${code} requires a minimum nights of ${promotion.minimumNights}`
+        );
+        return null;
+      }
+
       // Check applicable units
       // bypass if applicable = all
       if (!promotion.applicableUnits?.includes("all")) {
@@ -211,6 +224,7 @@ export class Promotion {
       // Validate the promotion first
       const promotion = await this.validate(
         code,
+        undefined,
         undefined,
         undefined,
         customerId
