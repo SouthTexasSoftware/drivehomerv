@@ -4,30 +4,15 @@
   import type { PromotionType } from "$lib/new_types/PromotionType";
   import { promotionStore } from "$lib/new_stores/promotionStore";
   import { alertStore } from "$lib/stores/alert";
-  import { formatFirebaseTimestamp, toDateInputString } from "$lib/helpers";
   import { waitForFirebase } from "$lib/new_stores/firebaseStore";
   import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
   import { unitStore } from "$lib/stores";
+  import { formatFirebaseTimestamp, toDateInputString } from "$lib/helpers";
+  import { Timestamp } from "firebase/firestore";
 
-  let formData: Omit<
-    PromotionType,
-    "id" | "createdAt" | "usageCount" | "updatedAt"
-  > = {
-    code: "",
-    name: "",
-    discountType: "percentage",
-    discountValue: 0,
-    startDate: toDateInputString(new Date()),
-    isActive: false,
-    stackable: false,
-    description: "",
-    usageLimit: undefined,
-    minimumPurchase: undefined,
-    applicableUnits: ["all"],
-    promotionUsage: undefined,
-    maxDiscount: undefined,
-  };
-
+  let formData: PromotionType | null = null;
+  let editingId: string | null = null;
   let isLoading = true;
   let error: string | null = null;
 
@@ -35,6 +20,16 @@
     try {
       await waitForFirebase();
       await promotionStore.loadAll();
+      editingId = $page.params.promotion_id;
+      let promo = await promotionStore.get(editingId);
+      if (promo) {
+        formData = {
+          ...promo,
+          startDate: toDateInputString(promo.startDate),
+          endDate: toDateInputString(promo.endDate),
+        };
+      }
+      console.log(formData);
     } catch (err) {
       error = "Failed to initialize Firebase or load promotions";
       alertStore.error(error, 5000);
@@ -44,32 +39,12 @@
     }
   });
 
-  function isValidDate(dateInput: Date | string | undefined): boolean {
-    if (!dateInput) return true;
-    if (dateInput instanceof Date) {
-      return !isNaN(dateInput.getTime());
+  async function updatePromotion() {
+    if (formData && editingId) {
+      await promotionStore.update(editingId, formData, true);
+      formData = null;
+      editingId = null;
     }
-    const date = new Date(dateInput);
-    return !isNaN(date.getTime());
-  }
-
-  async function createPromotion() {
-    await promotionStore.create(formData, true);
-    formData = {
-      code: "",
-      name: "",
-      discountType: "percentage",
-      discountValue: 0,
-      startDate: toDateInputString(new Date()),
-      isActive: false,
-      stackable: false,
-      description: "",
-      usageLimit: undefined,
-      minimumPurchase: undefined,
-      applicableUnits: undefined,
-      maxDiscount: undefined,
-    };
-    goto("/cms/promotions");
   }
 
   // Reactive variable to track "All Units" checkbox state
@@ -77,13 +52,39 @@
   // Reactive variable to track individual unit selections
   let selectedUnitIds: string[] = [];
 
+  // Initialize based on formData.applicableUnits
+  function initializeUnitsSelection() {
+    if (formData!.applicableUnits?.includes("all")) {
+      selectAllUnits = true;
+      selectedUnitIds = [];
+    } else if (
+      formData!.applicableUnits &&
+      formData!.applicableUnits.length > 0
+    ) {
+      selectAllUnits = false;
+      selectedUnitIds = [...formData!.applicableUnits];
+    } else {
+      // Handle null/undefined/empty case
+      selectAllUnits = true;
+      selectedUnitIds = [];
+      formData!.applicableUnits = ["all"];
+    }
+  }
+
+  // Run initialization when component mounts or formData changes
+  $: if (formData) {
+    if (formData.applicableUnits) {
+      initializeUnitsSelection();
+    }
+  }
+
   // Function to update applicableUnits based on checkbox states
   function updateApplicableUnits() {
     if (selectAllUnits) {
-      formData.applicableUnits = ["all"];
+      formData!.applicableUnits = ["all"];
       selectedUnitIds = []; // Clear individual selections
     } else {
-      formData.applicableUnits = selectedUnitIds;
+      formData!.applicableUnits = selectedUnitIds;
     }
   }
 
@@ -109,11 +110,11 @@
   }
 </script>
 
-{#if isLoading}
+{#if isLoading || formData == null}
   <div
     class="card-container rounded-md w-full max-w-2xl mx-auto p-6 flex flex-col shadow-md"
   >
-    <p class="font-[cms-regular] text-sm text-gray-600">Building form...</p>
+    <p class="font-[cms-regular] text-sm text-gray-600">Loading Promotion...</p>
   </div>
 {:else if error}
   <div
@@ -152,9 +153,9 @@
       class="card-container mt-6 rounded-md w-full max-w-2xl mx-auto p-6 flex flex-col shadow-md"
     >
       <div class=" p-4 rounded-md mb-6">
-        <h2 class="font-[cms-semibold] text-xl mb-2">Create Promotion</h2>
+        <h2 class="font-[cms-semibold] text-xl mb-2">Update Promotion</h2>
         <form
-          on:submit|preventDefault={createPromotion}
+          on:submit|preventDefault={updatePromotion}
           class="flex flex-col gap-4"
         >
           <div class="flex gap-8" id="columns-container">
@@ -165,7 +166,6 @@
                   bind:value={formData.code}
                   required
                   class="mt-1 p-2 rounded border border-gray-300"
-                  placeholder="SAVE10"
                 />
               </label>
               <label class="flex flex-col">
@@ -174,7 +174,6 @@
                   bind:value={formData.name}
                   required
                   class="mt-1 p-2 rounded border border-gray-300"
-                  placeholder="10% Off"
                 />
               </label>
               <label class="flex flex-col">
@@ -263,7 +262,7 @@
           <button
             type="submit"
             class="bg-[hsl(var(--p))] text-[hsl(var(--b1))] font-[cms-semibold] py-2 px-4 rounded mt-2"
-            >Create Promotion</button
+            >Update</button
           >
         </form>
       </div>

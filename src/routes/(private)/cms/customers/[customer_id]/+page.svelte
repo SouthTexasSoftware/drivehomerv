@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { PageData } from "./$types";
-  import type { Customer } from "$lib/types";
   import CustomerCard from "./CustomerCard.svelte";
   import { beforeUpdate, onMount } from "svelte";
   import { customerStore } from "$lib/stores";
@@ -8,6 +7,7 @@
   import PageDataLoading from "$lib/components/PageDataLoading.svelte";
   import { afterNavigate } from "$app/navigation";
   import { Timestamp } from "firebase/firestore";
+  import type { Customer } from "$lib/new_types/CustomerType";
 
   export let data: PageData;
   let customer: Customer | undefined;

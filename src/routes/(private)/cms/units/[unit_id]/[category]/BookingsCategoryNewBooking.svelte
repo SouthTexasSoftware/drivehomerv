@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Booking, Customer, Unit } from "$lib/types";
+  import type { Booking, Unit } from "$lib/types";
   import PopupCalendarInputNoBookings from "$lib/components/PopupCalendarInputNoBookings.svelte";
   import { afterUpdate, createEventDispatcher } from "svelte";
   import { Timestamp, doc, serverTimestamp, setDoc } from "firebase/firestore";
@@ -7,6 +7,7 @@
   import { bookingStore } from "$lib/stores";
   import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { fly } from "svelte/transition";
+  import type { Customer } from "$lib/new_types/CustomerType";
 
   export let unitObject: Unit;
 
@@ -203,6 +204,7 @@
       phone: phoneInput.value,
       preferred_contact_method: {},
       stripe_id: "",
+      created: Timestamp.now(),
     } as Customer;
 
     // send to stripe to establish a stripe_id

@@ -1,13 +1,14 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { formatFirebaseTimestamp } from "$lib/helpers";
+  import { formatFirebaseTimestamp, loadMoreCustomers } from "$lib/helpers";
+  import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { customerStore, unitStore } from "$lib/stores";
 </script>
 
-<div class="customers-selection-container">
+<div class="customers-selection-container max-h-[100vh]">
   <h2>Customers</h2>
   <div class="divider" />
-  <div class="customer-links">
+  <div class="customer-links overflow-scroll pb-32">
     {#if $customerStore.isPopulated}
       {#each $customerStore.customers as customer}
         <a
@@ -20,6 +21,11 @@
           >
         </a>
       {/each}
+      <button
+        class="bg-[hsl(var(--p))] text-[hsl(var(--b1))] font-[cms-semibold] py-1 px-2 rounded mx-4 mt-4"
+        on:click={() => loadMoreCustomers($firebaseStore)}
+        >Load More Customers</button
+      >
     {/if}
   </div>
 </div>

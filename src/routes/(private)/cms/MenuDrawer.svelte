@@ -73,7 +73,7 @@
       />
     </svg></a
   >
-  <!-- DEV ONLY RIGHT NOW 
+
   <a
     class="cms-link"
     href="/cms/customers"
@@ -100,7 +100,7 @@
     </svg></a
   >
   <a
-    class="cms-link"
+    class="cms-link home"
     href="/cms/promotions"
     class:active={$page.url.pathname.includes("/cms/promotions")}
   >
@@ -120,7 +120,6 @@
       /><circle cx="7.5" cy="7.5" r=".5" fill="currentColor" /></svg
     >
   </a>
-  -->
 </div>
 
 <style>

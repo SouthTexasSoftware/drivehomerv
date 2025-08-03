@@ -12,6 +12,7 @@
     connectToFirebase,
     firebaseStore,
   } from "$lib/new_stores/firebaseStore";
+  import Alert from "$lib/components/Alert.svelte";
 
   onMount(() => {
     loadResources();
@@ -45,6 +46,8 @@
     }
   }
 </script>
+
+<Alert />
 
 <Header />
 

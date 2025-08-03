@@ -11,6 +11,11 @@
   import { newUUID } from "$lib/helpers";
   import { Timestamp, doc, setDoc } from "firebase/firestore";
   import { fade, slide } from "svelte/transition";
+  import { SearchCheck, LoaderCircle, CircleX } from "lucide-svelte";
+  import { Promotion } from "$lib/classes/Promotion";
+  import type { PromotionType } from "$lib/new_types/PromotionType";
+  import { writable } from "svelte/store";
+  import { alertStore } from "$lib/stores/alert";
 
   export let unitObject: Unit;
   export let showRequest: boolean;
@@ -22,13 +27,19 @@
 
   let loadingBookingRecap = false;
 
-  let winterSpecial = false;
+  let promotionsApplied = writable<PromotionType[]>([]);
+  const promotionManager = new Promotion();
+
+  let lastCalendarSelectionEvent: CustomEvent;
+
   let originalPrice = 0;
   let additionalFeesTotal = 0;
   let nightlyRateSum = 0;
   let totalBookingPrice = 0;
 
   function handleNewCalendarSelection(event: CustomEvent) {
+    lastCalendarSelectionEvent = event;
+
     if (event.detail.reset) {
       selectedTripLength = 0;
       return;
@@ -99,8 +110,6 @@
       });
     }
 
-    // console.log($bookingStore.additional_line_items);
-
     totalBookingPrice = parseFloat(
       (
         nightlyRateSum +
@@ -114,30 +123,88 @@
     // always set orignal price at this point
     originalPrice = structuredClone(totalBookingPrice);
 
-    // handle the winter special - which will modify the total price if necessary
-    // if (totalBookingPrice > 1895) {
-    //   if (selectedTripLength < 22) {
-    //     winterSpecial = true;
-    //     totalBookingPrice = 1895;
+    // PROMOTIONS PRICING MODIFIER
+    let totalDiscount = 0;
 
-    //     // manage additional line item
-    //     if (!$bookingStore.additional_line_items) {
-    //       $bookingStore.additional_line_items = {};
-    //     }
+    // Check if any promotion is non-stackable
+    const hasNonStackable = $promotionsApplied.some(
+      (promo) => !promo.stackable
+    );
 
-    //     $bookingStore.additional_line_items["Winter Special"] = {
-    //       value: originalPrice - totalBookingPrice,
-    //       type: "subtract",
-    //     };
-    //   }
-    // } else {
-    //   winterSpecial = false;
-    //   if ($bookingStore.additional_line_items) {
-    //     if ($bookingStore.additional_line_items["Winter Special"]) {
-    //       delete $bookingStore.additional_line_items["Winter Special"];
-    //     }
-    //   }
-    // }
+    if ($promotionsApplied.length > 0) {
+      if (hasNonStackable) {
+        // Apply only the promotion with the highest discount
+        let maxDiscount = 0;
+        let selectedPromo: PromotionType | null = null;
+
+        $promotionsApplied.forEach((promotion) => {
+          let discount: number;
+          if (promotion.discountType === "percentage") {
+            discount = originalPrice * (promotion.discountValue / 100);
+          } else {
+            // fixed
+            discount = promotion.discountValue;
+          }
+
+          // Apply maxDiscount cap if set
+          if (promotion.maxDiscount && discount > promotion.maxDiscount) {
+            discount = promotion.maxDiscount;
+          }
+
+          // Track the promotion with the highest discount
+          if (discount > maxDiscount) {
+            maxDiscount = discount;
+            selectedPromo = promotion;
+          }
+        });
+
+        totalDiscount = maxDiscount;
+
+        // If multiple promotions exist, keep only the selected non-stackable one
+        if (selectedPromo && $promotionsApplied.length > 1) {
+          promotionsApplied.set([selectedPromo]);
+          alertStore.warning(
+            "Non-stackable promotion applied. Only the highest discount was kept.",
+            5000
+          );
+        }
+      } else {
+        // Apply all stackable promotions
+        $promotionsApplied.forEach((promotion) => {
+          let discount: number;
+          if (promotion.discountType === "percentage") {
+            discount = originalPrice * (promotion.discountValue / 100);
+          } else {
+            // fixed
+            discount = promotion.discountValue;
+          }
+
+          // Apply maxDiscount cap if set
+          if (promotion.maxDiscount && discount > promotion.maxDiscount) {
+            discount = promotion.maxDiscount;
+          }
+
+          totalDiscount += discount;
+        });
+      }
+    }
+
+    totalBookingPrice = originalPrice - totalDiscount;
+
+    if (totalDiscount > 0) {
+      if ($bookingStore.additional_line_items) {
+        $bookingStore.additional_line_items["Promo Code"] = {
+          value: totalDiscount,
+          type: "subtract",
+        };
+      }
+    } else {
+      if ($bookingStore.additional_line_items) {
+        if ($bookingStore.additional_line_items["Promo Code"]) {
+          delete $bookingStore.additional_line_items["Promo Code"];
+        }
+      }
+    }
 
     bookingStore.update((store) => {
       store.pickup_dropoff_price_addition = pickup_dropoff_price_addition;
@@ -163,6 +230,10 @@
         100;
       let sales_tax_unrounded = sales_tax_percentage * store.nightly_rate_sum;
       store.sales_tax = parseFloat(sales_tax_unrounded.toFixed(2));
+
+      store.promotionCodes = $promotionsApplied.map((promotion) => {
+        return promotion.code;
+      });
 
       return store;
     });
@@ -211,6 +282,80 @@
       goto(currentUrl + "/book_now?id=" + docRef.id);
       loadingBookingRecap = false;
     }, 300);
+  }
+
+  let validatingPromotion = false;
+  let promotionError = false;
+  let promotionInput: HTMLInputElement;
+  // validate promotion code
+  async function applyPromotion() {
+    validatingPromotion = true;
+    promotionError = false;
+
+    const inputValue = promotionInput.value?.trim();
+    if (!inputValue) {
+      promotionError = true;
+      validatingPromotion = false;
+      alertStore.error("Please enter a promotion code", 5000);
+      return;
+    }
+
+    const promotionResult = await promotionManager.validate(
+      inputValue,
+      unitObject.id
+    );
+
+    validatingPromotion = false;
+
+    if (!promotionResult) {
+      promotionError = true;
+      alertStore.error("Invalid or expired promotion code", 5000);
+      return;
+    }
+
+    promotionsApplied.update((promotions) => {
+      // Check for duplicates by code or id
+      if (
+        promotions.some(
+          (p) => p.id === promotionResult.id || p.code === promotionResult.code
+        )
+      ) {
+        alertStore.warning("Promotion already applied", 3000);
+        return promotions;
+      }
+      const updatedPromotions = [...promotions, promotionResult];
+
+      if (!lastCalendarSelectionEvent) {
+        alertStore.warning("Please select trip dates.", 3000);
+        return promotions;
+      }
+
+      alertStore.success(`Promotion ${promotionResult.code} applied`, 3000);
+
+      promotionInput.value = "";
+
+      return updatedPromotions;
+    });
+
+    handleNewCalendarSelection(lastCalendarSelectionEvent);
+  }
+
+  // TODO: need to add a flag to the booking, so we can tag usage and customer to promotion
+
+  // Local function to remove a promotion and recalculate price
+  function removePromotion(promotionId: string) {
+    promotionsApplied.update((promotions) => {
+      const updatedPromotions = promotions.filter((p) => p.id !== promotionId);
+      handleNewCalendarSelection(lastCalendarSelectionEvent);
+      alertStore.success("Promotion removed", 3000);
+      return updatedPromotions;
+    });
+
+    if ($bookingStore.additional_line_items) {
+      if ($bookingStore.additional_line_items["Promo Code"]) {
+        delete $bookingStore.additional_line_items["Promo Code"];
+      }
+    }
   }
 </script>
 
@@ -266,27 +411,27 @@
               {#if $bookingStore.additional_line_items[item_name].type == "subtract"}
                 -
               {/if}
-              ${$bookingStore.additional_line_items[item_name].value}
+              ${$bookingStore.additional_line_items[item_name].value.toFixed(2)}
             </p>
           </div>
         {/each}
       {/if}
-      {#if winterSpecial == false}
-        <div class="row fee mi-per-night">
-          <p>100 mi per night ($0.00/night)</p>
-          <p class="green-highlight">FREE</p>
+      <div class="row fee mi-per-night">
+        <p>100 mi per night ($0.00/night)</p>
+        <p class="green-highlight">FREE</p>
+      </div>
+      <div class="banner">
+        <div class="row fee miles-included">
+          <p>Miles included</p>
+          <p>{100 * selectedTripLength} mi</p>
         </div>
-        <div class="banner">
-          <div class="row fee miles-included">
-            <p>Miles included</p>
-            <p>{100 * selectedTripLength} mi</p>
-          </div>
-          <p class="row fee small-note">
-            Additional miles: ${unitObject.information.rates_and_fees.pricing
-              .mileage_overage}/mi
-          </p>
-        </div>
-        <div class="bar" />
+        <p class="row fee small-note">
+          Additional miles: ${unitObject.information.rates_and_fees.pricing
+            .mileage_overage}/mi
+        </p>
+      </div>
+      <div class="bar" />
+      {#if $promotionsApplied.length == 0}
         <div class="row total">
           <p>Total</p>
           {#if selectedTripLength == 0}
@@ -296,23 +441,65 @@
           {/if}
         </div>
       {:else}
-        <div class="banner winter">
-          <div class="row fee miles-included">
-            <p>Miles included</p>
-            <p>Unlimited</p>
-          </div>
+        <div id="promotions" class="flex flex-col">
+          {#each $promotionsApplied as promotion}
+            <div
+              class="flex rounded-md bg-green-50 border border-green-300 p-2 mt-2 justify-between font-regular text-green-800 relative"
+              in:slide
+            >
+              <p>{promotion.name}</p>
+              <p>{promotion.code}</p>
+              <button
+                on:click={() => removePromotion(promotion.id)}
+                class="absolute -right-8 text-red-800"><CircleX /></button
+              >
+            </div>
+          {/each}
         </div>
-        <div class="bar" />
         <div class="row total">
-          <p class="winter-special">Total</p>
+          <p class="">Total</p>
           {#if selectedTripLength == 0}
             <p>Select Dates</p>
           {:else}
-            <p class="winter-special price">${totalBookingPrice}</p>
-            <p class="strikethrough">${originalPrice}</p>
+            <div class="flex ml-auto">
+              <p class="strikethrough mr-2 text-gray-600">
+                ${originalPrice.toFixed(2)}
+              </p>
+              <p class="price">${totalBookingPrice.toFixed(2)}</p>
+            </div>
           {/if}
         </div>
       {/if}
+
+      <label class="font-[font-bold] text-[hsl(var(--pf))] flex flex-col mt-2">
+        Promo Code
+        <div class="flex">
+          <input
+            bind:this={promotionInput}
+            name="promoCode"
+            type="text"
+            class="border-solid border-[hsl(var(--b3))] border rounded-lg h-10 w-full px-4"
+            disabled={validatingPromotion}
+          />
+          <button
+            class="border-solid border-[hsl(var(--b3))] border rounded-lg h-10 w-12 flex justify-center items-center ml-1 hover:bg-red-50"
+            on:click={applyPromotion}
+          >
+            {#if validatingPromotion}
+              <LoaderCircle class="animate-spin"></LoaderCircle>
+            {:else}
+              <SearchCheck></SearchCheck>
+            {/if}
+          </button>
+        </div>
+
+        <p
+          class="font-[font-light] text-sm text-red-500 opacity-0"
+          class:opacity-100={promotionError}
+        >
+          Invalid or expired promo code.
+        </p>
+      </label>
 
       {#if screenWidth > 500}
         {#if !selectedTripLength}

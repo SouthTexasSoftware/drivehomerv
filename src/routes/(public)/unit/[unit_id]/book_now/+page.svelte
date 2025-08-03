@@ -2,7 +2,7 @@
   import { navigating, page } from "$app/stores";
   import { bookingStore, bookingTimerStore, unitStore } from "$lib/stores";
   import { firebaseStore } from "$lib/new_stores/firebaseStore";
-  import type { Booking, Customer, Unit } from "$lib/types";
+  import type { Booking, Unit } from "$lib/types";
   import { onMount } from "svelte";
   import { beforeNavigate, goto } from "$app/navigation";
   import ContactIcon from "./zIconContact.svelte";
@@ -25,6 +25,8 @@
   import { setBookingTimer } from "$lib/helpers";
   import { PUBLIC_STR_KEY } from "$env/static/public";
   import { writable } from "svelte/store";
+  import type { Customer } from "$lib/new_types/CustomerType";
+  import { Promotion } from "$lib/classes/Promotion";
 
   let unitObject: Unit | undefined = undefined;
   let unitLoadingCounter = 0;
@@ -160,6 +162,17 @@
               $bookingStore.id;
             $bookingStore.agreement_notification = false;
             $bookingStore.agreement_signed = false;
+
+            let promotionManager = new Promotion();
+            if ($bookingStore.promotionCodes) {
+              for (const code of $bookingStore.promotionCodes) {
+                const usedPromo = await promotionManager.use(
+                  code,
+                  $bookingStore.customerObject!.id,
+                  $bookingStore.id
+                );
+              }
+            }
 
             //@ts-ignore
             await setDoc($bookingStore.document_reference, $bookingStore);

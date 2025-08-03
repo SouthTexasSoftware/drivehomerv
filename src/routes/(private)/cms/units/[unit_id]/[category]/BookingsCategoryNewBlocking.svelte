@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Booking, Customer, Unit } from "$lib/types";
+  import type { Unit } from "$lib/types";
   import PopupCalendarInputNoBookings from "$lib/components/PopupCalendarInputNoBookings.svelte";
   import { afterUpdate, createEventDispatcher } from "svelte";
   import { Timestamp, doc, serverTimestamp, setDoc } from "firebase/firestore";
