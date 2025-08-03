@@ -2,11 +2,12 @@
   import { page, updated } from "$app/stores";
   import { bookingStore } from "$lib/stores";
   import { firebaseStore } from "$lib/new_stores/firebaseStore";
-  import type { Booking, Customer, Unit } from "$lib/types";
+  import type { Booking, Unit } from "$lib/types";
   import { getMonthString, getDayString } from "$lib/helpers";
   import { Timestamp, collection, setDoc } from "firebase/firestore";
   import { beforeUpdate } from "svelte";
   import { fade } from "svelte/transition";
+  import type { Customer } from "$lib/new_types/CustomerType";
 
   export let bookingObject: Booking | undefined;
   export let unitObject: Unit;
@@ -192,7 +193,7 @@
       {#if bookingObject?.customerObject}
         <a
           href="/cms/customers/{bookingObject.customerObject.id}"
-          class="font-[cms-semibold] text-[hsl(var(--p))] text-lg"
+          class="font-[cms-semibold] text-[hsl(var(--p))] text-lg underline underline-offset-4"
           >{getCustomerName(bookingObject.customerObject)}</a
         >
         <p>{formatPhoneNumber(bookingObject.customerObject.phone)}</p>
@@ -330,7 +331,7 @@
                 {#if bookingObject.additional_line_items[item_name].type == "subtract"}
                   -
                 {/if}
-                ${bookingObject.additional_line_items[item_name].value}
+                ${bookingObject.additional_line_items[item_name].value.toFixed(2)}
               </p>
             </div>
           {/each}

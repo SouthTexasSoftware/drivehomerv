@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Booking, Customer, Unit } from "$lib/types";
+  import type { Booking, Unit } from "$lib/types";
   import { beforeUpdate, onMount } from "svelte";
   import BookingsOverview from "./BookingsOverview.svelte";
   import { collection, getDocs } from "firebase/firestore";
@@ -14,6 +14,7 @@
   import BookingsUpdate from "./BookingsUpdate.svelte";
   import BookingBlocking from "./BookingBlocking.svelte";
   import { goto } from "$app/navigation";
+  import type { Customer } from "$lib/new_types/CustomerType";
 
   export let unitObject: Unit;
   export let subcategory: string;

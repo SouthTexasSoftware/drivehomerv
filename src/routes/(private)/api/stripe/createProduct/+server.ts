@@ -2,7 +2,7 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import Stripe from "stripe";
 import { STR_PRIVATE_KEY } from "$env/static/private";
-import type { Booking, Customer, Unit } from "$lib/types";
+import type { Unit } from "$lib/types";
 
 export const POST = (async ({ request }) => {
   const unitObject = (await request.json()) as Unit;

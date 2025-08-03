@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Customer, Unit } from "$lib/types";
+  import type { Unit } from "$lib/types";
   import { bookingStore } from "$lib/stores";
   import { firebaseStore } from "$lib/new_stores/firebaseStore";
   import { getMonthString, getDayString } from "$lib/helpers";
@@ -18,6 +18,10 @@
   import { navigating, page } from "$app/stores";
   import { fly, slide } from "svelte/transition";
   import ZIconCheckout from "./zIconCheckout.svelte";
+  import type { Customer } from "$lib/new_types/CustomerType";
+  import { Promotion } from "$lib/classes/Promotion";
+  import { promotionStore } from "$lib/new_stores/promotionStore";
+  import type { PromotionType } from "$lib/new_types/PromotionType";
 
   export let unitObject: Unit;
   let submittingForm = false;
@@ -80,17 +84,6 @@
     if (!falseFlag) {
       buttonActive = true;
     }
-  }
-
-  function newUUID(): string {
-    // Alphanumeric characters
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let autoId = "";
-    for (let i = 0; i < 20; i++) {
-      autoId += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return autoId;
   }
 
   async function createCustomer() {
@@ -350,49 +343,44 @@
               {#if $bookingStore.additional_line_items[item_name].type == "subtract"}
                 -
               {/if}
-              ${$bookingStore.additional_line_items[item_name].value}
+              ${$bookingStore.additional_line_items[item_name].value.toFixed(2)}
             </p>
           </div>
         {/each}
       {/if}
-      {#if $bookingStore.total_price != 1895}
-        <div class="row fee mi-per-night">
-          <p>100 mi per night ($0.00/night)</p>
-          <p class="green-highlight">FREE</p>
+      <div class="row fee mi-per-night">
+        <p>100 mi per night ($0.00/night)</p>
+        <p class="green-highlight">FREE</p>
+      </div>
+      <div class="banner">
+        <div class="row fee miles-included">
+          <p>Miles included</p>
+          {#if $bookingStore.trip_length}
+            <p>{100 * $bookingStore.trip_length} mi</p>
+          {/if}
         </div>
-        <div class="banner">
-          <div class="row fee miles-included">
-            <p>Miles included</p>
-            {#if $bookingStore.trip_length}
-              <p>{100 * $bookingStore.trip_length} mi</p>
-            {/if}
+        <p class="row fee small-note">
+          Additional miles: ${unitObject.information.rates_and_fees.pricing
+            .mileage_overage}/mi
+        </p>
+      </div>
+      <div class="bar" />
+      {#if $bookingStore.promotionCodes}
+        {#each $bookingStore.promotionCodes as code}
+          <div
+            class="flex rounded-md bg-green-50 border border-green-300 p-2 mt-2 justify-between font-regular text-green-800 relative w-full"
+            in:slide
+          >
+            <p>Promo Code:</p>
+            <p>{code}</p>
           </div>
-          <p class="row fee small-note">
-            Additional miles: ${unitObject.information.rates_and_fees.pricing
-              .mileage_overage}/mi
-          </p>
-        </div>
-        <div class="bar" />
-        <div class="row total">
-          <p>Total</p>
-
-          <p>${$bookingStore.total_price?.toFixed(2)}</p>
-        </div>
-      {:else}
-        <div class="banner winter">
-          <div class="row fee miles-included">
-            <p>Miles included</p>
-            <p>Unlimited</p>
-          </div>
-        </div>
-        <div class="bar" />
-        <div class="row total">
-          <p class="winter-special">Total</p>
-
-          <p class="winter-special price">${$bookingStore.total_price}</p>
-          <p class="strikethrough">${$bookingStore.original_price}</p>
-        </div>
+        {/each}
       {/if}
+      <div class="row total">
+        <p>Total</p>
+
+        <p>${$bookingStore.total_price?.toFixed(2)}</p>
+      </div>
     </div>
   </div>
 

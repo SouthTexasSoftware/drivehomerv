@@ -19,7 +19,6 @@ import type {
   PhotoDocument,
   Booking,
   FileDocument,
-  Customer,
 } from "./types";
 import {
   bookingTimerStore,
@@ -174,17 +173,22 @@ import {
   startAfter,
   QueryDocumentSnapshot,
 } from "firebase/firestore";
+import type { Customer } from "./new_types/CustomerType";
 
+// Initial load function with check for existing data
 export async function populateCustomerStore(fbStore: FirebaseStore) {
   if (typeof window !== "undefined") {
     try {
-      // Get current queryOptions from customerStore
+      // Get current store state
       const store = get(customerStore);
-      const {
-        limit: limitCount,
-        loadAll,
-        paginationCursor,
-      } = store.queryOptions;
+
+      // Skip if already populated
+      if (store.isPopulated) {
+        return;
+      }
+
+      // Get query options
+      const { limit: limitCount, loadAll } = store.queryOptions;
 
       // Build the query, sorting by 'created' in descending order
       let customerQuery = query(
@@ -197,43 +201,94 @@ export async function populateCustomerStore(fbStore: FirebaseStore) {
         customerQuery = query(customerQuery, limit(limitCount));
       }
 
-      // Apply pagination if paginationCursor is provided
-      if (paginationCursor) {
-        customerQuery = query(customerQuery, startAfter(paginationCursor));
-      }
-
       const customerCollectionDocs = await getDocs(customerQuery);
 
       let initialCustomers: Customer[] = [];
       let lastCustomerCursor: QueryDocumentSnapshot | null = null;
 
-      // Process query results, ensuring document ID is included
+      // Process query results
       customerCollectionDocs.forEach((doc) => {
         initialCustomers.push({ ...doc.data(), id: doc.id } as Customer);
+        lastCustomerCursor = doc;
+      });
+
+      customerStore.update((data) => ({
+        ...data,
+        customers: initialCustomers,
+        isPopulated: true,
+        queryOptions: {
+          ...data.queryOptions,
+          paginationCursor: lastCustomerCursor,
+        },
+      }));
+
+      return;
+    } catch (error) {
+      console.error("Error in populateCustomerStore:", error);
+      return;
+    }
+  }
+  return;
+}
+
+// Load more customers for pagination
+export async function loadMoreCustomers(fbStore: FirebaseStore) {
+  if (typeof window !== "undefined") {
+    try {
+      // Get current store state
+      const store = get(customerStore);
+      const {
+        limit: limitCount,
+        loadAll,
+        paginationCursor,
+      } = store.queryOptions;
+
+      // Skip if no cursor or loadAll is true
+      if (!paginationCursor || loadAll) {
+        return;
+      }
+
+      // Build the query with pagination
+      let customerQuery = query(
+        collection(fbStore.db, "customers"),
+        orderBy("created", "desc"),
+        startAfter(paginationCursor),
+        limit(limitCount)
+      );
+
+      const customerCollectionDocs = await getDocs(customerQuery);
+
+      let newCustomers: Customer[] = [];
+      let lastCustomerCursor: QueryDocumentSnapshot | null = null;
+
+      // Process query results
+      customerCollectionDocs.forEach((doc) => {
+        newCustomers.push({ ...doc.data(), id: doc.id } as Customer);
         lastCustomerCursor = doc;
       });
 
       customerStore.update((data) => {
         // Deduplicate customers by id
         const existingIds = new Set(
-          data.customers.map((customer) => customer.id)
+          data.customers.map((customer: Customer) => customer.id)
         );
-        const newCustomers = initialCustomers.filter(
+        const uniqueNewCustomers = newCustomers.filter(
           (customer) => !existingIds.has(customer.id)
         );
 
-        // Append new customers for pagination, or replace if not paginating
-        data.customers = paginationCursor
-          ? [...data.customers, ...newCustomers]
-          : newCustomers;
-        data.isPopulated = true;
-        data.queryOptions.paginationCursor = lastCustomerCursor;
-        return data;
+        return {
+          ...data,
+          customers: [...data.customers, ...uniqueNewCustomers],
+          queryOptions: {
+            ...data.queryOptions,
+            paginationCursor: lastCustomerCursor,
+          },
+        };
       });
 
       return;
     } catch (error) {
-      console.error("Error in populateCustomerStore:", error);
+      console.error("Error in loadMoreCustomers:", error);
       return;
     }
   }
@@ -687,7 +742,7 @@ export function validateRequiredFields(
 
 // Format Timestamp to readable string, handle undefined
 export function formatFirebaseTimestamp(
-  timestamp: Timestamp | number | Date | string | undefined,
+  timestamp: Timestamp | number | Date | string | undefined | null,
   dateOnly: boolean = false
 ): string {
   if (!timestamp) {
@@ -696,16 +751,30 @@ export function formatFirebaseTimestamp(
 
   let date: Date;
   if (timestamp instanceof Timestamp) {
-    date = timestamp.toDate();
+    date = timestamp.toDate(); // Firestore Timestamp to Date
   } else if (timestamp instanceof Date) {
-    date = timestamp;
+    date = timestamp; // Already a Date
   } else if (typeof timestamp === "string") {
+    // Handle YYYY-MM-DD format by appending time to force local timezone
+    if (/^\d{4}-\d{2}-\d{2}$/.test(timestamp)) {
+      // Parse as local date by setting time to noon to avoid timezone issues
+      date = new Date(`${timestamp}T12:00:00`);
+      if (isNaN(date.getTime())) {
+        return "Invalid Date";
+      }
+    } else {
+      // Handle other string formats (e.g., ISO or other parseable strings)
+      date = new Date(timestamp);
+      if (isNaN(date.getTime())) {
+        return "Invalid Date";
+      }
+    }
+  } else {
+    // Handle number (epoch milliseconds)
     date = new Date(timestamp);
     if (isNaN(date.getTime())) {
       return "Invalid Date";
     }
-  } else {
-    date = new Date(timestamp);
   }
 
   const options: Intl.DateTimeFormatOptions = dateOnly
@@ -724,4 +793,14 @@ export function formatFirebaseTimestamp(
       };
 
   return date.toLocaleString("en-US", options);
+}
+
+// Convert Firestore Timestamp or Date to YYYY-MM-DD string for input[type="date"]
+export function toDateInputString(
+  date: Timestamp | Date | string | null | undefined
+): string {
+  if (!date) return "";
+  if (typeof date === "string") return date; // Already a string, assume YYYY-MM-DD
+  const d = date instanceof Timestamp ? date.toDate() : new Date(date);
+  return d.toISOString().split("T")[0]; // Returns YYYY-MM-DD
 }

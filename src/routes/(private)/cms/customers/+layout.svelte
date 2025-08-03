@@ -1,24 +1,27 @@
 <script lang="ts">
-  import { unitStore } from "$lib/stores";
+  import { customerStore, unitStore } from "$lib/stores";
+  import { onMount } from "svelte";
   import CustomersColumn from "./CustomersColumn.svelte";
+  import { populateCustomerStore } from "$lib/helpers";
+  import {
+    firebaseStore,
+    waitForFirebase,
+  } from "$lib/new_stores/firebaseStore";
 
-
-
-    /*TODO: use my custom calendar to improve this page.
-   * goal: calendar where units can be toggled on / off
-   *     bookings are selectable and then show the booking information off to the side
-   *
-   */
+  onMount(async () => {
+    populateCustomerStore($firebaseStore);
+  });
+  
 </script>
 
 <div class="units-container">
-  {#if $unitStore.isPopulated}
+  {#if $customerStore.isPopulated}
     <CustomersColumn />
     <slot />
   {:else}
     <div class="spinner-container">
       <div class="spinner" />
-      <p>Loading Unit Data . . .</p>
+      <p>Loading Customer Data . . .</p>
     </div>
   {/if}
 </div>

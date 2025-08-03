@@ -6,10 +6,9 @@ import type {
   Unit,
   PhotoDocument,
   BookingDisplayFilter,
-  CustomerStore,
-  Customer,
 } from "./types";
 import { doc, getDoc, type Unsubscribe } from "firebase/firestore";
+import type { Customer, CustomerStore } from "./new_types/CustomerType";
 
 export const unitStore = writable<UnitStore>({
   units: [],

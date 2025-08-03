@@ -1,40 +1,31 @@
-<!-- src/routes/cms/promotions/create/+page.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
-  import type { PromotionType } from "$lib/new_types/PromotionType";
+  import type {
+    PromotionType,
+    PromotionUsage,
+  } from "$lib/new_types/PromotionType";
   import { promotionStore } from "$lib/new_stores/promotionStore";
   import { alertStore } from "$lib/stores/alert";
   import { formatFirebaseTimestamp } from "$lib/helpers";
-  import { waitForFirebase } from "$lib/new_stores/firebaseStore";
+  import {
+    firebaseStore,
+    waitForFirebase,
+  } from "$lib/new_stores/firebaseStore";
+  import { Timestamp } from "firebase/firestore";
+  import { customerStore } from "$lib/stores";
 
-  let formData: Omit<
-    PromotionType,
-    "id" | "createdAt" | "usageCount" | "updatedAt"
-  > = {
-    code: "",
-    name: "",
-    discountType: "percentage",
-    discountValue: 0,
-    startDate: new Date().toISOString().split("T")[0],
-    isActive: false,
-    stackable: false,
-    description: "",
-    usageLimit: undefined,
-    minimumPurchase: undefined,
-    applicableUnits: undefined,
-    customerEligibility: undefined,
-    maxDiscount: undefined,
-  };
-
-  let editFormData: PromotionType | null = null;
-  let editingId: string | null = null;
   let isLoading = true;
   let error: string | null = null;
+
+  let loadingUsedList = true;
+  let usedPromotionsList: ExtendedPromotionUsage[] = [];
 
   onMount(async () => {
     try {
       await waitForFirebase();
       await promotionStore.loadAll();
+      usedPromotionsList = buildRecentlyUsedList($promotionStore, 10);
+      loadingUsedList = false;
     } catch (err) {
       error = "Failed to initialize Firebase or load promotions";
       alertStore.error(error, 5000);
@@ -44,79 +35,58 @@
     }
   });
 
-  function isValidDate(dateInput: Date | string | undefined): boolean {
-    if (!dateInput) return true;
-    if (dateInput instanceof Date) {
-      return !isNaN(dateInput.getTime());
-    }
-    const date = new Date(dateInput);
-    return !isNaN(date.getTime());
-  }
-
-  async function createPromotion() {
-    if (!isValidDate(formData.startDate) || !isValidDate(formData.endDate)) {
-      alertStore.error("Invalid date format for Start Date or End Date", 5000);
-      return;
-    }
-    await promotionStore.create(formData, true);
-    formData = {
-      code: "",
-      name: "",
-      discountType: "percentage",
-      discountValue: 0,
-      startDate: new Date().toISOString().split("T")[0],
-      isActive: false,
-      stackable: false,
-      description: "",
-      usageLimit: undefined,
-      minimumPurchase: undefined,
-      applicableUnits: undefined,
-      customerEligibility: undefined,
-      maxDiscount: undefined,
-    };
-  }
-
-  function startEditing(promotion: PromotionType) {
-    editFormData = {
-      ...promotion,
-      startDate:
-        promotion.startDate instanceof Date
-          ? promotion.startDate.toISOString().split("T")[0]
-          : promotion.startDate,
-      endDate: promotion.endDate
-        ? promotion.endDate instanceof Date
-          ? promotion.endDate.toISOString().split("T")[0]
-          : promotion.endDate
-        : "",
-    };
-    editingId = promotion.id;
-  }
-
-  async function updatePromotion() {
-    if (editFormData && editingId) {
-      if (
-        !isValidDate(editFormData.startDate) ||
-        !isValidDate(editFormData.endDate)
-      ) {
-        alertStore.error(
-          "Invalid date format for Start Date or End Date",
-          5000
-        );
-        return;
-      }
-      await promotionStore.update(editingId, editFormData, true);
-      editFormData = null;
-      editingId = null;
-    }
-  }
-
   async function deletePromotion(id: string) {
     await promotionStore.delete(id, true);
   }
 
-  function cancelEdit() {
-    editFormData = null;
-    editingId = null;
+  // Helper function to format applicableUnits for display
+  function formatApplicableUnits(applicableUnits?: string[]): string {
+    if (!applicableUnits || applicableUnits.length === 0) {
+      return "None";
+    }
+    if (applicableUnits.includes("all")) {
+      return "All";
+    }
+    return applicableUnits.length.toString();
+  }
+
+  // Helper function to convert Timestamp or string to Date
+  function toDate(timestamp: Timestamp | string): Date {
+    if (typeof timestamp === "string") {
+      return new Date(timestamp);
+    }
+    return timestamp.toDate();
+  }
+
+  interface ExtendedPromotionUsage extends PromotionUsage {
+    promotionCode: string;
+    promotionName: string;
+  }
+
+  function buildRecentlyUsedList(
+    promotions: PromotionType[],
+    limit: number = Infinity
+  ): ExtendedPromotionUsage[] {
+    // Create temporary array of all usage entries with promotion data
+    const allUsages: ExtendedPromotionUsage[] = promotions
+      .filter(
+        (promo) => promo.promotionUsage && promo.promotionUsage.length > 0
+      )
+      .flatMap((promo) =>
+        promo.promotionUsage!.map((usage) => ({
+          ...usage,
+          promotionCode: promo.code,
+          promotionName: promo.name,
+        }))
+      );
+
+    // Sort by timestamp (most recent first)
+    return allUsages
+      .sort(
+        (a, b) =>
+          toDate(b.usedTimestamp).getTime() - toDate(a.usedTimestamp).getTime()
+      )
+      .slice(0, limit);
   }
 </script>
 
@@ -135,120 +105,6 @@
     <p class="font-[cms-regular] text-sm text-red-600">{error}</p>
   </div>
 {:else}
-  {#if editFormData}
-    <div class="bg-gray-100 p-4 rounded-md mb-6">
-      <h2 class="font-[cms-semibold] text-lg mb-2">Edit Promotion</h2>
-      <form
-        on:submit|preventDefault={updatePromotion}
-        class="flex flex-col gap-4"
-      >
-        <label class="flex flex-col">
-          <span class="font-[cms-semibold] text-sm">Code</span>
-          <input
-            bind:value={editFormData.code}
-            required
-            class="mt-1 p-2 rounded border border-gray-300"
-          />
-        </label>
-        <label class="flex flex-col">
-          <span class="font-[cms-semibold] text-sm">Name</span>
-          <input
-            bind:value={editFormData.name}
-            required
-            class="mt-1 p-2 rounded border border-gray-300"
-          />
-        </label>
-        <label class="flex flex-col">
-          <span class="font-[cms-semibold] text-sm">Description</span>
-          <textarea
-            bind:value={editFormData.description}
-            class="mt-1 p-2 rounded border border-gray-300"
-          />
-        </label>
-        <label class="flex flex-col">
-          <span class="font-[cms-semibold] text-sm">Discount Type</span>
-          <select
-            bind:value={editFormData.discountType}
-            class="mt-1 p-2 rounded border border-gray-300"
-          >
-            <option value="percentage">Percentage</option>
-            <option value="fixed">Fixed</option>
-          </select>
-        </label>
-        <label class="flex flex-col">
-          <span class="font-[cms-semibold] text-sm">Discount Value</span>
-          <input
-            type="number"
-            bind:value={editFormData.discountValue}
-            required
-            class="mt-1 p-2 rounded border border-gray-300"
-          />
-        </label>
-        <label class="flex flex-col">
-          <span class="font-[cms-semibold] text-sm">Start Date</span>
-          <input
-            type="date"
-            bind:value={editFormData.startDate}
-            required
-            class="mt-1 p-2 rounded border border-gray-300"
-          />
-        </label>
-        <label class="flex flex-col">
-          <span class="font-[cms-semibold] text-sm">End Date</span>
-          <input
-            type="date"
-            bind:value={editFormData.endDate}
-            class="mt-1 p-2 rounded border border-gray-300"
-          />
-        </label>
-        <label class="flex flex-col">
-          <span class="font-[cms-semibold] text-sm">Usage Limit</span>
-          <input
-            type="number"
-            bind:value={editFormData.usageLimit}
-            class="mt-1 p-2 rounded border border-gray-300"
-          />
-        </label>
-        <label class="flex flex-col">
-          <span class="font-[cms-semibold] text-sm">Minimum Purchase</span>
-          <input
-            type="number"
-            bind:value={editFormData.minimumPurchase}
-            class="mt-1 p-2 rounded border border-gray-300"
-          />
-        </label>
-        <label class="flex items-center gap-2">
-          <input
-            type="checkbox"
-            bind:checked={editFormData.isActive}
-            class="h-4 w-4"
-          />
-          <span class="font-[cms-semibold] text-sm">Active</span>
-        </label>
-        <label class="flex items-center gap-2">
-          <input
-            type="checkbox"
-            bind:checked={editFormData.stackable}
-            class="h-4 w-4"
-          />
-          <span class="font-[cms-semibold] text-sm">Stackable</span>
-        </label>
-        <div class="flex gap-2">
-          <button
-            type="submit"
-            class="bg-[hsl(var(--p))] text-[hsl(var(--b1))] font-[cms-semibold] py-2 px-4 rounded mt-2"
-            >Update Promotion</button
-          >
-          <button
-            type="button"
-            on:click={cancelEdit}
-            class="bg-gray-400 text-gray-950 font-[cms-semibold] py-2 px-4 rounded mt-2"
-            >Cancel</button
-          >
-        </div>
-      </form>
-    </div>
-  {/if}
   <a href="/cms/promotions/create" class="ml-auto absolute top-0 right-0">
     <button
       class="bg-[hsl(var(--p))] text-[hsl(var(--b1))] font-[cms-semibold] py-2 px-4 rounded"
@@ -258,7 +114,7 @@
   <div
     class="card-container mt-6 rounded-md w-full min-w-[90vw] max-w-2xl mx-auto p-6 flex flex-col shadow-md"
   >
-    <div class="bg-gray-100 p-4 rounded-md">
+    <div class="p-4 rounded-md">
       <h2 class="font-[cms-semibold] text-lg mb-2">All Promotions</h2>
       {#if $promotionStore.length === 0}
         <p class="font-[cms-regular] text-sm text-gray-600">
@@ -281,10 +137,13 @@
                   >End Date</th
                 >
                 <th class="font-[cms-semibold] text-sm p-2 text-left"
-                  >Created At</th
+                  >Created</th
                 >
                 <th class="font-[cms-semibold] text-sm p-2 text-left"
-                  >Updated At</th
+                  >Updated</th
+                >
+                <th class="font-[cms-semibold] text-sm p-2 text-left"
+                  >For Units</th
                 >
                 <th class="font-[cms-semibold] text-sm p-2 text-left">Active</th
                 >
@@ -322,16 +181,25 @@
                       ? formatFirebaseTimestamp(promotion.updatedAt, true)
                       : "N/A"}
                   </td>
-                  <td class="font-[cms-regular] text-sm p-2"
-                    >{promotion.isActive ? "Yes" : "No"}</td
-                  >
                   <td class="font-[cms-regular] text-sm p-2">
-                    <button
-                      on:click={() => startEditing(promotion)}
-                      class="bg-[hsl(var(--p))] text-[hsl(var(--b1))] font-[cms-semibold] py-1 px-2 rounded mr-2"
+                    {formatApplicableUnits(promotion.applicableUnits)}
+                  </td>
+                  <td class="font-[cms-regular] text-sm p-2">
+                    <p
+                      class="rounded-md bg-green-200 p-2 w-fit"
+                      class:bg-red-200={!promotion.isActive}
                     >
-                      Edit
-                    </button>
+                      {promotion.isActive ? "Yes" : "No"}
+                    </p>
+                  </td>
+                  <td class="font-[cms-regular] text-sm p-2">
+                    <a href="/cms/promotions/edit/{promotion.id}">
+                      <button
+                        class="bg-[hsl(var(--p))] text-[hsl(var(--b1))] font-[cms-semibold] py-1 px-2 rounded mr-2"
+                      >
+                        Edit
+                      </button>
+                    </a>
                     <button
                       on:click={() => deletePromotion(promotion.id)}
                       class="bg-red-500 text-white font-[cms-semibold] py-1 px-2 rounded"
@@ -339,6 +207,83 @@
                       Delete
                     </button>
                   </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      {/if}
+    </div>
+  </div>
+{/if}
+{#if loadingUsedList}
+  <div
+    class="card-container rounded-md w-full max-w-2xl mx-auto p-6 flex flex-col shadow-md"
+  >
+    <p class="font-[cms-regular] text-sm text-gray-600">
+      Recently Used Loading...
+    </p>
+  </div>
+{:else if error}
+  <div
+    class="card-container rounded-md w-full max-w-2xl mx-auto p-6 flex flex-col shadow-md"
+  >
+    <p class="font-[cms-regular] text-sm text-red-600">{error}</p>
+  </div>
+{:else}
+  <div
+    class="card-container mt-6 rounded-md w-full min-w-[90vw] max-w-2xl mx-auto p-6 flex flex-col shadow-md"
+  >
+    <div class="p-4 rounded-md">
+      <h2 class="font-[cms-semibold] text-lg mb-2">Recently Used</h2>
+      {#if usedPromotionsList.length === 0}
+        <p class="font-[cms-regular] text-sm text-gray-600">
+          No promotions to use yet.
+        </p>
+      {:else}
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-gray-200">
+                <th class="font-[cms-semibold] text-sm p-2 text-left">Code</th>
+                <th class="font-[cms-semibold] text-sm p-2 text-left">Name</th>
+                <th class="font-[cms-semibold] text-sm p-2 text-left"
+                  >Used On</th
+                >
+                <th class="font-[cms-semibold] text-sm p-2 text-left"
+                  >Customer</th
+                >
+                <th class="font-[cms-semibold] text-sm p-2 text-left"
+                  >Booking</th
+                >
+              </tr>
+            </thead>
+            <tbody>
+              {#each usedPromotionsList as usedPromotion}
+                <tr class="border-b border-gray-300">
+                  <td class="font-[cms-regular] text-sm p-2"
+                    >{usedPromotion.promotionCode}</td
+                  >
+                  <td class="font-[cms-regular] text-sm p-2"
+                    >{usedPromotion.promotionName}</td
+                  >
+                  <td class="font-[cms-regular] text-sm p-2">
+                    {formatFirebaseTimestamp(usedPromotion.usedTimestamp, true)}
+                  </td>
+                  <td class="font-[cms-regular] text-sm p-2"
+                    ><a
+                      href="/cms/customers/{usedPromotion.customerId}"
+                      class="underline text-red-800"
+                      >{usedPromotion.customerId}</a
+                    ></td
+                  >
+                  <td class="font-[cms-regular] text-sm p-2"
+                    ><a
+                      href="/cms/bookings/{usedPromotion.bookingId}"
+                      class="underline text-red-800"
+                      >{usedPromotion.bookingId}</a
+                    ></td
+                  >
                 </tr>
               {/each}
             </tbody>

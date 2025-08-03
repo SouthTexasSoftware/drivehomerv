@@ -2,7 +2,8 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import Stripe from "stripe";
 import { STR_PRIVATE_KEY } from "$env/static/private";
-import type { Customer } from "lib/types";
+import { Customer } from "$lib/new_types/CustomerType";
+
 
 export const POST = (async ({ request }) => {
   const customerObject = (await request.json()) as Customer;
