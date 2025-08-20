@@ -3,7 +3,7 @@
   import { unitStore } from "$lib/stores";
   import DashboardColumn from "./DashboardColumn.svelte";
 
-  goto("/cms/dashboard/vertical_calendar");
+  goto("/cms/dashboard/revenue_reports");
 </script>
 
 <div class="units-container">
