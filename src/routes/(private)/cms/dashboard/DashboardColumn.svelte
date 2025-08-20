@@ -3,9 +3,15 @@
 </script>
 
 <div class="dashboard-selection-container">
-  <h2>Dashboard</h2>
+  <h2>Dashboards</h2>
   <div class="divider" />
   <div id="dashboard-links" class="flex flex-col gap-6">
+    <a
+      href="/cms/dashboard/revenue_reports"
+      class:active={$page.url.pathname.includes("revenue_reports")}
+    >
+      Revenue Reports
+    </a>
     <a
       href="/cms/dashboard/vertical_calendar"
       class:active={$page.url.pathname.includes("vertical_calendar")}
