@@ -1,11 +1,12 @@
-import { firestore } from "firebase-admin";
+import admin from "firebase-admin";
+import type { Firestore } from "firebase-admin/firestore";
 import type { RevenueReport } from "$lib/new_types/RevenueReport";
 
 export class RevenueReportService {
-  private db: firestore.Firestore;
+  private db: Firestore;
 
-  constructor(firestore: firestore.Firestore) {
-    this.db = firestore;
+  constructor(firestore: Firestore) {
+    this.db = admin.firestore();
   }
 
   // Check if today is the last day of a quarter
@@ -34,8 +35,8 @@ export class RevenueReportService {
 
   // Fetch bookings for a specific date range
   async fetchBookings(startDate: Date, endDate: Date): Promise<any[]> {
-    const startTimestamp = firestore.Timestamp.fromDate(startDate);
-    const endTimestamp = firestore.Timestamp.fromDate(endDate);
+    const startTimestamp = admin.firestore.Timestamp.fromDate(startDate);
+    const endTimestamp = admin.firestore.Timestamp.fromDate(endDate);
 
     const bookingsSnapshot = await this.db
       .collectionGroup("bookings")
