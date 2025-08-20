@@ -2,7 +2,8 @@ import type { RequestHandler } from "./$types";
 import { initializeApp, getApp, cert } from "firebase-admin/app";
 import { RevenueReportService } from "$lib/services/revenue-report-service";
 import { json, error } from "@sveltejs/kit";
-import { getFirestore } from "firebase-admin/firestore";
+import admin from "firebase-admin";
+
 import {
   FIREBASE_ADMIN_CLIENT_EMAIL,
   FIREBASE_ADMIN_PRIVATE_KEY,
@@ -27,7 +28,7 @@ if (!serverFirebase) {
     console.log(e);
   }
 
-  const db = getFirestore();
+  const db = admin.firestore();
 
   serverAdminStore.set({
     app: serverFirebase,
