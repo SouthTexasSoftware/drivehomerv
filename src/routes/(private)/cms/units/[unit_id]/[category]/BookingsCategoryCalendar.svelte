@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { DateTime } from "@easepick/bundle";
+  import * as easepickPkg from '@easepick/bundle';
+  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;
   import type { Unit } from "$lib/types";
   import { onMount } from "svelte";
   import { afterNavigate } from "$app/navigation";
@@ -450,7 +451,7 @@
     border-radius: 4px;
   }
   .calendar-body li.is-today {
-    border: 1px solid hsl(var(--p));
+    border: 1px solid var(--p);
   }
 
   .calendar-body .calendar-weekdays li {
@@ -470,7 +471,7 @@
     align-items: center;
   }
   .calendar-dates li div.in-booking {
-    background-color: hsl(var(--b2));
+    background-color: var(--b2);
     position: absolute;
     width: 100%;
     height: 100%;
@@ -480,7 +481,7 @@
   .calendar-dates li div.pickup {
     width: 0;
     height: 0;
-    border-top: 50px solid hsl(var(--b2));
+    border-top: 50px solid var(--b2);
     border-left: 50px solid transparent;
     position: absolute;
     top: 0;
@@ -489,7 +490,7 @@
   .calendar-dates li div.dropoff {
     width: 0;
     height: 0;
-    border-bottom: 50px solid hsl(var(--b2));
+    border-bottom: 50px solid var(--b2);
     border-right: 50px solid transparent;
     position: absolute;
     top: 0;

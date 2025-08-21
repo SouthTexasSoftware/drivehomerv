@@ -75,11 +75,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: hsl(var(--p));
+    background-color: var(--p);
     color: white;
   }
   .block {
-    background-color: hsl(var(--wa));
+    background-color: var(--wa);
   }
   @media (max-width: 500px) {
     .button-container {

@@ -129,7 +129,7 @@
     class="ml-auto absolute top-0 right-0"
   >
     <button
-      class="bg-[hsl(var(--p))] text-[hsl(var(--b1))] font-[cms-semibold] py-2 px-4 rounded"
+      class="bg-[var(--p)] text-[var(--b1)] font-[cms-semibold] py-2 px-4 rounded"
       ><svg
         xmlns="http://www.w3.org/2000/svg"
         width="24"
@@ -271,7 +271,7 @@
           </div>
           <button
             type="submit"
-            class="bg-[hsl(var(--p))] text-[hsl(var(--b1))] font-[cms-semibold] py-2 px-4 rounded mt-2"
+            class="bg-[var(--p)] text-[var(--b1)] font-[cms-semibold] py-2 px-4 rounded mt-2"
             >Create Promotion</button
           >
         </form>

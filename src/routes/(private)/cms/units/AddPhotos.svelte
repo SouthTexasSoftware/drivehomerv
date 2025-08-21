@@ -102,7 +102,7 @@
 
 <style>
   .add-photos-container {
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
     border-radius: 4px;
     width: 100%;
     max-width: 400px;
@@ -111,7 +111,7 @@
     flex-direction: column;
     align-items: center;
     max-height: 50vh;
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
   }
   h4 {
     font-size: 20px;

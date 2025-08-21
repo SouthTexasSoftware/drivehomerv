@@ -16,7 +16,7 @@
   .loading-bar {
     position: fixed;
     height: 2px;
-    background-color: hsl(var(--p));
+    background-color: var(--p);
     bottom: 0;
     animation: loading ease-out 1s;
     animation-fill-mode: forwards;

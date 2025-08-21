@@ -72,7 +72,7 @@
     box-shadow: 0px 1px 2px grey;
     border-radius: 20px;
     margin: 25px 0 50px;
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -102,7 +102,7 @@
   .title-divider {
     width: 100px;
     height: 2px;
-    background-color: hsl(var(--b2));
+    background-color: var(--b2);
   }
   .section-content {
     width: 80%;

@@ -9,7 +9,8 @@
   import { Timestamp, doc, setDoc, updateDoc } from "firebase/firestore";
   import { get } from "svelte/store";
   import { fly } from "svelte/transition";
-  import { DateTime } from "@easepick/bundle";
+  import * as easepickPkg from '@easepick/bundle';
+  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;
   import { PUBLIC_STR_KEY } from "$env/static/public";
 
   export let unitObject: Unit;
@@ -277,8 +278,8 @@
     width: 100%;
     margin-top: 25px;
     border-radius: 5px;
-    border: 1px solid hsl(var(--p));
-    color: hsl(var(--p));
+    border: 1px solid var(--p);
+    color: var(--p);
     height: 47px;
     box-shadow:
       0px 1px 1px rgba(0, 0, 0, 0.03),
@@ -294,7 +295,7 @@
   }
   .error-text {
     font-family: font-bold;
-    color: hsl(var(--er));
+    color: var(--er);
   }
   .agreement-statement {
     margin-top: 10px;
@@ -306,7 +307,7 @@
   }
   .agreement-link {
     font-family: cms-semibold;
-    border-bottom: 1px solid hsl(var(--p));
+    border-bottom: 1px solid var(--p);
   }
   .left-arrow {
     position: absolute;
@@ -317,7 +318,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 3px solid hsl(var(--p));
+    border-top: 3px solid var(--p);
     border-right: 3px solid transparent;
     animation-name: spinning;
     animation-duration: 1.5s;

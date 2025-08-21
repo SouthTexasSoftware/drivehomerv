@@ -266,7 +266,7 @@
 
 <style>
   .photos-option-container {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     margin: 25px;
     position: relative;
     border-radius: 4px;
@@ -294,8 +294,8 @@
   }
   .add-photo {
     font-family: cms-light;
-    color: hsl(var(--b2));
-    background-color: hsl(var(--p));
+    color: var(--b2);
+    background-color: var(--p);
     width: 25px;
     border-radius: 4px;
     font-size: 25px;
@@ -369,7 +369,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--p));
+    border-top: 2px solid var(--p);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1.2s;

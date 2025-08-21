@@ -274,13 +274,13 @@
 
 <style>
   .edit-unit-container {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     padding: 25px;
     display: flex;
     flex-direction: column;
     align-items: center;
     border-radius: 4px;
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
     width: 400px;
   }
   h4 {

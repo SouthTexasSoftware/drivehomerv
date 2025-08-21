@@ -67,7 +67,7 @@
     box-shadow: 0px 1px 2px grey;
     margin: 25vh auto;
     padding: 25px;
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
   }
   h3 {
     font-size: 26px;
@@ -89,9 +89,9 @@
   .errors {
     margin-top: 15px;
     text-align: center;
-    background-color: hsl(var(--er));
+    background-color: var(--er);
     border-radius: 4px;
-    color: hsl(var(--erc));
+    color: var(--erc);
     padding: 3px 35px;
   }
 </style>

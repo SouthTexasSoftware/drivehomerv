@@ -70,12 +70,12 @@
     transition: all 0.3s;
   }
   a.create-link {
-    color: hsl(var(--p));
+    color: var(--p);
     font-family: cms-semibold;
   }
   a.active {
     background-color: var(--cms-highlightPrimary);
-    border-right: 3px solid hsl(var(--p));
+    border-right: 3px solid var(--p);
   }
 
   @media (max-width: 1000px) {
@@ -127,7 +127,7 @@
       background-color: transparent;
       border: none;
       text-decoration: underline;
-      text-decoration-color: hsl(var(--p));
+      text-decoration-color: var(--p);
       text-decoration-thickness: 3px;
     }
   }

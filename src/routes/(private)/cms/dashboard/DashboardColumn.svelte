@@ -50,7 +50,7 @@
   }
   a.active {
     background-color: var(--cms-highlightPrimary);
-    border-right: 3px solid hsl(var(--p));
+    border-right: 3px solid var(--p);
   }
 
   @media (max-width: 1000px) {

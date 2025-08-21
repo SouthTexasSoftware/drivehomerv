@@ -193,7 +193,7 @@
       {#if bookingObject?.customerObject}
         <a
           href="/cms/customers/{bookingObject.customerObject.id}"
-          class="font-[cms-semibold] text-[hsl(var(--p))] text-lg underline underline-offset-4"
+          class="font-[cms-semibold] text-[var(--p)] text-lg underline underline-offset-4"
           >{getCustomerName(bookingObject.customerObject)}</a
         >
         <p>{formatPhoneNumber(bookingObject.customerObject.phone)}</p>
@@ -446,8 +446,8 @@
     position: absolute;
     left: 110%;
     top: -5px;
-    background-color: hsl(var(--su));
-    color: hsl(var(--b1));
+    background-color: var(--su);
+    color: var(--b1);
     font-family: cms-semibold;
     font-size: 12px;
     padding: 0px 13px;
@@ -462,18 +462,18 @@
     background-color: #dfdfdf;
   }
   .label-status.pending {
-    background-color: hsl(var(--wa));
+    background-color: var(--wa);
     width: 150px;
     text-align: center;
   }
   .label-status.generate {
-    background-color: hsl(var(--er));
+    background-color: var(--er);
     width: 180px;
     text-align: center;
     height: 18px;
   }
   .label-status.queue {
-    background-color: hsl(var(--wa));
+    background-color: var(--wa);
     width: 90px;
   }
   .small-date {
@@ -530,14 +530,14 @@
   .agreement-link {
     font-family: cms-semibold;
     border-radius: 4px;
-    background-color: hsl(var(--p));
+    background-color: var(--p);
     color: white;
     font-size: 13px;
     padding: 3px 10px;
     margin-left: 15px;
   }
   .total-price {
-    color: hsl(var(--p));
+    color: var(--p);
     font-family: cms-semibold;
   }
   .stripe-invoice {
@@ -564,7 +564,7 @@
   }
   .generate-error {
     position: absolute;
-    color: hsl(var(--er));
+    color: var(--er);
     font-size: 10px;
     font-family: font-bold;
     left: 5%;
@@ -591,7 +591,7 @@
     bottom: 0px;
     left: 0;
     font-family: cms-regular;
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     width: 100%;
     text-align: center;
     padding: 2px;
@@ -608,7 +608,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--p));
+    border-top: 2px solid var(--p);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1.2s;
@@ -620,7 +620,7 @@
     height: 15px;
   }
   .spinner.white {
-    border-top: 2px solid hsl(var(--b2));
+    border-top: 2px solid var(--b2);
     margin: 0 auto;
     width: 10px;
     height: 10px;

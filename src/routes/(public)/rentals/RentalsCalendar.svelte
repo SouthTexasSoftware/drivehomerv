@@ -1,11 +1,9 @@
 <script lang="ts">
-  import { easepick } from "@easepick/bundle";
-  import { RangePlugin } from "@easepick/range-plugin";
-  import { LockPlugin } from "@easepick/lock-plugin";
+  import * as easepickPkg from '@easepick/bundle';
+  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;
   import { onMount, createEventDispatcher } from "svelte";
   import rentalsAvailableCalendar from "$lib/styles/rentalsAvailableCalendar.css?inline";
   import { bookingStore } from "$lib/stores";
-  import { DateTime } from "@easepick/datetime";
 
   let dispatch = createEventDispatcher();
   let screenWidth: number;
@@ -255,7 +253,7 @@
     max-width: 300px;
   }
   .date-display {
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
     border-radius: 10px;
     padding: 10px 10px;
     color: black;

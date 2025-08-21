@@ -184,7 +184,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: hsl(var(--b2));
+    background-color: var(--b2);
     background-position: center;
     position: relative;
   }
@@ -193,7 +193,7 @@
     font-size: 14px;
     font-family: cms-semibold;
     color: white;
-    background-color: hsl(var(--p));
+    background-color: var(--p);
     position: absolute;
     top: 5px;
     padding: 0 8px;
@@ -211,7 +211,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--p));
+    border-top: 2px solid var(--p);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;

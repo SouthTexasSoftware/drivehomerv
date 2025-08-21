@@ -2,7 +2,8 @@
   import { enhance } from "$app/forms";
   import type { Booking } from "$lib/types";
   import AgreementVerbiageLatest from "./AgreementVerbiageLatest.svelte";
-  import { DateTime } from "@easepick/bundle";
+  import * as easepickPkg from '@easepick/bundle';
+  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;
   import { Timestamp, doc, updateDoc } from "firebase/firestore";
   import { bookingStore } from "$lib/stores";
   import { firebaseStore } from "$lib/new_stores/firebaseStore";
@@ -64,7 +65,7 @@
       <input
         type="checkbox"
         bind:checked={$bookingStore.agreement_signed}
-        class="checkbox"
+        class='checked:accent-red-700 w-6 h-6'
         name="terms"
         required
       />
@@ -167,7 +168,7 @@
     display: flex;
     flex-direction: column;
     border-radius: 10px;
-    border: 1px solid hsl(var(--b2));
+    border: 1px solid var(--b2);
     padding: 15px;
     overflow-y: scroll;
   }
@@ -227,14 +228,14 @@
   }
   input {
     border-radius: 5px;
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
     padding: 3px 10px;
     margin-top: 0;
   }
   button {
     font-family: cms-semibold;
-    color: hsl(var(--b1));
-    background-color: hsl(var(--p));
+    color: var(--b1);
+    background-color: var(--p);
     border-radius: 5px;
     width: 100px;
     height: 30px;
@@ -246,7 +247,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--b1));
+    border-top: 2px solid var(--b1);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1.2s;

@@ -14,7 +14,8 @@
     getDoc,
     setDoc,
   } from "firebase/firestore";
-  import { DateTime } from "@easepick/bundle";
+  import * as easepickPkg from "@easepick/bundle";
+  const { easepick, RangePlugin, LockPlugin, DateTime } = easepickPkg;
   import { navigating, page } from "$app/stores";
   import { fly, slide } from "svelte/transition";
   import ZIconCheckout from "./zIconCheckout.svelte";
@@ -22,6 +23,7 @@
   import { Promotion } from "$lib/classes/Promotion";
   import { promotionStore } from "$lib/new_stores/promotionStore";
   import type { PromotionType } from "$lib/new_types/PromotionType";
+  import type { SubmitFunction } from "@sveltejs/kit";
 
   export let unitObject: Unit;
   let submittingForm = false;
@@ -197,6 +199,33 @@
       rvAnimationTrigger = false;
     }, 10000);
   }
+
+  const customEnhance: SubmitFunction = async ({ formData, cancel }) => {
+    if (submittingForm) return;
+    submittingForm = true;
+    rvAnimationTrigger = false;
+
+    formObject = {};
+
+    for (const [key, value] of formData) {
+      // @ts-ignore
+      formObject[key] = value;
+    }
+
+    if ($bookingStore.customerObject?.id) {
+      await updateCustomer();
+      submittingForm = false;
+      dispatch("complete", true);
+      cancel();
+      return;
+    }
+
+    await createCustomer();
+
+    submittingForm = false;
+    dispatch("complete", true);
+    cancel();
+  };
 </script>
 
 <div class="review-container">
@@ -393,36 +422,7 @@
       method="POST"
       name="contact-form"
       id="contact-form"
-      use:enhance={async ({ form, data, cancel }) => {
-        if (submittingForm) return;
-        submittingForm = true;
-        rvAnimationTrigger = false;
-
-        formObject = {};
-
-        for (const [key, value] of data) {
-          //@ts-ignore
-          formObject[key] = value;
-        }
-
-        if ($bookingStore.customerObject?.id) {
-          // UPDATE STRIPE AND DB INSTEAD OF CREATING NEW
-          await updateCustomer();
-
-          submittingForm = false;
-          dispatch("complete", true);
-          cancel();
-          return;
-        }
-
-        await createCustomer();
-
-        submittingForm = false;
-
-        dispatch("complete", true);
-
-        cancel();
-      }}
+      use:enhance={customEnhance}
     >
       <div class="input-wrapper">
         <p class="label">Driver's First Name</p>
@@ -473,7 +473,7 @@
         <input
           type="checkbox"
           bind:checked={$bookingStore.agreement_signed}
-          class="checkbox"
+          class="checked:accent-red-700"
           style="width:1.5rem; height: 1.5rem;"
           name="terms"
           required
@@ -554,7 +554,7 @@
   }
   input {
     border-radius: 5px;
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
     padding: 3px 10px;
     margin-top: 0;
   }
@@ -589,12 +589,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    /* background-color: hsl(var(--b2)); */
+    /* background-color: var(--b2); */
     background-position: center;
   }
   .unit-name {
     font-family: "font-medium";
-    color: hsl(var(--p));
+    color: var(--p);
     font-size: 20px;
   }
   .features-row {
@@ -640,7 +640,7 @@
   }
   .bold {
     font-family: font-bold;
-    color: hsl(var(--p));
+    color: var(--p);
   }
   .pricing-overview {
     width: 50%;
@@ -657,21 +657,21 @@
     /* left/right margin for the rows is set in .col */
   }
   .row.fee {
-    color: hsl(var(--n));
+    color: var(--n);
     opacity: 0.8;
     font-size: 16px;
     width: 100%;
   }
   .green-highlight {
-    color: hsl(var(--suc));
+    color: var(--suc);
     font-family: font-light;
   }
   .banner {
     border-radius: 10px;
-    background-color: hsl(var(--b2));
+    background-color: var(--b2);
     padding: 4px 10px;
     margin-bottom: 10px;
-    color: hsl(var(--b3));
+    color: var(--b3);
     width: 100%;
   }
   .banner.winter {
@@ -703,10 +703,10 @@
     content: "";
     width: 100%;
     height: 1px;
-    background-color: hsl(var(--b2));
+    background-color: var(--b2);
   }
   .row.total {
-    color: hsl(var(--pf));
+    color: var(--pf);
     font-size: 18px;
 
     margin-top: 10px;

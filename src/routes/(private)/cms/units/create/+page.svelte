@@ -261,7 +261,7 @@ list of things required to build new unit object and throw no errors!  all under
 
 <style>
   .new-unit-container {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     margin: 25px;
     position: relative;
     border-radius: 4px;
@@ -339,9 +339,9 @@ list of things required to build new unit object and throw no errors!  all under
     height: 69%;
   }
   button {
-    background-color: hsl(var(--p));
+    background-color: var(--p);
     border-radius: 3px;
-    color: hsl(var(--b1));
+    color: var(--b1);
     width: 90%;
     align-self: center;
     padding: 8px 0;

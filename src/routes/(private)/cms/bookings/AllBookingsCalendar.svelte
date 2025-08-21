@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { DateTime } from "@easepick/bundle";
+  import * as easepickPkg from '@easepick/bundle';
+  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;
   import type { Booking, BookingDisplayFilter, Unit } from "$lib/types";
   import { onMount } from "svelte";
   import { afterNavigate } from "$app/navigation";
@@ -706,7 +707,7 @@
     font-family: font-bold;
   }
   .calendar-body li.is-today {
-    border: 1px solid hsl(var(--p));
+    border: 1px solid var(--p);
   }
 
   .calendar-body .calendar-weekdays li {
@@ -723,11 +724,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    border-top: 1px solid hsl(var(--b2));
+    border-top: 1px solid var(--b2);
   }
 
   .calendar-body .calendar-dates li.is-today {
-    border: 1px solid hsl(var(--p));
+    border: 1px solid var(--p);
   }
   .day-value {
     font-family: font-regular;
@@ -782,7 +783,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--p));
+    border-top: 2px solid var(--p);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;

@@ -58,7 +58,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--p));
+    border-top: 2px solid var(--p);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;
@@ -70,7 +70,7 @@
     height: 150px;
   }
   p {
-    color: hsl(var(--p));
+    color: var(--p);
     font-family: font-bold;
     margin-top: 20px;
   }

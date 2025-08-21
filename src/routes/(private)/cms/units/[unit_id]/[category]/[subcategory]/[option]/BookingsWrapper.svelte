@@ -224,7 +224,7 @@
 
 <style>
   .bookings-option-container {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     margin: 25px;
     position: relative;
     border-radius: 4px;
@@ -263,8 +263,8 @@
   }
   .add-photo {
     font-family: cms-light;
-    color: hsl(var(--b2));
-    background-color: hsl(var(--p));
+    color: var(--b2);
+    background-color: var(--p);
     width: 20px;
     border-radius: 4px;
     font-size: 25px;

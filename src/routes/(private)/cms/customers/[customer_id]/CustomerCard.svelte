@@ -158,7 +158,7 @@
                 {@const booking = $bookingCache.get(bookingId)}
                 <a
                   href="/cms/units/{booking?.unit_id}/bookings/{booking?.id}/Overview"
-                  class="bg-[hsl(var(--p))] font-semibold text-[hsl(var(--b1))] py-1 px-2 text-center self-start rounded border-radius-[4px] mt-2 ml-6 text-sm"
+                  class="bg-[var(--p)] font-semibold text-[var(--b1)] py-1 px-2 text-center self-start rounded border-radius-[4px] mt-2 ml-6 text-sm"
                 >
                   View Booking: {shortenId(bookingId)}
                 </a>

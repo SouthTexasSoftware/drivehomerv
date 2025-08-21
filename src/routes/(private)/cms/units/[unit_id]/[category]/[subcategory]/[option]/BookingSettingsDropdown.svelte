@@ -103,20 +103,20 @@
     border-radius: 4px;
     outline: none;
     width: 60%;
-    background-color: hsl(var(--p));
-    color: hsl(var(--b2));
+    background-color: var(--p);
+    color: var(--b2);
     justify-content: center;
     display: flex;
     height: 35px;
   }
   .update {
-    background-color: hsl(var(--su));
+    background-color: var(--su);
     margin-bottom: 25px;
   }
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--b1));
+    border-top: 2px solid var(--b1);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;

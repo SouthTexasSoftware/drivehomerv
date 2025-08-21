@@ -86,13 +86,13 @@
 
 <style>
   .outer-container {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     padding: 25px;
     display: flex;
     flex-direction: column;
     align-items: center;
     border-radius: 4px;
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
     width: 300px;
     height: 200px;
     margin: 0 25px 25px;
@@ -104,8 +104,8 @@
     font-size: 12px;
   }
   .error-message {
-    color: hsl(var(--erc));
-    background-color: hsl(var(--er));
+    color: var(--erc);
+    background-color: var(--er);
     padding: 2px 15px;
     border-radius: 4px;
     margin-top: 5px;

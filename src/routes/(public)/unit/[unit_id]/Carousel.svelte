@@ -118,7 +118,7 @@
 <style>
   .carousel-container {
     height: 100%;
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     position: relative;
   }
   .photos-wrapper {
@@ -137,7 +137,7 @@
     height: 60px;
   }
   svg path {
-    fill: hsl(var(--b3));
+    fill: var(--b3);
     opacity: 0.7;
   }
   .arrow {

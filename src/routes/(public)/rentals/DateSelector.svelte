@@ -53,7 +53,7 @@
 
 <style>
   .selector-container {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     border-radius: 4px;
     box-shadow: 0 3px 5px #80808087;
     padding: 25px;
@@ -70,7 +70,7 @@
     text-align: center;
   }
   .underline-bar {
-    background-color: hsl(var(--b2));
+    background-color: var(--b2);
     height: 1px;
     width: 60%;
     margin: 0 auto 15px;

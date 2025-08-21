@@ -107,7 +107,7 @@
 {:else}
   <a href="/cms/promotions/create" class="ml-auto absolute top-0 right-0">
     <button
-      class="bg-[hsl(var(--p))] text-[hsl(var(--b1))] font-[cms-semibold] py-2 px-4 rounded"
+      class="bg-[var(--p)] text-[var(--b1)] font-[cms-semibold] py-2 px-4 rounded"
       >Create Promotion</button
     ></a
   >
@@ -201,7 +201,7 @@
                   <td class="font-[cms-regular] text-sm p-2">
                     <a href="/cms/promotions/edit/{promotion.id}">
                       <button
-                        class="bg-[hsl(var(--p))] text-[hsl(var(--b1))] font-[cms-semibold] py-1 px-2 rounded mr-2"
+                        class="bg-[var(--p)] text-[var(--b1)] font-[cms-semibold] py-1 px-2 rounded mr-2"
                       >
                         Edit
                       </button>

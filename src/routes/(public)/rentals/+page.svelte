@@ -26,87 +26,107 @@
     }
   });
 
-  /**
-   * @param selection.detail [start: Date, end: Date]
-   * Compares the passed in selection to all units in the $unitStore.
-   * Updates the global 'availableUnits'
-   */
-  function updateAvailableUnits(selection: {
+  // Helper function to normalize dates to midnight
+  function normalizeDate(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  interface Selection {
     detail: { start: Date; end: Date };
-  }) {
-    // show some laoders when doing this recalculation (to inform the customer that something is happening)
+  }
+
+  // Helper function to calculate nights between two dates
+  function calculateNights(start: Date, end: Date): number {
+    const timeDiff = end.getTime() - start.getTime();
+    return Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
+  }
+
+  /**
+   * Compares the passed-in selection to all units in the $unitStore.
+   * Updates the global 'availableUnits' based on booking conflicts and minimum nights requirement.
+   * @param selection Object containing start and end dates
+   */
+  function updateAvailableUnits(selection: Selection): void {
+    // Show loaders during recalculation
     recalculatingUnits = true;
 
-    let selectionStartInteger = selection.detail.start.getTime();
-    let selectionEndInteger = selection.detail.end.getTime();
+    const selectionStart = normalizeDate(selection.detail.start);
+    const selectionEnd = normalizeDate(selection.detail.end);
 
-    let tempNewArray: Unit[] = [];
+    // Calculate selection duration in nights
+    const selectionNights = calculateNights(selectionStart, selectionEnd);
 
-    //@ts-ignore
-    $unitStore.units.forEach((unit: Unit, index: number): Unit | undefined => {
-      // if unit is not publicly available, don't add it to the available array or do any math on it
+    // Validate selection dates
+    if (selectionEnd < selectionStart) {
+      console.error("End date cannot be before start date");
+      availableUnits = [];
+      noUnitsAvailable = true;
+      setTimeout(() => {
+        recalculatingUnits = false;
+      }, 200);
+      return;
+    }
+
+    const tempNewArray: Unit[] = [];
+
+    // Get units from store
+    const units = $unitStore.units || [];
+
+    units.forEach((unit: Unit) => {
+      // Skip non-public units
       if (!unit.publicly_visible) return;
 
-      // compare selection to bookings
-      // auto set unit to available by default
       let unitIsAvailable = true;
 
-      unit.bookingDates?.forEach((booking: { start: Date; end: Date }) => {
-        //convert both booking entries to JSDates and then integers for comparison
+      // Check minimum nights requirement
+      const minimumNights = parseInt(
+        unit.information.rates_and_fees.pricing.minimum_nights,
+        10
+      );
+      if (isNaN(minimumNights) || selectionNights < minimumNights) {
+        unitIsAvailable = false;
+        return; // No need to check bookings if minimum nights not met
+      }
 
-        let bookingStart = booking.start.getTime();
-        let bookingEnd = booking.end.getTime();
+      // Check for booking conflicts
+      if (unit.bookingDates && unit.bookingDates.length > 0) {
+        for (const booking of unit.bookingDates) {
+          const bookingStart = normalizeDate(booking.start);
+          const bookingEnd = normalizeDate(booking.end);
 
-        // if selection start or end == a booking start or end, no good.
-        if (
-          bookingStart == selectionStartInteger ||
-          bookingStart == selectionEndInteger
-        ) {
-          unitIsAvailable = false;
-          return;
+          // Check for conflict:
+          // Conflict occurs if:
+          // 1. Selection starts before booking ends AND
+          // 2. Selection ends after booking starts
+          // Allow same-day start/end connections
+          if (selectionStart <= bookingEnd && selectionEnd >= bookingStart) {
+            // Allow same-day connections
+            if (
+              (selectionStart.getTime() === bookingEnd.getTime() &&
+                selectionEnd.getTime() !== bookingStart.getTime()) ||
+              (selectionEnd.getTime() === bookingStart.getTime() &&
+                selectionStart.getTime() !== bookingEnd.getTime())
+            ) {
+              continue;
+            }
+            unitIsAvailable = false;
+            break; // No need to check further bookings
+          }
         }
-        // if selection span includes booking start, no good
-        if (
-          selectionStartInteger < bookingStart &&
-          selectionEndInteger > bookingStart
-        ) {
-          unitIsAvailable = false;
-          return;
-        }
-        // if selection span includes booking end, no good
-        if (
-          selectionStartInteger < bookingEnd &&
-          selectionEndInteger > bookingEnd
-        ) {
-          unitIsAvailable = false;
-          return;
-        }
-        // if selection is within a booking completely, no good
-        if (
-          selectionStartInteger > bookingStart &&
-          selectionEndInteger < bookingEnd
-        ) {
-          unitIsAvailable = false;
-          return;
-        }
-      });
+      }
 
-      // if unit is still available after comparing all bookings, push to temp array
       if (unitIsAvailable) {
         tempNewArray.push(unit);
       }
     });
-    // all units have been analyzed, now set available units to match the temp array
+
+    // Update available units
     availableUnits = tempNewArray;
 
-    //check if there are no units available and display a customer message
-    if (availableUnits?.length == 0) {
-      noUnitsAvailable = true;
-    } else {
-      noUnitsAvailable = false;
-    }
+    // Update no units available flag
+    noUnitsAvailable = availableUnits.length === 0;
 
-    //remove loading shaders in a minimum of .2 seconds. (tells the customer that a calculation was done)
+    // Remove loading state after minimum 200ms
     setTimeout(() => {
       recalculatingUnits = false;
     }, 200);

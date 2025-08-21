@@ -168,7 +168,7 @@
   }
   .category-link.active {
     background-color: var(--cms-highlightPrimary);
-    border-bottom: 3px solid hsl(var(--p));
+    border-bottom: 3px solid var(--p);
   }
   .category-link {
     width: 50px;

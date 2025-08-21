@@ -26,7 +26,7 @@
 
 <style>
   .card-container {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     border-radius: 4px;
     box-shadow: 0 3px 5px #80808087;
     padding: 25px;
@@ -47,11 +47,11 @@
   }
   .no-photos-tag {
     font-family: "font-medium";
-    color: hsl(var(--b3));
+    color: var(--b3);
   }
   .unit-name {
     font-family: "font-medium";
-    color: hsl(var(--p));
+    color: var(--p);
     font-size: 18px;
     width: 150px;
     height: 20px;

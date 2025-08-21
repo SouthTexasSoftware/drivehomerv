@@ -60,7 +60,7 @@
     box-shadow: 0px 1px 2px grey;
     border-radius: 2px;
     margin: 25px 0 50px;
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     position: relative;
     display: grid;
     grid-template-rows: 1fr 0.8fr;

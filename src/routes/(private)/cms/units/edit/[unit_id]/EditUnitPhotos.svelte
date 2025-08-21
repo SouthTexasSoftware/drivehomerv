@@ -118,13 +118,13 @@
 
 <style>
   .outer-container {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     padding: 25px;
     display: flex;
     flex-direction: column;
     align-items: center;
     border-radius: 4px;
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
     width: auto;
     margin: 0 25px;
   }
@@ -139,7 +139,7 @@
   }
   .card {
     border-radius: 4px;
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
     width: 300px;
 
     margin: 10px;
@@ -151,10 +151,10 @@
   figure {
     height: 300px;
     width: 300px;
-    background-color: hsl(var(--b2));
+    background-color: var(--b2);
     display: flex;
     justify-content: center;
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
   }
   .card-photo {
     width: 100%;
@@ -181,7 +181,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--p));
+    border-top: 2px solid var(--p);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;
@@ -194,7 +194,7 @@
     margin: auto;
   }
   .spinner.small {
-    border-top: 2px solid hsl(var(--b1));
+    border-top: 2px solid var(--b1);
     width: 20px;
     height: 20px;
   }

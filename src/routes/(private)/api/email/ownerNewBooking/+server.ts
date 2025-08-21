@@ -2,7 +2,7 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { emailHandler } from "$lib/email";
 import type { Booking } from "$lib/types";
-import { DateTime } from "@easepick/bundle";
+
 
 interface RequestData {
   invoiceID: string;

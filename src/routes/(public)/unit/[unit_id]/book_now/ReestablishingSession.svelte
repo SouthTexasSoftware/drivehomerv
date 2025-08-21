@@ -23,7 +23,7 @@
     .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 3px solid hsl(var(--p));
+    border-top: 3px solid var(--p);
     border-right: 3px solid transparent;
     animation-name: spinning;
     animation-duration: 1.5s;

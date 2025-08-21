@@ -6,7 +6,9 @@
   // we can eventually make this a display of all the rentals, and a lookup feature for destination, passenger count etc
 
   onMount(() => {
-    goto("/rentals");
+    goto("/rentals", {
+                replaceState: true,
+  });
   });
 </script>
 
