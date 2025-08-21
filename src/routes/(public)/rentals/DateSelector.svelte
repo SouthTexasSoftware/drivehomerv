@@ -1,12 +1,13 @@
 <script lang="ts">
   import RentalsCalendar from "./RentalsCalendar.svelte";
+
 </script>
 
 <div class="selector-container">
   <h4>Find Your Drive Home</h4>
   <div class="underline-bar" />
 
-  <RentalsCalendar on:selection />
+  <RentalsCalendar on:selection on:reset/>
 
   <div class="row">
     <svg

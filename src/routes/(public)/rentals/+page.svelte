@@ -131,6 +131,12 @@
       recalculatingUnits = false;
     }, 200);
   }
+
+  function resetSelection() {
+    availableUnits = $unitStore.units;
+
+    noUnitsAvailable = false;
+  }
 </script>
 
 <h2>Available Rentals</h2>
@@ -140,7 +146,10 @@
       <UnitCardLoader />
     {/each}
   {:else}
-    <DateSelector on:selection={updateAvailableUnits} />
+    <DateSelector
+      on:selection={updateAvailableUnits}
+      on:reset={resetSelection}
+    />
     {#if recalculatingUnits}
       {#each availableUnits as unit}
         <UnitCardLoader />

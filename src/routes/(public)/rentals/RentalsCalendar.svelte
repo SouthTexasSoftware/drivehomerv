@@ -1,6 +1,6 @@
 <script lang="ts">
-  import * as easepickPkg from '@easepick/bundle';
-  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;
+  import * as easepickPkg from "@easepick/bundle";
+  const { easepick, RangePlugin, LockPlugin, DateTime } = easepickPkg;
   import { onMount, createEventDispatcher } from "svelte";
   import rentalsAvailableCalendar from "$lib/styles/rentalsAvailableCalendar.css?inline";
   import { bookingStore } from "$lib/stores";
@@ -12,6 +12,8 @@
   let selectedTripEnd = "End Date";
   let calendarInputElement: HTMLInputElement;
   let calendarContainer: HTMLElement;
+
+  let selectionMade = false;
 
   onMount(() => {
     if ($bookingStore) {
@@ -71,6 +73,7 @@
     selectedTripEnd = dateToString(selection.end);
 
     dispatch("selection", selection);
+    selectionMade = true;
 
     if ($bookingStore) {
       bookingStore.update((store) => {
@@ -92,6 +95,20 @@
     dateString = dateString.substring(4);
     dateString = dateString.replaceAll(" ", "-");
     return dateString;
+  }
+
+  function selectionResetHandler() {
+    selectedTripStart = "Start Date";
+    selectedTripEnd = "End Date";
+
+    selectionMade = false;
+
+    //@ts-ignore
+    delete $bookingStore.start;
+    //@ts-ignore
+    delete $bookingStore.end;
+
+    dispatch("reset", true);
   }
 </script>
 
@@ -120,7 +137,7 @@
     <strong class="dates"> Select Your Dates!</strong>
   </div>
 
-  <div class="row indent">
+  <div class="row indent relative mb-4">
     <button
       on:click={() => {
         calendarInputElement.click();
@@ -186,7 +203,7 @@
     </button>
     <label for="calendar-button" class="row date-display">
       <p>{selectedTripStart}</p>
-      <div class="arrow-container">
+      <div class="arrow-container mx-2">
         <svg
           id="right-arrow"
           viewBox="0 0 24 24"
@@ -224,6 +241,12 @@
       </div>
       <p>{selectedTripEnd}</p>
     </label>
+    {#if selectionMade}
+      <button
+        class="absolute -bottom-6 right-0 text-sm rounded-md text-white bg-red-700 px-2"
+        on:click={selectionResetHandler}>Reset</button
+      >
+    {/if}
     <input id="calendar-button" bind:this={calendarInputElement} />
   </div>
   <div class="calendar-container" bind:this={calendarContainer} />

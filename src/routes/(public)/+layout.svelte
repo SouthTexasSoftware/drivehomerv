@@ -4,19 +4,20 @@
   import NavigationLoader from "$lib/components/NavigationLoader.svelte";
   import "$lib/global.css";
   import { populateUnitStore, connectAnalytics } from "$lib/helpers";
-
   import { onMount } from "svelte";
   import { dev } from "$app/environment";
-  import WinterSpecial from "$lib/components/WinterSpecial.svelte";
   import {
     connectToFirebase,
     firebaseStore,
   } from "$lib/new_stores/firebaseStore";
   import Alert from "$lib/components/Alert.svelte";
+  import { injectAnalytics } from "@vercel/analytics/sveltekit";
 
   onMount(() => {
     loadResources();
   });
+
+  injectAnalytics({ mode: dev ? "development" : "production" });
 
   function loadResources() {
     if (!$firebaseStore) {
