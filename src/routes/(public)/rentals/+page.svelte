@@ -133,7 +133,9 @@
   }
 
   function resetSelection() {
-    availableUnits = $unitStore.units;
+    availableUnits = $unitStore.units.filter(
+      (unit) => unit.publicly_visible === true
+    );
 
     noUnitsAvailable = false;
   }
