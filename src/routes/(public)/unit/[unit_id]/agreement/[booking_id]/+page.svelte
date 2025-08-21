@@ -11,7 +11,8 @@
   import Agreement from "./Agreement.svelte";
   import { dev } from "$app/environment";
   import { arrayUnion, updateDoc, deleteDoc } from "firebase/firestore";
-  import { DateTime } from "@easepick/bundle";
+  import * as easepickPkg from '@easepick/bundle';
+  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;
   import AgreementSigned from "./AgreementSigned.svelte";
   import BackToCheckout from "./BackToCheckout.svelte";
 

@@ -33,8 +33,8 @@
     padding: 25px;
     display: flex;
     flex-direction: column;
-    background-color: hsl(var(--b1));
-    border: 1px solid hsl(var(--b3));
+    background-color: var(--b1);
+    border: 1px solid var(--b3);
     border-radius: 4px;
   }
   h4 {
@@ -47,12 +47,12 @@
     grid-template-columns: 100px 1fr repeat(2, 75px);
   }
   .table-header {
-    border-bottom: 1px solid hsl(var(--b3));
+    border-bottom: 1px solid var(--b3);
     padding: 0 10px;
   }
   .table-row {
     height: 25px;
-    border: 1px solid hsl(var(--b2));
+    border: 1px solid var(--b2);
     border-radius: 4px;
     padding: 5px;
     height: 40px;
@@ -63,10 +63,10 @@
     margin: 0 10px;
   }
   a {
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
     border-radius: 4px;
     padding: 0 5px;
     text-align: center;
-    background-color: hsl(var(--b2));
+    background-color: var(--b2);
   }
 </style>

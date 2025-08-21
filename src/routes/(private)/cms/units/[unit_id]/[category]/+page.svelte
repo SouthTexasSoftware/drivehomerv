@@ -28,7 +28,7 @@
       width: 100%;
       max-height: 87%;
       overflow-y:scroll;
-      border-bottom: 1px solid hsl(var(--p));
+      border-bottom: 1px solid var(--p);
     }
   }
 </style>

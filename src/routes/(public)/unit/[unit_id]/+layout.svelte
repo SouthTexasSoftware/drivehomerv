@@ -14,7 +14,7 @@
     width: 200vw;
     height: 300px;
     left: -50vw;
-    background: hsl(var(--p));
+    background: var(--p);
     transform: rotate(-16deg);
     z-index: -1;
   }

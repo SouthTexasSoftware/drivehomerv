@@ -1,13 +1,12 @@
 <script lang="ts">
-  import { easepick } from "@easepick/bundle";
-  import { DateTime } from "@easepick/datetime";
-  import { RangePlugin } from "@easepick/range-plugin";
-  import { LockPlugin } from "@easepick/lock-plugin";
+  import * as easepickPkg from "@easepick/bundle";
+  const { easepick, RangePlugin, LockPlugin, DateTime } = easepickPkg;
   import { onMount, createEventDispatcher } from "svelte";
   import publicPickerCalendar from "$lib/styles/publicPickerCalendar.css?inline";
   import type { Unit } from "$lib/types";
   import { bookingStore, bookingUpdateStore, unitStore } from "$lib/stores";
   import DeliveryModal from "./DeliveryModal.svelte";
+  import { afterNavigate } from "$app/navigation";
 
   export let unitObject: Unit;
   export let loadingBookingRecap: boolean;
@@ -47,7 +46,7 @@
   let showDeliveryModal = false;
   let deliverySet = false;
 
-  let pickerGlobal: easepick.Core;
+  let pickerGlobal: typeof easepick.Core;
   let calendarBookedDates: Date[][] = [];
 
   onMount(awaitUnitStorePopulation);
@@ -349,6 +348,7 @@
           parseInt(
             unitObject.information.rates_and_fees.pricing.base_rental_fee
           );
+        selection.pickup.price.toPrecision(2);
       } else {
         options.selected = false;
       }
@@ -446,7 +446,7 @@
     >Reset</button
   >
 
-  <label for="calendar-button" class="row date-display">
+  <label for="calendar-button" class="row date-display border">
     <p>{selectedTripStart}</p>
     <div class="arrow-container">
       <svg
@@ -566,13 +566,13 @@
   {#if !deliverySet || !$bookingStore.delivery_details}
     <button
       on:click={() => (showDeliveryModal = true)}
-      class="bg-primary px-4 py-1 text-white rounded-sm text-sm font-weight-100"
+      class="bg-red-700 px-4 py-1 text-white rounded-sm text-sm font-weight-100"
       >Add Delivery</button
     >
   {:else}
     <button
       on:click={removeDelivery}
-      class="bg-primary px-4 py-1 text-white rounded-sm text-sm font-weight-100"
+      class="bg-red-700 px-4 py-1 text-white rounded-sm text-sm font-weight-100"
       >Remove Delivery</button
     >
   {/if}
@@ -633,7 +633,7 @@
     z-index: 2;
   }
   .date-display {
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
     border-radius: 10px;
     padding: 10px 10px;
     color: black;
@@ -671,8 +671,8 @@
   }
   select {
     padding: 10px;
-    background-color: hsl(var(--b1));
-    border: solid 1px hsl(var(--b3));
+    background-color: var(--b1);
+    border: solid 1px var(--b3);
     border-radius: 10px;
     width: 85%;
     margin-right: 10%;
@@ -681,7 +681,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--b3));
+    border-top: 2px solid var(--b3);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;

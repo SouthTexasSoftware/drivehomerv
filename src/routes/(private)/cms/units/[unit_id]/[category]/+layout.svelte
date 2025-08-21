@@ -120,7 +120,7 @@
       text-align: start;
       padding: 0 48px;
       margin-left: auto;
-      background-color: hsl(var(--p));
+      background-color: var(--p);
       border-radius: 5px;
       color: white;
       margin-top: 20px;

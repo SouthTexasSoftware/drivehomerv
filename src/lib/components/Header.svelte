@@ -162,7 +162,7 @@
     padding: 10px;
     box-shadow: 0px 0px 2px grey;
     z-index: 105;
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
   }
 
   @media (max-width: 500px) {

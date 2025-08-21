@@ -89,7 +89,7 @@
 
 <style>
   .card-container {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     border-radius: 4px;
     box-shadow: 0 3px 5px #80808087;
     padding: 25px;
@@ -109,16 +109,16 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    /* background-color: hsl(var(--b2)); */
+    /* background-color: var(--b2); */
     background-position: center;
   }
   .no-photos-tag {
     font-family: "font-medium";
-    color: hsl(var(--b3));
+    color: var(--b3);
   }
   .unit-name {
     font-family: "font-medium";
-    color: hsl(var(--p));
+    color: var(--p);
     font-size: 18px;
   }
   .features-row {
@@ -150,7 +150,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--p));
+    border-top: 2px solid var(--p);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;
@@ -163,7 +163,7 @@
     margin: auto;
   }
   .spinner.small {
-    border-top: 2px solid hsl(var(--p));
+    border-top: 2px solid var(--p);
     width: 30px;
     height: 30px;
   }

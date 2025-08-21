@@ -3,7 +3,8 @@
   import PopupCalendarInputNoBookings from "$lib/components/PopupCalendarInputNoBookings.svelte";
   import { afterUpdate, createEventDispatcher } from "svelte";
   import { Timestamp, doc, serverTimestamp, setDoc } from "firebase/firestore";
-  import { DateTime } from "@easepick/bundle";
+  import * as easepickPkg from '@easepick/bundle';
+  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;;
   import { bookingStore } from "$lib/stores";
   import { firebaseStore } from "$lib/new_stores/firebaseStore";
 
@@ -163,7 +164,7 @@
 
 <style>
   .new-booking-option-container {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     position: relative;
     border-radius: 4px;
     box-shadow: 0 1px 3px var(--cms-boxShadow);
@@ -203,7 +204,7 @@
     align-items: center;
   }
   .validation-error {
-    color: hsl(var(--er));
+    color: var(--er);
     font-family: monospace;
     font-size: 12px;
     position: absolute;
@@ -233,7 +234,7 @@
   textarea {
     width: 100%;
     border-radius: 10px;
-    border: 1px solid hsl(var(--b2));
+    border: 1px solid var(--b2);
     padding: 15px;
     font-family: cms-regular;
     font-size: 18px;
@@ -242,13 +243,13 @@
     content: "";
     width: 80%;
     height: 1px;
-    background-color: hsl(var(--b2));
+    background-color: var(--b2);
     margin: 15px auto;
   }
   #save-button {
-    background-color: hsl(var(--p));
+    background-color: var(--p);
     font-family: cms-light;
-    color: hsl(var(--b1));
+    color: var(--b1);
     width: 80%;
     height: 40px;
     display: flex;
@@ -261,7 +262,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--b1));
+    border-top: 2px solid var(--b1);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;

@@ -135,7 +135,7 @@
     width: 100vw;
   }
   .upper-footer {
-    background-color: hsl(var(--p));
+    background-color: var(--p);
     min-height: 150px;
     width: 100%;
     display: flex;
@@ -143,7 +143,7 @@
     align-items: center;
   }
   .content-block {
-    color: hsl(var(--b1));
+    color: var(--b1);
     width: 25%;
     font-family: font-medium;
     min-width: 210px;
@@ -163,7 +163,7 @@
     display: inline-block;
   }
   .lower-footer {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     width: 100%;
     display: flex;
     flex-direction: column;

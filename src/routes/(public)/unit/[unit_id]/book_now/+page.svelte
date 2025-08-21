@@ -21,7 +21,8 @@
     setDoc,
     updateDoc,
   } from "firebase/firestore";
-  import { DateTime } from "@easepick/bundle";
+  import * as easepickPkg from '@easepick/bundle';
+  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;
   import { setBookingTimer } from "$lib/helpers";
   import { PUBLIC_STR_KEY } from "$env/static/public";
   import { writable } from "svelte/store";
@@ -472,13 +473,13 @@
     text-align: center;
   }
   .block-label.active {
-    color: hsl(var(--p));
+    color: var(--p);
   }
   .header-bar {
     margin: 0 15px;
     width: 100px;
     height: 1px;
-    background-color: hsl(var(--b2));
+    background-color: var(--b2);
   }
 
   .loading-unit-container {
@@ -492,7 +493,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 3px solid hsl(var(--b1));
+    border-top: 3px solid var(--b1);
     border-right: 3px solid transparent;
     animation-name: spinning;
     animation-duration: 1.5s;

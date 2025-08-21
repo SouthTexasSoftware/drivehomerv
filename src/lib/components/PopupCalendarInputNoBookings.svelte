@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { easepick } from "@easepick/bundle";
-  import { RangePlugin } from "@easepick/range-plugin";
-  import { LockPlugin } from "@easepick/lock-plugin";
+  import * as easepickPkg from '@easepick/bundle';
+  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;
   import { onMount, createEventDispatcher } from "svelte";
   import cmsPickerCalendar from "$lib/styles/cmsPickerCalendar.css?inline";
 
@@ -130,12 +129,12 @@
     display: flex;
     justify-content: space-evenly;
     margin: 5px 0px;
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
     border-radius: 4px;
     padding: 10px 3px;
     color: var(--cms-text);
     z-index: 100;
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     font-size: 14px;
     width: 300px;
   }

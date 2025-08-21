@@ -28,7 +28,8 @@ import {
   unitStore,
 } from "./stores";
 import { firebaseStore } from "./new_stores/firebaseStore";
-import { DateTime } from "@easepick/bundle";
+import * as easepickPkg from "@easepick/bundle";
+const { easepick, RangePlugin, LockPlugin, DateTime } = easepickPkg;
 import { getAnalytics } from "firebase/analytics";
 
 // TODO: needs a fallback when a failure is caught. Display a message, etc.

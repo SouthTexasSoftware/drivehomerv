@@ -128,7 +128,7 @@ let unitId = $page.params.unit_id;
     margin: 5px 0 50px 0;
   }
   a {
-    color: hsl(var(--p));
+    color: var(--p);
 
   }
 

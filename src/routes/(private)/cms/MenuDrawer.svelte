@@ -124,7 +124,7 @@
 
 <style>
   .menu-container {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     flex-grow: 0;
     display: flex;
     flex-direction: column;
@@ -162,10 +162,10 @@
     fill: transparent !important;
   }
   .cms-link.active svg path {
-    fill: hsl(var(--p));
+    fill: var(--p);
   }
   .cms-link.home.active svg path {
-    stroke: hsl(var(--p));
+    stroke: var(--p);
     fill: transparent !important;
   }
   .cms-link.active {
@@ -173,7 +173,7 @@
   }
   @media (max-width: 1000px) {
     .menu-container {
-      background-color: hsl(var(--b1));
+      background-color: var(--b1);
       flex-grow: 0;
       display: flex;
       align-items: center;

@@ -50,9 +50,9 @@
 
 <style>
   button {
-    background-color: hsl(var(--p));
+    background-color: var(--p);
     /* border-radius: 3px; */
-    color: hsl(var(--b1));
+    color: var(--b1);
     width: 90%;
     padding: 8px 0;
     margin-top: 25px;
@@ -68,7 +68,7 @@
   button p {
     font-family: font-light;
     font-size: 20px;
-    /* border-bottom: 1px solid hsl(var(--b3)); */
+    /* border-bottom: 1px solid var(--b3); */
   }
   svg {
     margin-right: 10px;
@@ -76,7 +76,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--b1));
+    border-top: 2px solid var(--b1);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;

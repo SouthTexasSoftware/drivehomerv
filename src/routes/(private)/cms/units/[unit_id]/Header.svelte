@@ -234,7 +234,7 @@
     background-color: var(--cms-boxShadow);
   }
   button.save {
-    background-color: hsl(var(--p));
+    background-color: var(--p);
     color: white;
   }
   svg {
@@ -243,7 +243,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 1px solid hsl(var(--b1));
+    border-top: 1px solid var(--b1);
     border-right: 1px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;
@@ -272,8 +272,8 @@
       position: absolute;
       top: 0px;
       z-index: 100;
-      background-color: hsl(var(--b1));
-      border-bottom: 1px solid hsl(var(--p));
+      background-color: var(--b1);
+      border-bottom: 1px solid var(--p);
       padding: 10px 35px;
     }
   }

@@ -1,7 +1,8 @@
 <script lang="ts">
   import { cmsStore, unitStore } from "$lib/stores";
   import { firebaseStore } from "$lib/new_stores/firebaseStore";
-  import { DateTime } from "@easepick/bundle";
+  import * as easepickPkg from '@easepick/bundle';
+  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;
   import { collection, onSnapshot } from "firebase/firestore";
   import { populateUnitBookings } from "$lib/helpers";
   import type { Booking, BookingDisplayFilter } from "$lib/types";
@@ -825,7 +826,7 @@
     font-size: 13px;
     background-color: transparent;
     border-radius: 10px;
-    border: 2px solid hsl(var(--b2));
+    border: 2px solid var(--b2);
     padding: 0px 10px;
     margin: 0 10px;
     height: 25px;
@@ -859,10 +860,10 @@
   }
   .bookings-count {
     font-family: cms-bold;
-    color: hsl(var(--p));
+    color: var(--p);
   }
   .booking-card {
-    border: 3px solid hsl(var(--b2));
+    border: 3px solid var(--b2);
     border-radius: 10px;
     padding: 5px;
     display: flex;
@@ -871,7 +872,7 @@
     transition: all 0.2s;
   }
   .booking-card:hover {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
   }
   .unit-img {
     width: 70px;
@@ -882,7 +883,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    /* background-color: hsl(var(--b2)); */
+    /* background-color: var(--b2); */
     background-position: center;
   }
   .booking-info-container {
@@ -906,10 +907,10 @@
   }
   .info-text.unit-name {
     font-family: cms-bold;
-    color: hsl(var(--p));
+    color: var(--p);
   }
   .info-text.highlight {
-    color: hsl(var(--wa));
+    color: var(--wa);
   }
   .spinner {
     content: "";
@@ -929,7 +930,7 @@
   .spinner.bookings {
     height: 50px;
     width: 50px;
-    border-top: 2px solid hsl(var(--p));
+    border-top: 2px solid var(--p);
     border-right: 2px solid transparent;
     margin-top: 50px;
   }
@@ -956,7 +957,7 @@
       max-width: 100vw;
       position: relative;
       min-width: 200px;
-      border-bottom: 1px solid hsl(var(--b3));
+      border-bottom: 1px solid var(--b3);
     }
     .bookings-header {
       margin-top: 15px;

@@ -10,7 +10,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--b1));
+    border-top: 2px solid var(--b1);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;

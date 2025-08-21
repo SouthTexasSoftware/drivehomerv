@@ -54,7 +54,7 @@
   }
   p.unit-name {
     font-family: font-medium;
-    color: hsl(var(--p));
+    color: var(--p);
     font-size: 32px;
     margin-top: -10px;
     text-align: center;

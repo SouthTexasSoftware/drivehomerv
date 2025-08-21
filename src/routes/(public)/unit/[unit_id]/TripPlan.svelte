@@ -9,7 +9,14 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import { newUUID } from "$lib/helpers";
-  import { Timestamp, collection, doc, getDocs, query, setDoc } from "firebase/firestore";
+  import {
+    Timestamp,
+    collection,
+    doc,
+    getDocs,
+    query,
+    setDoc,
+  } from "firebase/firestore";
   import { fade, slide } from "svelte/transition";
   import { SearchCheck, LoaderCircle, CircleX } from "lucide-svelte";
   import { Promotion } from "$lib/classes/Promotion";
@@ -254,8 +261,11 @@
     //second round check for booking conflict
     let hasConflict = await checkBookingConflict($bookingStore);
 
-    if(hasConflict) {
-      alertStore.error("Booking dates conflict with an existing booking. Please select new dates or send us a message!", 10000);
+    if (hasConflict) {
+      alertStore.error(
+        "Booking dates conflict with an existing booking. Please select new dates or send us a message!",
+        10000
+      );
       loadingBookingRecap = false;
       return;
     }
@@ -293,64 +303,67 @@
 
   // NEW Booking Conflict Verification
   // Helper function to parse date string to Date object
-function parseDate(dateStr: string): Date {
-  return new Date(dateStr);
-}
-
-// Helper function to normalize dates to midnight for accurate comparison
-function normalizeDate(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-async function checkBookingConflict(newBooking: Booking): Promise<boolean> {
-  try {
-    const bookingsRef = collection($firebaseStore.db, `units/${newBooking.unit_id}/bookings`);
-    
-    // Get all bookings for the unit
-    const bookingsSnapshot = await getDocs(query(bookingsRef));
-    
-    // Convert new booking dates
-    const newStart = normalizeDate(parseDate(newBooking.start));
-    const newEnd = normalizeDate(parseDate(newBooking.end));
-    
-    // Check if end date is before start date
-    if (newEnd < newStart) {
-      throw new Error('End date cannot be before start date');
-    }
-
-    // Check each existing booking
-    for (const doc of bookingsSnapshot.docs) {
-      const existingBooking = doc.data() as Booking;
-      
-      const existingStart = normalizeDate(parseDate(existingBooking.start));
-      const existingEnd = normalizeDate(parseDate(existingBooking.end));
-      
-      // Check for conflict:
-      // Conflict occurs if:
-      // 1. New booking starts before existing booking ends AND
-      // 2. New booking ends after existing booking starts
-      // Allowing same-day start/end connections
-      if (
-        (newStart <= existingEnd && newEnd >= existingStart)
-      ) {
-        // If both dates are exactly the same as an existing booking's start/end
-        // and it's just a same-day connection, allow it
-        if (
-          (newStart.getTime() === existingEnd.getTime() && newEnd.getTime() !== existingStart.getTime()) ||
-          (newEnd.getTime() === existingStart.getTime() && newStart.getTime() !== existingEnd.getTime())
-        ) {
-          continue;
-        }
-        return true; // Conflict found
-      }
-    }
-    
-    return false; // No conflicts found
-  } catch (error) {
-    console.error('Error checking booking conflict:', error);
-    throw error;
+  function parseDate(dateStr: string): Date {
+    return new Date(dateStr);
   }
-}
+
+  // Helper function to normalize dates to midnight for accurate comparison
+  function normalizeDate(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  async function checkBookingConflict(newBooking: Booking): Promise<boolean> {
+    try {
+      const bookingsRef = collection(
+        $firebaseStore.db,
+        `units/${newBooking.unit_id}/bookings`
+      );
+
+      // Get all bookings for the unit
+      const bookingsSnapshot = await getDocs(query(bookingsRef));
+
+      // Convert new booking dates
+      const newStart = normalizeDate(parseDate(newBooking.start));
+      const newEnd = normalizeDate(parseDate(newBooking.end));
+
+      // Check if end date is before start date
+      if (newEnd < newStart) {
+        throw new Error("End date cannot be before start date");
+      }
+
+      // Check each existing booking
+      for (const doc of bookingsSnapshot.docs) {
+        const existingBooking = doc.data() as Booking;
+
+        const existingStart = normalizeDate(parseDate(existingBooking.start));
+        const existingEnd = normalizeDate(parseDate(existingBooking.end));
+
+        // Check for conflict:
+        // Conflict occurs if:
+        // 1. New booking starts before existing booking ends AND
+        // 2. New booking ends after existing booking starts
+        // Allowing same-day start/end connections
+        if (newStart <= existingEnd && newEnd >= existingStart) {
+          // If both dates are exactly the same as an existing booking's start/end
+          // and it's just a same-day connection, allow it
+          if (
+            (newStart.getTime() === existingEnd.getTime() &&
+              newEnd.getTime() !== existingStart.getTime()) ||
+            (newEnd.getTime() === existingStart.getTime() &&
+              newStart.getTime() !== existingEnd.getTime())
+          ) {
+            continue;
+          }
+          return true; // Conflict found
+        }
+      }
+
+      return false; // No conflicts found
+    } catch (error) {
+      console.error("Error checking booking conflict:", error);
+      throw error;
+    }
+  }
 
   let validatingPromotion = false;
   let promotionError = false;
@@ -541,18 +554,18 @@ async function checkBookingConflict(newBooking: Booking): Promise<boolean> {
         </div>
       {/if}
 
-      <label class="font-[font-bold] text-[hsl(var(--pf))] flex flex-col mt-2">
+      <label class="font-[font-bold] text-[var(--pf)] flex flex-col mt-2">
         Promo Code
         <div class="flex">
           <input
             bind:this={promotionInput}
             name="promoCode"
             type="text"
-            class="border-solid border-[hsl(var(--b3))] border rounded-lg h-10 w-full px-4"
+            class="border-solid border-[var(--b3)] border rounded-lg h-10 w-full px-4"
             disabled={validatingPromotion}
           />
           <button
-            class="border-solid border-[hsl(var(--b3))] border rounded-lg h-10 w-12 flex justify-center items-center ml-1 hover:bg-red-50"
+            class="border-solid border-[var(--b3)] border rounded-lg h-10 w-12 flex justify-center items-center ml-1 hover:bg-red-50"
             on:click={applyPromotion}
           >
             {#if validatingPromotion}
@@ -573,10 +586,12 @@ async function checkBookingConflict(newBooking: Booking): Promise<boolean> {
 
       {#if screenWidth > 500}
         {#if !selectedTripLength}
-          <button class="reserve-button"><p>SELECT DATES</p></button>
+          <button class="reserve-button"
+            ><p class="text-white">SELECT DATES</p></button
+          >
         {:else}
           <button class="reserve-button" on:click={bookNowRequested}
-            ><p>
+            ><p class="text-white">
               {#if loadingBookingRecap}
                 <div class="spinner" />
               {:else}
@@ -613,7 +628,7 @@ async function checkBookingConflict(newBooking: Booking): Promise<boolean> {
 <style>
   .trip-plan-container {
     width: 100%;
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -652,7 +667,7 @@ async function checkBookingConflict(newBooking: Booking): Promise<boolean> {
   }
   strong {
     font-size: 20px;
-    color: hsl(var(--nf));
+    color: var(--nf);
   }
   p#pickup-location {
     margin-top: -10px;
@@ -660,21 +675,21 @@ async function checkBookingConflict(newBooking: Booking): Promise<boolean> {
   }
 
   .row.fee {
-    color: hsl(var(--n));
+    color: var(--n);
     opacity: 0.8;
     font-size: 16px;
   }
 
   .green-highlight {
-    color: hsl(var(--suc));
+    color: var(--suc);
     font-family: font-light;
   }
   .banner {
     border-radius: 10px;
-    background-color: hsl(var(--b2));
+    background-color: var(--b2);
     padding: 4px 10px;
     margin-bottom: 10px;
-    color: hsl(var(--b3));
+    color: var(--b3);
   }
   .banner.winter {
     background-color: #d3e3f7;
@@ -693,17 +708,17 @@ async function checkBookingConflict(newBooking: Booking): Promise<boolean> {
     content: "";
     width: 100%;
     height: 1px;
-    background-color: hsl(var(--b2));
+    background-color: var(--b2);
   }
   .row.total {
-    color: hsl(var(--pf));
+    color: var(--pf);
     font-size: 22px;
     margin-top: 10px;
   }
   .reserve-button {
-    background-color: hsl(var(--p));
+    background-color: var(--p);
     border-radius: 3px;
-    color: hsl(var(--b1));
+    color: var(--b1);
     width: 100%;
     padding: 8px 0;
     margin-top: 25px;
@@ -727,7 +742,7 @@ async function checkBookingConflict(newBooking: Booking): Promise<boolean> {
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 2px solid hsl(var(--b1));
+    border-top: 2px solid var(--b1);
     border-right: 2px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;

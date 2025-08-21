@@ -3,69 +3,99 @@
 @tailwind utilities;
 
 @font-face {
-    font-family: font-regular;
-    src: url('./fonts/Ubuntu-Regular.ttf');
+  font-family: font-regular;
+  src: url("./fonts/Ubuntu-Regular.ttf");
 }
 
 @font-face {
-    font-family: font-medium;
-    src: url('./fonts/Ubuntu-Medium.ttf');
+  font-family: font-medium;
+  src: url("./fonts/Ubuntu-Medium.ttf");
 }
 
 @font-face {
-    font-family: font-light;
-    src: url('./fonts/Ubuntu-Light.ttf');
+  font-family: font-light;
+  src: url("./fonts/Ubuntu-Light.ttf");
 }
 
 @font-face {
-    font-family: font-bold;
-    src: url('./fonts/Ubuntu-Bold.ttf');
+  font-family: font-bold;
+  src: url("./fonts/Ubuntu-Bold.ttf");
 }
 
 @font-face {
-    font-family: cms-regular;
-    src: url('./fonts/Montserrat-Regular.ttf');
+  font-family: cms-regular;
+  src: url("./fonts/Montserrat-Regular.ttf");
 }
 @font-face {
-    font-family: cms-bold;
-    src: url('./fonts/Montserrat-Bold.ttf');
+  font-family: cms-bold;
+  src: url("./fonts/Montserrat-Bold.ttf");
 }
 @font-face {
-    font-family: cms-medium;
-    src: url('./fonts/Montserrat-Medium.ttf');
+  font-family: cms-medium;
+  src: url("./fonts/Montserrat-Medium.ttf");
 }
 @font-face {
-    font-family: cms-semibold;
-    src: url('./fonts/Montserrat-SemiBold.ttf');
+  font-family: cms-semibold;
+  src: url("./fonts/Montserrat-SemiBold.ttf");
 }
 @font-face {
-    font-family: cms-light;
-    src: url('./fonts/Montserrat-Light.ttf');
+  font-family: cms-light;
+  src: url("./fonts/Montserrat-Light.ttf");
 }
 
 * {
-    font-family: font-regular;
-    box-sizing: border-box;
-    user-select: none;
-    
+  font-family: font-regular;
+  box-sizing: border-box;
+  user-select: none;
 }
 
-body, html {
-    width: 100vw;
-    position: relative;
-    overflow-x: hidden;
+body,
+html {
+  width: 100vw;
+  position: relative;
+  overflow-x: hidden;
 }
 
 /* GLOBAL VARIABLES */
 
 :root {
+  --large-bp: 1800px;
+  --mid-bp: 1000px;
+  --small-bp: 500px;
 
-    --large-bp: 1800px;
-    --mid-bp: 1000px;
-    --small-bp:500px;
+  --cms-text: #3d3d3d;
+  --cms-highlightPrimary: #f2e9e9;
+  --cms-boxShadow: #dbdbdb;
+  --cms-bgColor: #fafafa;
 
-    --cms-text: #3D3D3D;
-    --cms-highlightPrimary: #F2E9E9;
-    --cms-boxShadow: #dbdbdb;
-    --cms-bgColor: #FAFAFA;
+  --p: #ae2623;
+  --pc: #c15043;
+  --pf: #802927;
+  --a: #e2968a;
+  --b1: #ffffff;
+  --b2: #f2f3f4;
+  --b3: #79615d;
+
+  /* near black */
+  --n: #353535;
+
+  /* black? */
+  --nf: #000;
+
+  /* yellow */
+  --wa: #d1b700;
+
+  /* harsh red */
+  --er: #bf1512;
+
+  /* content over harsh red? */
+  --erc: #f7bfbe;
+
+  /* green */
+  --su: #00d14f;
+
+  /* green darker */
+  --suc: #1e632b;
+
+  --chkbg: #ffffff;
 }

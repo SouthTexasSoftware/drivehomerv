@@ -24,6 +24,6 @@
   }
   a {
     font-family: cms-semibold;
-    border-bottom: 1px solid hsl(var(--p));
+    border-bottom: 1px solid var(--p);
   }
 </style>

@@ -184,7 +184,7 @@
 
 <style>
   .information-option-container {
-    background-color: hsl(var(--b1));
+    background-color: var(--b1);
     margin: 25px;
     position: relative;
     border-radius: 4px;

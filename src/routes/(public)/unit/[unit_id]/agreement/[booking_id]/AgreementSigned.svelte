@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Booking } from "$lib/types";
-  import { DateTime } from "@easepick/bundle";
+  import * as easepickPkg from '@easepick/bundle';
+  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;
   import type { ComponentType } from "svelte";
   import Agreement from "./Agreement.svelte";
   const svelteComponents = import.meta.glob("./*.svelte");
@@ -86,7 +87,7 @@
     display: flex;
     flex-direction: column;
     border-radius: 10px;
-    border: 1px solid hsl(var(--b2));
+    border: 1px solid var(--b2);
     padding: 15px;
     overflow-y: scroll;
   }
@@ -144,14 +145,14 @@
   }
   input {
     border-radius: 5px;
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
     padding: 3px 10px;
     margin-top: 0;
   }
   .input-data {
     padding: 3px 10px;
     border-radius: 5px;
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--b3);
   }
   .input-data.name {
     width: 75%;
@@ -161,7 +162,7 @@
   }
   .signature-captured {
     font-size: 12px;
-    color: hsl(var(--p));
+    color: var(--p);
     margin-top: -15px;
     margin-bottom: 15px;
   }

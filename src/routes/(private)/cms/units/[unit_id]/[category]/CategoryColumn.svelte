@@ -3,7 +3,8 @@
   import { page } from "$app/stores";
   import { onMount } from "svelte";
   import type { Unit } from "$lib/types";
-  import { DateTime } from "@easepick/bundle";
+  import * as easepickPkg from '@easepick/bundle';
+  const {easepick , RangePlugin, LockPlugin, DateTime} = easepickPkg;
   import { afterNavigate, goto } from "$app/navigation";
   import { cmsStore, unitStore } from "$lib/stores";
   import { firebaseStore } from "$lib/new_stores/firebaseStore";
@@ -363,7 +364,7 @@
     font-size: 14px;
   }
   .subcategory-title p.active {
-    color: hsl(var(--p));
+    color: var(--p);
   }
   svg {
     margin-left: 15px;
@@ -385,13 +386,13 @@
   }
   .option-link.active {
     background-color: var(--cms-highlightPrimary);
-    border-right: 3px solid hsl(var(--p));
+    border-right: 3px solid var(--p);
   }
 
   .load-past-bookings {
-    background-color: hsl(var(--p));
+    background-color: var(--p);
     font-family: font-bold;
-    color: hsl(var(--b1));
+    color: var(--b1);
     text-align: center;
     align-self: flex-start;
     height: 24px;
@@ -406,7 +407,7 @@
     .column-container {
       width: 100%;
       background-color: #fafafa;
-      border: 1px solid hsl(var(--b2));
+      border: 1px solid var(--b2);
       height: 100%;
     }
   }
@@ -414,7 +415,7 @@
   .spinner {
     content: "";
     border-radius: 50%;
-    border-top: 1px solid hsl(var(--b1));
+    border-top: 1px solid var(--b1);
     border-right: 1px solid transparent;
     animation-name: spinning;
     animation-duration: 1s;
