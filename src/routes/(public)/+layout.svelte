@@ -17,7 +17,7 @@
     loadResources();
   });
 
-  injectAnalytics({ mode: dev ? "development" : "production" });
+  //injectAnalytics({ mode: dev ? "development" : "production" });
 
   function loadResources() {
     if (!$firebaseStore) {
